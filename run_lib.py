@@ -40,6 +40,8 @@ import torch
 from torch.utils import tensorboard
 from torchvision.utils import make_grid, save_image
 from utils import save_checkpoint, restore_checkpoint
+from playground import permute_channels, normalise, normalise_per_band, create_supergrid
+from iunets.layers import InvertibleDownsampling2D
 
 FLAGS = flags.FLAGS
 
@@ -82,9 +84,13 @@ def train(config, workdir):
                                               uniform_dequantization=config.data.uniform_dequantization)
   train_iter = iter(train_ds)  # pytype: disable=wrong-arg-types
   eval_iter = iter(eval_ds)  # pytype: disable=wrong-arg-types
+
   # Create data normalizer and its inverse
   scaler = datasets.get_data_scaler(config)
   inverse_scaler = datasets.get_data_inverse_scaler(config)
+
+  # Create the Haar Transform
+  haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
 
   # Setup SDEs
   if config.training.sde.lower() == 'vpsde':
@@ -127,6 +133,11 @@ def train(config, workdir):
     batch = torch.from_numpy(next(train_iter)['image']._numpy()).to(config.device).float()
     batch = batch.permute(0, 3, 1, 2)
     batch = scaler(batch)
+
+    #addition
+    batch = haar_transform(batch) #apply the haar transform
+    batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
+
     # Execute one training step
     loss = train_step_fn(state, batch)
     if step % config.training.log_freq == 0:
@@ -142,6 +153,11 @@ def train(config, workdir):
       eval_batch = torch.from_numpy(next(eval_iter)['image']._numpy()).to(config.device).float()
       eval_batch = eval_batch.permute(0, 3, 1, 2)
       eval_batch = scaler(eval_batch)
+
+      #addition
+      eval_batch = haar_transform(eval_batch) #apply the haar transform
+      eval_batch = permute_channels(eval_batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
+
       eval_loss = eval_step_fn(state, eval_batch)
       logging.info("step: %d, eval_loss: %.5e" % (step, eval_loss.item()))
       writer.add_scalar("eval_loss", eval_loss.item(), step)
@@ -160,16 +176,23 @@ def train(config, workdir):
         ema.restore(score_model.parameters())
         this_sample_dir = os.path.join(sample_dir, "iter_{}".format(step))
         tf.io.gfile.makedirs(this_sample_dir)
-        nrow = int(np.sqrt(sample.shape[0]))
-        image_grid = make_grid(sample, nrow, padding=2)
-        sample = np.clip(sample.permute(0, 2, 3, 1).cpu().numpy() * 255, 0, 255).astype(np.uint8)
-        with tf.io.gfile.GFile(
-            os.path.join(this_sample_dir, "sample.np"), "wb") as fout:
-          np.save(fout, sample)
 
+        #sample = np.clip(sample.permute(0, 2, 3, 1).cpu().numpy() * 255, 0, 255).astype(np.uint8)
+        #with tf.io.gfile.GFile(
+        #    os.path.join(this_sample_dir, "sample.np"), "wb") as fout:
+        #  np.save(fout, sample)
+
+        normalised_sample = normalise_per_band(sample)
+        haar_grid = create_supergrid(normalised_sample)
         with tf.io.gfile.GFile(
-            os.path.join(this_sample_dir, "sample.png"), "wb") as fout:
-          save_image(image_grid, fout)
+            os.path.join(this_sample_dir, "haar_grid.png"), "wb") as fout:
+          save_image(haar_grid, fout)
+        
+        back_permuted_sample = permute_channels(sample, forward=False)
+        image_grid = haar_transform.inverse(back_permuted_sample)
+        with tf.io.gfile.GFile(
+            os.path.join(this_sample_dir, "image_grid.png"), "wb") as fout:
+          save_image(image_grid, fout, normalize=True)
 
 
 def evaluate(config,

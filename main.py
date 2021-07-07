@@ -22,6 +22,7 @@ from ml_collections.config_flags import config_flags
 import logging
 import os
 import tensorflow as tf
+from haar_helper import create_haar_dataset
 
 FLAGS = flags.FLAGS
 
@@ -47,6 +48,12 @@ def main(argv):
     logger = logging.getLogger()
     logger.addHandler(handler)
     logger.setLevel('INFO')
+
+    #create dataset if requested.
+    data = FLAGS.config.data
+    if data.create_dataset:
+      create_haar_dataset(data.base_dir, data.highest_resolution, data.target_resolution, data.max_haar_depth, data.split)
+
     # Run the training pipeline
     run_lib.train(FLAGS.config, FLAGS.workdir)
   elif FLAGS.mode == "eval":

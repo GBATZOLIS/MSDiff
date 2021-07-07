@@ -70,7 +70,17 @@ def get_pc_inpainter(sde, predictor, corrector, inverse_scaler, snr,
     """
     with torch.no_grad():
       # Initial sample
-      x = data * mask + sde.prior_sampling(data.shape).to(data.device) * (1. - mask)
+
+      #GB suggestion:
+      #vec_t = torch.ones(data.shape[0], device=data.device) * sde.T
+      #masked_data_mean, std = sde.marginal_prob(data, vec_t)
+      #masked_data = masked_data_mean + torch.randn_like(x) * std[:, None, None, None]
+      #x = masked_data * mask + sde.prior_sampling(data.shape).to(data.device) * (1. - mask)
+      #
+      #Song code:
+      #x = data * mask + sde.prior_sampling(data.shape).to(data.device) * (1. - mask) 
+
+      x = data * mask + sde.prior_sampling(data.shape).to(data.device) * (1. - mask) 
       timesteps = torch.linspace(sde.T, eps, sde.N)
       for i in range(sde.N):
         t = timesteps[i]

@@ -342,7 +342,7 @@ def shared_predictor_update_fn(x, t, sde, model, predictor, probability_flow, co
 
 
 def shared_corrector_update_fn(x, t, sde, model, corrector, continuous, snr, n_steps):
-  """A wrapper tha configures and returns the update function of correctors."""
+  """A wrapper that configures and returns the update function of correctors."""
   score_fn = mutils.get_score_fn(sde, model, train=False, continuous=continuous)
   if corrector is None:
     # Predictor-only sampler
@@ -388,7 +388,7 @@ def get_pc_sampler(sde, shape, predictor, corrector, inverse_scaler, snr,
                                           n_steps=n_steps)
 
   def pc_sampler(model):
-    """ The PC sampler funciton.
+    """ The PC sampler function.
 
     Args:
       model: A score model.
