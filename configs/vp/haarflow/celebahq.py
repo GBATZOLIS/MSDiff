@@ -81,6 +81,8 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
+  model.sigma_max = 378
+  model.sigma_min = 0.01
   model.beta_min = 0.1
   # We use an adjusted beta max 
   # because the range is doubled in each level starting from the first level
