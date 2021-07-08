@@ -143,6 +143,7 @@ def train(config, workdir):
       state['step'] = step
 
       #addition
+      batch = batch.to(config.device)
       batch = haar_transform(batch) #apply the haar transform
       batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
 
@@ -160,6 +161,7 @@ def train(config, workdir):
       if step % config.training.eval_freq == 0:
         for batch in val_dataloader:
           #addition
+          batch = batch.to(config.device)
           batch = haar_transform(batch) #apply the haar transform
           batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
 
