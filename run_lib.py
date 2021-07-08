@@ -165,7 +165,7 @@ def train(config, workdir):
           batch = haar_transform(batch) #apply the haar transform
           batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
 
-          eval_loss = eval_step_fn(state, eval_batch)
+          eval_loss = eval_step_fn(state, batch)
           logging.info("step: %d, eval_loss: %.5e" % (step, eval_loss.item()))
           writer.add_scalar("eval_loss", eval_loss.item(), step)
 
