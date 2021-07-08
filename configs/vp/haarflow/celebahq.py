@@ -68,7 +68,7 @@ def get_config():
   data.dataset = 'celebaHQ'
   data.create_dataset = True
   data.split = [0.8, 0.1, 0.1]
-  data.base_dir = 'datasets/'
+  data.base_dir = 'datasets/celebaHQ'
   data.highest_resolution = 1024 #highest available resolution of the dataset
   data.target_resolution = 64 #this should remain constant for an experiment
   data.image_size = 64 #we vary this for training on different resolutions
