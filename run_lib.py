@@ -134,10 +134,11 @@ def train(config, workdir):
   # In case there are multiple hosts (e.g., TPU pods), only log to host 0
   logging.info("Starting training loop at step %d." % (initial_step,))
 
+  step = initial_step
   for epoch in range(initial_epoch, config.training.num_epochs + 1):
     state['epoch'] = epoch
-    for i, batch in enumerate(train_dataloader):
-      step = initial_step + i
+    for batch in train_dataloader:
+      step += 1
       if step > num_train_steps:
         break
       state['step'] = step
@@ -158,7 +159,7 @@ def train(config, workdir):
         save_checkpoint(checkpoint_meta_dir, state)
 
       # Report the loss on an evaluation dataset periodically
-      if step % config.training.eval_freq == 5:
+      if step % config.training.eval_freq == 10:
         for batch in val_dataloader:
           #addition
           batch = batch.to(config.device)
