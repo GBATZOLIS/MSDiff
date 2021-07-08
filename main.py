@@ -52,7 +52,7 @@ def main(argv):
     #create dataset if requested.
     data = FLAGS.config.data
     if data.create_dataset:
-      create_haar_dataset(data.base_dir, data.highest_resolution, data.target_resolution, data.max_haar_depth, data.split)
+      create_haar_dataset(os.path.join(data.base_dir, data.dataset), data.highest_resolution, data.target_resolution, data.max_haar_depth, data.split)
 
     # Run the training pipeline
     run_lib.train(FLAGS.config, FLAGS.workdir)
