@@ -74,6 +74,7 @@ def get_config():
   data.image_size = 64 #we vary this for training on different resolutions
   data.level = math.log(data.target_resolution // data.image_size, 2) 
   data.max_haar_depth = 3 #maximum depth of multi-level haar tranform -> 1+data.max_haar_depth resolution levels.
+  data.centered = False
   data.random_flip = False
   data.uniform_dequantization = False
   data.num_channels = 12 #because of the haar tranform we have 12 channels.
