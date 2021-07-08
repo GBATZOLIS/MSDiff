@@ -222,13 +222,11 @@ class HaarDecomposedDataset(data.Dataset):
     if self.level==0:
       image = Image.open(self.image_files[index])
       image = torch.from_numpy(np.array(image)).float()
-      print(image.shape)
       image = image.permute(2, 0, 1)
       image /= 255
       return image
     else:
       image = np.load(self.image_files[index])
-      print(image.shape)
       image = torch.from_numpy(image).float()
       return image
         
