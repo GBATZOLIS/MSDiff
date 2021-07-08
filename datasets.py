@@ -198,7 +198,8 @@ def get_dataset(config, uniform_dequantization=False, evaluation=False):
   return train_ds, eval_ds, dataset_builder
 
 import torch.utils.data as data
-
+import torch
+import numpy as np
 
 class HaarDecomposedDataset(data.Dataset):
   def __init__(self,  config, uniform_dequantisation, phase='train'):
