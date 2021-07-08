@@ -27,6 +27,7 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.batch_size = 64
+  training.workers = 4
   training.n_iters = 2400001
   training.snapshot_freq = 50000
   training.log_freq = 50
@@ -52,6 +53,7 @@ def get_config():
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
+  evaluate.workers = 4
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
   evaluate.batch_size = 512
@@ -74,7 +76,7 @@ def get_config():
   data.max_haar_depth = 3 #maximum depth of multi-level haar tranform -> 1+data.max_haar_depth resolution levels.
   data.random_flip = False
   data.uniform_dequantization = False
-  data.num_channels = 3
+  data.num_channels = 12 #because of the haar tranform we have 12 channels.
   
 
   # model
@@ -82,7 +84,7 @@ def get_config():
   model.beta_min = 0.1
   # We use an adjusted beta max 
   # because the range is doubled in each level starting from the first level
-  model.beta_max = 20. + 4*(data.level+1)*np.log(2) 
+  model.beta_max = 20. + 4*(data.level+1)*np.log(2) #take the doubling value range into consideration.
   model.dropout = 0.
   model.embedding_type = 'fourier'
 

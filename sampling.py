@@ -77,14 +77,13 @@ def get_corrector(name):
   return _CORRECTORS[name]
 
 
-def get_sampling_fn(config, sde, shape, inverse_scaler, eps):
+def get_sampling_fn(config, sde, shape, eps):
   """Create a sampling function.
 
   Args:
     config: A `ml_collections.ConfigDict` object that contains all configuration information.
     sde: A `sde_lib.SDE` object that represents the forward SDE.
     shape: A sequence of integers representing the expected shape of a single sample.
-    inverse_scaler: The inverse data normalizer function.
     eps: A `float` number. The reverse-time SDE is only integrated to `eps` for numerical stability.
 
   Returns:
@@ -97,7 +96,6 @@ def get_sampling_fn(config, sde, shape, inverse_scaler, eps):
   if sampler_name.lower() == 'ode':
     sampling_fn = get_ode_sampler(sde=sde,
                                   shape=shape,
-                                  inverse_scaler=inverse_scaler,
                                   denoise=config.sampling.noise_removal,
                                   eps=eps,
                                   device=config.device)
@@ -109,7 +107,6 @@ def get_sampling_fn(config, sde, shape, inverse_scaler, eps):
                                  shape=shape,
                                  predictor=predictor,
                                  corrector=corrector,
-                                 inverse_scaler=inverse_scaler,
                                  snr=config.sampling.snr,
                                  n_steps=config.sampling.n_steps_each,
                                  probability_flow=config.sampling.probability_flow,
@@ -352,7 +349,7 @@ def shared_corrector_update_fn(x, t, sde, model, corrector, continuous, snr, n_s
   return corrector_obj.update_fn(x, t)
 
 
-def get_pc_sampler(sde, shape, predictor, corrector, inverse_scaler, snr,
+def get_pc_sampler(sde, shape, predictor, corrector, snr,
                    n_steps=1, probability_flow=False, continuous=False,
                    denoise=True, eps=1e-3, device='cuda'):
   """Create a Predictor-Corrector (PC) sampler.
@@ -362,7 +359,6 @@ def get_pc_sampler(sde, shape, predictor, corrector, inverse_scaler, snr,
     shape: A sequence of integers. The expected shape of a single sample.
     predictor: A subclass of `sampling.Predictor` representing the predictor algorithm.
     corrector: A subclass of `sampling.Corrector` representing the corrector algorithm.
-    inverse_scaler: The inverse data normalizer.
     snr: A `float` number. The signal-to-noise ratio for configuring correctors.
     n_steps: An integer. The number of corrector steps per predictor update.
     probability_flow: If `True`, solve the reverse-time probability flow ODE when running the predictor.
@@ -406,12 +402,12 @@ def get_pc_sampler(sde, shape, predictor, corrector, inverse_scaler, snr,
         x, x_mean = corrector_update_fn(x, vec_t, model=model)
         x, x_mean = predictor_update_fn(x, vec_t, model=model)
 
-      return inverse_scaler(x_mean if denoise else x), sde.N * (n_steps + 1)
+      return x_mean if denoise else x, sde.N * (n_steps + 1)
 
   return pc_sampler
 
 
-def get_ode_sampler(sde, shape, inverse_scaler,
+def get_ode_sampler(sde, shape,
                     denoise=False, rtol=1e-5, atol=1e-5,
                     method='RK45', eps=1e-3, device='cuda'):
   """Probability flow ODE sampler with the black-box ODE solver.
@@ -419,7 +415,6 @@ def get_ode_sampler(sde, shape, inverse_scaler,
   Args:
     sde: An `sde_lib.SDE` object that represents the forward SDE.
     shape: A sequence of integers. The expected shape of a single sample.
-    inverse_scaler: The inverse data normalizer.
     denoise: If `True`, add one-step denoising to final samples.
     rtol: A `float` number. The relative tolerance level of the ODE solver.
     atol: A `float` number. The absolute tolerance level of the ODE solver.
@@ -479,7 +474,6 @@ def get_ode_sampler(sde, shape, inverse_scaler,
       if denoise:
         x = denoise_update_fn(model, x)
 
-      x = inverse_scaler(x)
       return x, nfe
 
   return ode_sampler

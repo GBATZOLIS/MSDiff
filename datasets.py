@@ -203,9 +203,9 @@ class HaarDecomposedDataset(data.Dataset):
     self.dataset = config.data.dataset
     self.level = config.data.level #target resolution - level 0.
     if config.data.level == 0: #data are saved as png files.
-      self.image_files = glob.glob(os.path.join(config.data.base_dir, config.data.dataset, str(config.data.image_size), phase, '*.png')
+      self.image_files = glob.glob(os.path.join(config.data.base_dir, config.data.dataset, str(config.data.image_size), phase, '*.png'))
     elif config.data.level >= 1: #data are saved as numpy arrays to minimise the reconstruction.
-      self.image_files = glob.glob(os.path.join(config.data.base_dir, config.data.dataset, str(config.data.image_size), phase, '*.png')
+      self.image_files = glob.glob(os.path.join(config.data.base_dir, config.data.dataset, str(config.data.image_size), phase, '*.npy'))
     else:
       raise Exception('Invalid haar level.')
     
@@ -214,11 +214,18 @@ class HaarDecomposedDataset(data.Dataset):
     self.uniform_dequantisation = uniform_dequantisation
   
   def __getitem__(self, index):
-    image = Image.open(self.image_files[index])
-    image = torch.from_numpy(np.array(image)).float()
-    image = image.permute(2, 0, 1)
-    image = 2**self.level*image / 255
-    return image
+    if self.level==0:
+      image = Image.open(self.image_files[index])
+      image = torch.from_numpy(np.array(image)).float()
+      print(image.shape)
+      image = image.permute(2, 0, 1)
+      image /= 255
+      return image
+    else:
+      image = np.load(self.image_files[index])
+      print(image.shape)
+      image = torch.from_numpy(image).float()
+      return image
         
   def __len__(self):
       """Return the total number of images."""

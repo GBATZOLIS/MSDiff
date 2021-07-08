@@ -40,8 +40,9 @@ import torch
 from torch.utils import tensorboard
 from torchvision.utils import make_grid, save_image
 from utils import save_checkpoint, restore_checkpoint
-from playground import permute_channels, normalise, normalise_per_band, create_supergrid
+from haar_helper import permute_channels, normalise, normalise_per_band, create_supergrid
 from iunets.layers import InvertibleDownsampling2D
+from torch.utils.data import DataLoader
 
 FLAGS = flags.FLAGS
 
@@ -67,7 +68,7 @@ def train(config, workdir):
   score_model = mutils.create_model(config)
   ema = ExponentialMovingAverage(score_model.parameters(), decay=config.model.ema_rate)
   optimizer = losses.get_optimizer(config, score_model.parameters())
-  state = dict(optimizer=optimizer, model=score_model, ema=ema, step=0)
+  state = dict(optimizer=optimizer, model=score_model, ema=ema, step=0, epoch=0)
 
   # Create checkpoints directory
   checkpoint_dir = os.path.join(workdir, "checkpoints")
@@ -77,17 +78,22 @@ def train(config, workdir):
   tf.io.gfile.makedirs(os.path.dirname(checkpoint_meta_dir))
   # Resume training when intermediate checkpoints are detected
   state = restore_checkpoint(checkpoint_meta_dir, state, config.device)
+  initial_epoch = int(state['epoch'])
   initial_step = int(state['step'])
 
   # Build data iterators
-  train_ds, eval_ds, _ = datasets.get_dataset(config,
-                                              uniform_dequantization=config.data.uniform_dequantization)
-  train_iter = iter(train_ds)  # pytype: disable=wrong-arg-types
-  eval_iter = iter(eval_ds)  # pytype: disable=wrong-arg-types
+  #train_ds, eval_ds, _ = datasets.get_dataset(config,
+  #                                            uniform_dequantization=config.data.uniform_dequantization)
+  #train_iter = iter(train_ds)  # pytype: disable=wrong-arg-types
+  #eval_iter = iter(eval_ds)  # pytype: disable=wrong-arg-types
+  train_dataset = datasets.HaarDecomposedDataset(config, config.data.uniform_dequantization, phase='train')
+  train_dataloader = DataLoader(train_dataset, batch_size=config.training.batch_size, num_workers=config.training.workers, shuffle=True)
+  val_dataset = datasets.HaarDecomposedDataset(config, config.data.uniform_dequantization, phase='train')
+  val_dataloader = DataLoader(val_dataset, batch_size=config.training.batch_size, num_workers=config.training.workers, shuffle=False)
 
   # Create data normalizer and its inverse
-  scaler = datasets.get_data_scaler(config)
-  inverse_scaler = datasets.get_data_inverse_scaler(config)
+  #scaler = datasets.get_data_scaler(config)
+  #inverse_scaler = datasets.get_data_inverse_scaler(config)
 
   # Create the Haar Transform
   haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
@@ -121,78 +127,77 @@ def train(config, workdir):
   if config.training.snapshot_sampling:
     sampling_shape = (config.training.batch_size, config.data.num_channels,
                       config.data.image_size, config.data.image_size)
-    sampling_fn = sampling.get_sampling_fn(config, sde, sampling_shape, inverse_scaler, sampling_eps)
+    sampling_fn = sampling.get_sampling_fn(config, sde, sampling_shape, sampling_eps)
 
   num_train_steps = config.training.n_iters
 
   # In case there are multiple hosts (e.g., TPU pods), only log to host 0
   logging.info("Starting training loop at step %d." % (initial_step,))
 
-  for step in range(initial_step, num_train_steps + 1):
-    # Convert data to JAX arrays and normalize them. Use ._numpy() to avoid copy.
-    batch = torch.from_numpy(next(train_iter)['image']._numpy()).to(config.device).float()
-    batch = batch.permute(0, 3, 1, 2)
-    batch = scaler(batch)
-
-    #addition
-    batch = haar_transform(batch) #apply the haar transform
-    batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
-
-    # Execute one training step
-    loss = train_step_fn(state, batch)
-    if step % config.training.log_freq == 0:
-      logging.info("step: %d, training_loss: %.5e" % (step, loss.item()))
-      writer.add_scalar("training_loss", loss, step)
-
-    # Save a temporary checkpoint to resume training after pre-emption periodically
-    if step != 0 and step % config.training.snapshot_freq_for_preemption == 0:
-      save_checkpoint(checkpoint_meta_dir, state)
-
-    # Report the loss on an evaluation dataset periodically
-    if step % config.training.eval_freq == 0:
-      eval_batch = torch.from_numpy(next(eval_iter)['image']._numpy()).to(config.device).float()
-      eval_batch = eval_batch.permute(0, 3, 1, 2)
-      eval_batch = scaler(eval_batch)
+  for epoch in range(initial_epoch, num_epochs + 1):
+    state['epoch'] = epoch
+    for i, batch in enumerate(train_dataloader):
+      step = initial_step + i
+      if step > num_train_steps:
+        break
+      state['step'] = step
 
       #addition
-      eval_batch = haar_transform(eval_batch) #apply the haar transform
-      eval_batch = permute_channels(eval_batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
+      batch = haar_transform(batch) #apply the haar transform
+      batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
 
-      eval_loss = eval_step_fn(state, eval_batch)
-      logging.info("step: %d, eval_loss: %.5e" % (step, eval_loss.item()))
-      writer.add_scalar("eval_loss", eval_loss.item(), step)
+      # Execute one training step
+      loss = train_step_fn(state, batch)
+      if step % config.training.log_freq == 0:
+        logging.info("step: %d, training_loss: %.5e" % (step, loss.item()))
+        writer.add_scalar("training_loss", loss, step)
 
-    # Save a checkpoint periodically and generate samples if needed
-    if step != 0 and step % config.training.snapshot_freq == 0 or step == num_train_steps:
-      # Save the checkpoint.
-      save_step = step // config.training.snapshot_freq
-      save_checkpoint(os.path.join(checkpoint_dir, f'checkpoint_{save_step}.pth'), state)
+      # Save a temporary checkpoint to resume training after pre-emption periodically
+      if step != 0 and step % config.training.snapshot_freq_for_preemption == 0:
+        save_checkpoint(checkpoint_meta_dir, state)
 
-      # Generate and save samples
-      if config.training.snapshot_sampling:
-        ema.store(score_model.parameters())
-        ema.copy_to(score_model.parameters())
-        sample, n = sampling_fn(score_model)
-        ema.restore(score_model.parameters())
-        this_sample_dir = os.path.join(sample_dir, "iter_{}".format(step))
-        tf.io.gfile.makedirs(this_sample_dir)
+      # Report the loss on an evaluation dataset periodically
+      if step % config.training.eval_freq == 0:
+        for batch in val_dataloader:
+          #addition
+          batch = haar_transform(batch) #apply the haar transform
+          batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
 
-        #sample = np.clip(sample.permute(0, 2, 3, 1).cpu().numpy() * 255, 0, 255).astype(np.uint8)
-        #with tf.io.gfile.GFile(
-        #    os.path.join(this_sample_dir, "sample.np"), "wb") as fout:
-        #  np.save(fout, sample)
+          eval_loss = eval_step_fn(state, eval_batch)
+          logging.info("step: %d, eval_loss: %.5e" % (step, eval_loss.item()))
+          writer.add_scalar("eval_loss", eval_loss.item(), step)
 
-        normalised_sample = normalise_per_band(sample)
-        haar_grid = create_supergrid(normalised_sample)
-        with tf.io.gfile.GFile(
-            os.path.join(this_sample_dir, "haar_grid.png"), "wb") as fout:
-          save_image(haar_grid, fout)
-        
-        back_permuted_sample = permute_channels(sample, forward=False)
-        image_grid = haar_transform.inverse(back_permuted_sample)
-        with tf.io.gfile.GFile(
-            os.path.join(this_sample_dir, "image_grid.png"), "wb") as fout:
-          save_image(image_grid, fout, normalize=True)
+      # Save a checkpoint periodically and generate samples if needed
+      if step != 0 and step % config.training.snapshot_freq == 0 or step == num_train_steps:
+        # Save the checkpoint.
+        save_step = step // config.training.snapshot_freq
+        save_checkpoint(os.path.join(checkpoint_dir, f'checkpoint_{save_step}.pth'), state)
+
+        # Generate and save samples
+        if config.training.snapshot_sampling:
+          ema.store(score_model.parameters())
+          ema.copy_to(score_model.parameters())
+          sample, n = sampling_fn(score_model)
+          ema.restore(score_model.parameters())
+          this_sample_dir = os.path.join(sample_dir, "iter_{}".format(step))
+          tf.io.gfile.makedirs(this_sample_dir)
+
+          #sample = np.clip(sample.permute(0, 2, 3, 1).cpu().numpy() * 255, 0, 255).astype(np.uint8)
+          #with tf.io.gfile.GFile(
+          #    os.path.join(this_sample_dir, "sample.np"), "wb") as fout:
+          #  np.save(fout, sample)
+
+          normalised_sample = normalise_per_band(sample)
+          haar_grid = create_supergrid(normalised_sample)
+          with tf.io.gfile.GFile(
+              os.path.join(this_sample_dir, "haar_grid.png"), "wb") as fout:
+            save_image(haar_grid, fout)
+          
+          back_permuted_sample = permute_channels(sample, forward=False)
+          image_grid = haar_transform.inverse(back_permuted_sample)
+          with tf.io.gfile.GFile(
+              os.path.join(this_sample_dir, "image_grid.png"), "wb") as fout:
+            save_image(image_grid, fout, normalize=True)
 
 
 def evaluate(config,
