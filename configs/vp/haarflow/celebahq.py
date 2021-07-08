@@ -64,7 +64,7 @@ def get_config():
   evaluate.bpd_dataset = 'test'
 
   # data
-  data = config.data
+  config.data = data = ml_collections.ConfigDict()
   data.dataset = 'celebaHQ'
   data.create_dataset = True
   data.split = [0.8, 0.1, 0.1]
