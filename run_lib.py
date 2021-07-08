@@ -134,7 +134,7 @@ def train(config, workdir):
   # In case there are multiple hosts (e.g., TPU pods), only log to host 0
   logging.info("Starting training loop at step %d." % (initial_step,))
 
-  for epoch in range(initial_epoch, num_epochs + 1):
+  for epoch in range(initial_epoch, config.training.num_epochs + 1):
     state['epoch'] = epoch
     for i, batch in enumerate(train_dataloader):
       step = initial_step + i

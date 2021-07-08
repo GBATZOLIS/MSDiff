@@ -28,6 +28,7 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   config.training.batch_size = 64
   training.workers = 4
+  training.num_epochs = 10000
   training.n_iters = 2400001
   training.snapshot_freq = 50000
   training.log_freq = 50
@@ -72,7 +73,8 @@ def get_config():
   data.highest_resolution = 1024 #highest available resolution of the dataset
   data.target_resolution = 64 #this should remain constant for an experiment
   data.image_size = 64 #we vary this for training on different resolutions
-  data.level = math.log(data.target_resolution // data.image_size, 2) 
+  data.level = math.log(data.target_resolution // data.image_size, 2)
+  data.effective_image_size = data.image_size // 2 #actual image size after preprocessing. Divided by two when using haar tranform.
   data.max_haar_depth = 3 #maximum depth of multi-level haar tranform -> 1+data.max_haar_depth resolution levels.
   data.centered = False
   data.random_flip = False
