@@ -231,4 +231,4 @@ class HaarDecomposedDataset(data.Dataset):
         
   def __len__(self):
       """Return the total number of images."""
-      return len(self.imagefiles)
+      return len(self.image_files)
