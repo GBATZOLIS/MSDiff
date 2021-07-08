@@ -159,7 +159,7 @@ def train(config, workdir):
         save_checkpoint(checkpoint_meta_dir, state)
 
       # Report the loss on an evaluation dataset periodically
-      if step % config.training.eval_freq == 10:
+      if step % config.training.eval_freq == 100:
         for batch in val_dataloader:
           #addition
           batch = batch.to(config.device)
