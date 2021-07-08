@@ -210,6 +210,8 @@ class HaarDecomposedDataset(data.Dataset):
       self.image_files = glob.glob(os.path.join(config.data.base_dir, config.data.dataset, str(config.data.image_size), phase, '*.npy'))
     else:
       raise Exception('Invalid haar level.')
+
+    print(self.image_files)
     
     #preprocessing operations
     self.random_flip = config.data.random_flip
