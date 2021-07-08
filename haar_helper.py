@@ -96,7 +96,7 @@ def create_haar_dataset(base_image_dir, highest_resolution, target_resolution, l
     phase_dataset = create_train_val_test_index_dict(total_num_images, split)
 
     for counter, img_file in tqdm(enumerate(sorted(os.listdir(os.path.join(base_image_dir, 'resolution_'+str(highest_resolution)))))):
-        if counter>3000:
+        if counter>500:
             break
 
         image = Image.open(os.path.join(base_image_dir, 'resolution_'+str(highest_resolution), img_file))
