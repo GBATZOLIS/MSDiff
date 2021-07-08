@@ -96,7 +96,7 @@ def train(config, workdir):
   #inverse_scaler = datasets.get_data_inverse_scaler(config)
 
   # Create the Haar Transform
-  haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
+  haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False).to(config.device)
 
   # Setup SDEs
   if config.training.sde.lower() == 'vpsde':
