@@ -78,8 +78,15 @@ def train(config, workdir):
   tf.io.gfile.makedirs(os.path.dirname(checkpoint_meta_dir))
   # Resume training when intermediate checkpoints are detected
   state = restore_checkpoint(checkpoint_meta_dir, state, config.device)
-  initial_epoch = int(state['epoch'])
-  initial_step = int(state['step'])
+  
+  def restore_timestamp(timestamp, state):
+    if timestamp in state.keys():
+      return state[timestamp]
+    else:
+      return 0
+
+  initial_epoch = restore_timestamp('epoch', state)
+  initial_step = restore_timestamp('step', state)
 
   # Build data iterators
   #train_ds, eval_ds, _ = datasets.get_dataset(config,

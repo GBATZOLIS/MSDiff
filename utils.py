@@ -16,6 +16,8 @@ def restore_checkpoint(ckpt_dir, state, device):
     state['model'].load_state_dict(loaded_state['model'], strict=False)
     state['ema'].load_state_dict(loaded_state['ema'])
     state['step'] = loaded_state['step']
+    if 'epoch' in loaded_state.keys():
+      state['epoch'] = loaded_state['epoch']
     return state
 
 
@@ -24,6 +26,7 @@ def save_checkpoint(ckpt_dir, state):
     'optimizer': state['optimizer'].state_dict(),
     'model': state['model'].state_dict(),
     'ema': state['ema'].state_dict(),
-    'step': state['step']
+    'step': state['step'],
+    'epoch': state['epoch']
   }
   torch.save(saved_state, ckpt_dir)
