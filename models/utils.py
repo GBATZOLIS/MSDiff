@@ -117,7 +117,8 @@ def get_model_fn(model, train=False):
       A tuple of (model output, new mutable states)
     """
     if not train:
-      model.eval()
+      #model.eval()
+      model.train()
       return model(x, labels)
     else:
       model.train()
