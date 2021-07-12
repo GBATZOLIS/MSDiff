@@ -219,9 +219,12 @@ def train(config, workdir):
           #check reconstruction.
           rec_haar = haar_transform(image_grid)
           permuted_rec_haar = permute_channels(rec_haar)
+          normalised_permuted_rec_haar = normalise_per_band(permuted_rec_haar)
+          rec_haar_grid = create_supergrid(normalised_permuted_rec_haar)
+
           with tf.io.gfile.GFile(
               os.path.join(this_sample_dir, "rec_haar_grid.png"), "wb") as fout:
-            save_image(permuted_rec_haar, fout)
+            save_image(rec_haar_grid, fout)
 
 
 def evaluate(config,
