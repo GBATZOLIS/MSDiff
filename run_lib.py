@@ -210,9 +210,18 @@ def train(config, workdir):
           
           back_permuted_sample = permute_channels(sample, forward=False)
           image_grid = haar_transform.inverse(back_permuted_sample)
+          print('image grid: min: %.4f - max: %.4f ' % (image_grid.min(), image_grid.max()))
+
           with tf.io.gfile.GFile(
               os.path.join(this_sample_dir, "image_grid.png"), "wb") as fout:
             save_image(image_grid, fout, normalize=True)
+
+          #check reconstruction.
+          rec_haar = haar_transform(image_grid)
+          permuted_rec_haar = permute_channels(rec_haar)
+          with tf.io.gfile.GFile(
+              os.path.join(this_sample_dir, "rec_haar_grid.png"), "wb") as fout:
+            save_image(permuted_rec_haar, fout)
 
 
 def evaluate(config,
