@@ -67,7 +67,7 @@ def get_config():
   # data
   config.data = data = ml_collections.ConfigDict()
   data.dataset = 'celebaHQ'
-  data.create_dataset = True
+  data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
   data.base_dir = 'datasets'
   data.highest_resolution = 1024 #highest available resolution of the dataset
