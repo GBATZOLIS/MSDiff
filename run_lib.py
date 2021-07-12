@@ -177,14 +177,7 @@ def train(config, workdir):
           batch = batch.to(config.device)
           batch = haar_transform(batch) #apply the haar transform
           batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
-
-          normalised_batch = normalise_per_band(batch)
-          val_rec_haar_grid = create_supergrid(normalised_batch)
-
-          with tf.io.gfile.GFile(
-              os.path.join(this_sample_dir, "val_rec_haar_grid.png"), "wb") as fout:
-            save_image(val_rec_haar_grid, fout)
-
+          
           eval_loss = eval_step_fn(state, batch)
           logging.info("step: %d, eval_loss: %.5e" % (step, eval_loss.item()))
           writer.add_scalar("eval_loss", eval_loss.item(), step)
