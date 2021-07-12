@@ -179,3 +179,4 @@ def create_haar_dataset(base_image_dir, highest_resolution, target_resolution, l
 #base_image_dir = '/Users/gbatz97/Desktop/ScoreBasedConditionalGeneration/datasets/celebaHQ'
 #highest_resolution, target_resolution, levels = 1024, 64, 3
 #create_haar_dataset(base_image_dir, highest_resolution, target_resolution, levels, split=[0.9, 0.05, 0.05])
+
