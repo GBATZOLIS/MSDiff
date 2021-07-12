@@ -177,7 +177,7 @@ def train(config, workdir):
           batch = batch.to(config.device)
           batch = haar_transform(batch) #apply the haar transform
           batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
-          
+
           eval_loss = eval_step_fn(state, batch)
           logging.info("step: %d, eval_loss: %.5e" % (step, eval_loss.item()))
           writer.add_scalar("eval_loss", eval_loss.item(), step)
@@ -210,7 +210,7 @@ def train(config, workdir):
           
           back_permuted_sample = permute_channels(sample, forward=False)
           image_grid = haar_transform.inverse(back_permuted_sample)
-          print('image grid: min: %.4f - max: %.4f ' % (image_grid.min(), image_grid.max()))
+          #print('image grid: min: %.4f - max: %.4f ' % (image_grid.min(), image_grid.max()))
 
           with tf.io.gfile.GFile(
               os.path.join(this_sample_dir, "image_grid.png"), "wb") as fout:
