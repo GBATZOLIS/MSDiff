@@ -133,7 +133,7 @@ def train(config, workdir):
   # Building sampling functions
   if config.training.snapshot_sampling:
     sampling_shape = (config.training.batch_size, config.data.num_channels,
-                      config.data.image_size, config.data.image_size)
+                      config.data.effective_image_size, config.data.effective_image_size)
     sampling_fn = sampling.get_sampling_fn(config, sde, sampling_shape, sampling_eps)
 
   num_train_steps = config.training.n_iters
