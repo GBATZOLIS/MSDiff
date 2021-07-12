@@ -152,13 +152,13 @@ def train(config, workdir):
 
       #addition
       batch = batch.to(config.device)
-      start_batch = batch.clone()
+      ##start_batch = batch.clone()
       batch = haar_transform(batch) #apply the haar transform
       batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
 
-      back_batch = permute_channels(batch, forward=False)
-      back_batch_inverse_haar = haar_transform.inverse(back_batch)
-      print(torch.sum(torch.abs(back_batch_inverse_haar - start_batch)))
+      ##back_batch = permute_channels(batch, forward=False)
+      ##back_batch_inverse_haar = haar_transform.inverse(back_batch)
+      ##print(torch.sum(torch.abs(back_batch_inverse_haar - start_batch)))
 
       # Execute one training step
       loss = train_step_fn(state, batch)

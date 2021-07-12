@@ -50,9 +50,10 @@ def normalise(x, value_range=None):
     return x
 
 def normalise_per_band(permuted_haar_image):
+    normalised_image = permuted_haar_image.clone()
     for i in range(4):
-        permuted_haar_image[:, 3*i:3*(i+1), :, :] = normalise(permuted_haar_image[:, 3*i:3*(i+1), :, :])
-    return permuted_haar_image #normalised permuted haar transformed image
+        normalised_image[:, 3*i:3*(i+1), :, :] = normalise(permuted_haar_image[:, 3*i:3*(i+1), :, :])
+    return normalised_image #normalised permuted haar transformed image
 
 def create_supergrid(normalised_permuted_haar_images):
     haar_super_grid = []
