@@ -158,7 +158,7 @@ def train(config, workdir):
 
       back_batch = permute_channels(batch, forward=False)
       back_batch_inverse_haar = haar_transform.inverse(back_batch)
-      print(torch.sum(torch.abs(back_batch - start_batch)))
+      print(torch.sum(torch.abs(back_batch_inverse_haar - start_batch)))
 
       # Execute one training step
       loss = train_step_fn(state, batch)
