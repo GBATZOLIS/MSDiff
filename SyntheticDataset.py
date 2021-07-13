@@ -84,9 +84,9 @@ class SyntheticDataModule(pl.LightningDataModule):
         super(SyntheticDataModule, self).__init__()
         #Synthetic Dataset arguments
         self.data_samples=config.data_samples
-        self.dataset_type=config.dataset_type
-        self.mixtures = config.mixtures
-        self.return_mixtures = config.return_mixtures
+        self.dataset_type=config.data.dataset_type
+        self.mixtures = config.data.mixtures
+        self.return_mixtures = config.data.return_mixtures
         self.split = config.data.split
 
         #DataLoader arguments

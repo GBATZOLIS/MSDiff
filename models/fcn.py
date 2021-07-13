@@ -6,10 +6,10 @@ from . import utils
 class FCN(nn.Module):
     def __init__(self, config): 
         super(FCN, self).__init__()
-        state_size = config.state_size
-        hidden_layers = config.hidden_layers
-        hidden_nodes = config.hidden_nodes
-        dropout = config.dropout
+        state_size = config.model.state_size
+        hidden_layers = config.model.hidden_layers
+        hidden_nodes = config.model.hidden_nodes
+        dropout = config.model.dropout
 
         input_size = state_size + 1 #+1 because of the time dimension.
         output_size = state_size
