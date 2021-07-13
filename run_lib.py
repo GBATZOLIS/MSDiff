@@ -26,12 +26,13 @@ import tensorflow as tf
 import tensorflow_gan as tfgan
 import logging
 # Keep the import below for registering all model definitions
-from models import ddpm, ncsnv2, ncsnpp
+from models import ddpm, ncsnv2, fcn
 import losses
 import sampling
 from models import utils as mutils
 from models.ema import ExponentialMovingAverage
 import datasets
+from SyntheticDataset import SyntheticDataModule, scatter_plot
 import evaluation
 import likelihood
 import sde_lib
@@ -88,22 +89,10 @@ def train(config, workdir):
   initial_epoch = restore_timestamp('epoch', state)
   initial_step = restore_timestamp('step', state)
 
-  # Build data iterators
-  #train_ds, eval_ds, _ = datasets.get_dataset(config,
-  #                                            uniform_dequantization=config.data.uniform_dequantization)
-  #train_iter = iter(train_ds)  # pytype: disable=wrong-arg-types
-  #eval_iter = iter(eval_ds)  # pytype: disable=wrong-arg-types
-  train_dataset = datasets.HaarDecomposedDataset(config, config.data.uniform_dequantization, phase='train')
-  train_dataloader = DataLoader(train_dataset, batch_size=config.training.batch_size, num_workers=config.training.workers, shuffle=True)
-  val_dataset = datasets.HaarDecomposedDataset(config, config.data.uniform_dequantization, phase='train')
-  val_dataloader = DataLoader(val_dataset, batch_size=config.training.batch_size, num_workers=config.training.workers, shuffle=False)
-
-  # Create data normalizer and its inverse
-  #scaler = datasets.get_data_scaler(config)
-  #inverse_scaler = datasets.get_data_inverse_scaler(config)
-
-  # Create the Haar Transform
-  haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False).to(config.device)
+  datamodule = SyntheticDataModule(config)
+  datamodule.setup()
+  train_dataloader = datamodule.train_dataloader()
+  val_dataloader = datamodule.val_dataloader()
 
   # Setup SDEs
   if config.training.sde.lower() == 'vpsde':
@@ -150,15 +139,7 @@ def train(config, workdir):
         break
       state['step'] = step
 
-      #addition
       batch = batch.to(config.device)
-      ##start_batch = batch.clone()
-      batch = haar_transform(batch) #apply the haar transform
-      batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
-
-      ##back_batch = permute_channels(batch, forward=False)
-      ##back_batch_inverse_haar = haar_transform.inverse(back_batch)
-      ##print(torch.sum(torch.abs(back_batch_inverse_haar - start_batch)))
 
       # Execute one training step
       loss = train_step_fn(state, batch)
@@ -175,9 +156,6 @@ def train(config, workdir):
         for batch in val_dataloader:
           #addition
           batch = batch.to(config.device)
-          batch = haar_transform(batch) #apply the haar transform
-          batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
-
           eval_loss = eval_step_fn(state, batch)
           logging.info("step: %d, eval_loss: %.5e" % (step, eval_loss.item()))
           writer.add_scalar("eval_loss", eval_loss.item(), step)
@@ -197,34 +175,9 @@ def train(config, workdir):
           this_sample_dir = os.path.join(sample_dir, "iter_{}".format(step))
           tf.io.gfile.makedirs(this_sample_dir)
 
-          #sample = np.clip(sample.permute(0, 2, 3, 1).cpu().numpy() * 255, 0, 255).astype(np.uint8)
-          #with tf.io.gfile.GFile(
-          #    os.path.join(this_sample_dir, "sample.np"), "wb") as fout:
-          #  np.save(fout, sample)
-
-          normalised_sample = normalise_per_band(sample)
-          haar_grid = create_supergrid(normalised_sample)
-          with tf.io.gfile.GFile(
-              os.path.join(this_sample_dir, "haar_grid.png"), "wb") as fout:
-            save_image(haar_grid, fout)
-          
-          back_permuted_sample = permute_channels(sample, forward=False)
-          image_grid = haar_transform.inverse(back_permuted_sample)
-          #print('image grid: min: %.4f - max: %.4f ' % (image_grid.min(), image_grid.max()))
-
-          with tf.io.gfile.GFile(
-              os.path.join(this_sample_dir, "image_grid.png"), "wb") as fout:
-            save_image(torch.clamp(image_grid, min=0, max=1), fout, normalize=True)
-
-          #check reconstruction.
-          #rec_haar = haar_transform(image_grid)
-          #permuted_rec_haar = permute_channels(rec_haar)
-          #normalised_permuted_rec_haar = normalise_per_band(permuted_rec_haar)
-          #rec_haar_grid = create_supergrid(normalised_permuted_rec_haar)
-
-          #with tf.io.gfile.GFile(
-          #    os.path.join(this_sample_dir, "rec_haar_grid.png"), "wb") as fout:
-          #  save_image(rec_haar_grid, fout)
+          #create a 2D grid with all the points and save it.
+          pytorch_image_grid = scatter_plot(sample)
+          save_image(pytorch_image_grid, fp=os.path.join(this_sample_dir, "samples_from_source_distribution.png"), normalize=True)
 
 
 def evaluate(config,

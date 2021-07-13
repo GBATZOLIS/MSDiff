@@ -181,3 +181,17 @@ def create_haar_dataset(base_image_dir, highest_resolution, target_resolution, l
 #highest_resolution, target_resolution, levels = 1024, 64, 3
 #create_haar_dataset(base_image_dir, highest_resolution, target_resolution, levels, split=[0.9, 0.05, 0.05])
 
+##testing of the forward and inverse haar pipeline.
+'''
+haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
+save_file = '/Users/gbatz97/Desktop/MRI_to_PET/datasets/celebA/train/001527.jpg'
+loaded_image = Image.open(save_file)
+loaded_image = torch.from_numpy(np.array(loaded_image)).float().unsqueeze(0)
+loaded_image = loaded_image.permute(0, 3, 1, 2)
+loaded_image = normalise(loaded_image, value_range=[0, 255])
+haar_image = haar_transform(loaded_image)
+haar_image = permute_channels(haar_image)
+haar_image = permute_channels(haar_image, forward=False)
+haar_image = haar_transform.inverse(haar_image)
+save_image(torch.clamp(haar_image, min=0, max=1), '/Users/gbatz97/Desktop/c.png')
+'''
