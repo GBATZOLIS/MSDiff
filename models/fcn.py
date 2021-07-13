@@ -31,6 +31,8 @@ class FCN(nn.Module):
         x_shape = x.shape
         t_shape = t.shape
 
+        print(x_shape, t_shape)
+
         if len(x_shape)==2 and len(t_shape)==0:
             #x_shape = (batchsize, state_size) --> sampling process - reverse SDE
             t = t.repeat((x_shape[0],1))
