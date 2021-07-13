@@ -36,6 +36,7 @@ class FCN(nn.Module):
         if len(x_shape)==2:
             #x_shape = (batchsize, state_size) --> sampling process - reverse SDE
             t = t.repeat((x_shape[0],1))
+            print(t.size())
             x = torch.cat([x, t], dim=1)
             x = self.mlp(x)
             return x
