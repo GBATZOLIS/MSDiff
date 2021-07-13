@@ -72,6 +72,7 @@ class SyntheticDataset(Dataset):
     
     def __getitem__(self, index):
         if self.return_mixtures:
+            print(self.data[index].size())
             return self.data[index], self.mixtures_indices[index]
         else:
             return self.data[index]
