@@ -92,11 +92,11 @@ class SyntheticDataModule(pl.LightningDataModule):
         #DataLoader arguments
         self.train_workers = config.training.workers
         self.val_workers = config.validation.workers
-        self.test_workers = config.evaluate.workers
+        self.test_workers = config.eval.workers
 
         self.train_batch = config.training.batch_size
         self.val_batch = config.validation.batch_size
-        self.test_batch = config.evaluate.batch_size
+        self.test_batch = config.eval.batch_size
         
     def setup(self, stage=None): 
         data = SyntheticDataset(self.data_samples, self.dataset_type, self.mixtures, self.return_mixtures)
