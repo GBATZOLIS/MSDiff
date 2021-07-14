@@ -29,8 +29,8 @@ def get_config():
   config.training.batch_size = 500
   training.workers = 4
   training.num_epochs = 10000
-  training.n_iters = 200000
-  training.snapshot_freq = 100
+  training.n_iters = 500000
+  training.snapshot_freq = 5000
   training.log_freq = 50
   training.eval_freq = 2500
   ## store additional checkpoints for preemption in cloud computing environments
@@ -51,7 +51,7 @@ def get_config():
   config.sampling = sampling = ml_collections.ConfigDict()
   sampling.method = 'pc'
   sampling.predictor = 'reverse_diffusion'
-  sampling.corrector = 'langevin'
+  sampling.corrector = 'none'
   sampling.n_steps_each = 1
   sampling.noise_removal = True
   sampling.probability_flow = False
@@ -88,7 +88,7 @@ def get_config():
   model.beta_min = 0.1
   # We use an adjusted beta max 
   # because the range is doubled in each level starting from the first level
-  model.beta_max = 25 #take the doubling value range into consideration.
+  model.beta_max = 25 #take the value range into consideration - consider the final perturbation kernels.
 
   model.name = 'fcn'
   model.state_size = data.dim
