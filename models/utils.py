@@ -156,7 +156,7 @@ def get_score_fn(sde, model, train=False, continuous=False):
         score = model_fn(x, labels)
         std = sde.sqrt_1m_alphas_cumprod.to(labels.device)[labels.long()]
 
-      score = -score / std[:, None, None, None]
+      score = -score / std[:, None]
       return score
 
   elif isinstance(sde, sde_lib.VESDE):

@@ -30,13 +30,9 @@ class FCN(nn.Module):
     def forward(self, x, t):
         x_shape = x.shape
         t_shape = t.shape
-
-        print(x_shape, t_shape)
-
         if len(x_shape)==2:
             #x_shape = (batchsize, state_size) --> sampling process - reverse SDE
             t = t.unsqueeze(-1)
-            print(t.size())
             x = torch.cat([x, t], dim=1)
             x = self.mlp(x)
             return x
