@@ -7,7 +7,9 @@ from PIL import Image
 #helper function for plotting samples from a 2D distribution.
 import matplotlib.pyplot as plt
 from PIL import Image
+import torchvision.transforms as transforms
 import io
+
 def scatter_plot(x, x_lim=None, y_lim=None, labels=None):
     assert len(x.shape)==2, 'x must have 2 dimensions to create a scatter plot.'
     fig = plt.figure()
@@ -20,7 +22,7 @@ def scatter_plot(x, x_lim=None, y_lim=None, labels=None):
     buf = io.BytesIO()
     plt.savefig(buf, format='jpeg')
     buf.seek(0)
-    image = PIL.Image.open(buf)
+    image = Image.open(buf)
     image = transforms.ToTensor()(image)
     plt.close()
     return image
