@@ -3,7 +3,7 @@ import torch
 import pytorch_lightning as pl
 from torch.utils.data import random_split, Dataset, DataLoader 
 import numpy as np
-
+from PIL import Image
 #helper function for plotting samples from a 2D distribution.
 import matplotlib.pyplot as plt
 from PIL import Image
