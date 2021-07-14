@@ -268,13 +268,21 @@ class LangevinCorrector(Corrector):
       alpha = torch.ones_like(t)
 
     for i in range(n_steps):
+      print('-----corrector-------')
       grad = score_fn(x, t)
+      print(grad.size())
       noise = torch.randn_like(x)
+      print(noise.size())
       grad_norm = torch.norm(grad.reshape(grad.shape[0], -1), dim=-1).mean()
+      print(grad_norm.size())
       noise_norm = torch.norm(noise.reshape(noise.shape[0], -1), dim=-1).mean()
+      print(noise_norm.size())
       step_size = (target_snr * noise_norm / grad_norm) ** 2 * 2 * alpha
       x_mean = x + step_size[:, None] * grad
+      print(x_mean.size())
       x = x_mean + torch.sqrt(step_size * 2)[:, None] * noise
+      print(x.size())
+      print('------------')
 
     return x, x_mean
 
