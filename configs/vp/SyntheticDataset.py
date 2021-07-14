@@ -30,7 +30,7 @@ def get_config():
   training.workers = 4
   training.num_epochs = 10000
   training.n_iters = 200000
-  training.snapshot_freq = 5000
+  training.snapshot_freq = 100
   training.log_freq = 50
   training.eval_freq = 2500
   ## store additional checkpoints for preemption in cloud computing environments
