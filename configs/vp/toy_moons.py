@@ -28,8 +28,8 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   config.training.batch_size = 500
   training.workers = 4
-  training.num_epochs = 10000
-  training.n_iters = 500000
+  training.num_epochs = 10  
+  training.n_iters = 10000
   training.snapshot_freq = 5000
   training.log_freq = 50
   training.eval_freq = 2500
@@ -71,14 +71,10 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.dataset_type = 'GaussianBubbles'
-  data.create_dataset = False
-  data.split = [0.8, 0.1, 0.1]
   data.data_samples = 50000
-  data.mixtures = 4
-  data.return_mixtures = False #whether to return the mixture class of each point in the mixture.
   data.dim = 2
   data.num_channels = 0 
+  data.noise_scale = 0.015
   
 
   # model
@@ -104,7 +100,7 @@ def get_config():
   config.optim = optim = ml_collections.ConfigDict()
   optim.weight_decay = 0
   optim.optimizer = 'Adam'
-  optim.lr = 1e-4
+  optim.lr = 2e-5
   optim.beta1 = 0.9
   optim.eps = 1e-8
   optim.warmup = 5000

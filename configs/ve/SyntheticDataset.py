@@ -40,7 +40,7 @@ def get_config():
   training.likelihood_weighting = False
   training.continuous = True
   training.reduce_mean = False #look more for that setting
-  training.sde = 'vpsde'
+  training.sde = 'vesde'
 
   # validation
   config.validation = validation = ml_collections.ConfigDict()
@@ -83,7 +83,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.sigma_max = 378
+  model.sigma_max = 4
   model.sigma_min = 0.01
   model.beta_min = 0.1
   # We use an adjusted beta max 
@@ -104,7 +104,7 @@ def get_config():
   config.optim = optim = ml_collections.ConfigDict()
   optim.weight_decay = 0
   optim.optimizer = 'Adam'
-  optim.lr = 1e-4
+  optim.lr = 2e-5
   optim.beta1 = 0.9
   optim.eps = 1e-8
   optim.warmup = 5000

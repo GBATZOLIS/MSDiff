@@ -407,9 +407,9 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
       for i in range(sde.N):
         t = timesteps[i]
         vec_t = torch.ones(shape[0], device=t.device) * t
-        print(x.size())
+        #print(x.size())
         x, x_mean = corrector_update_fn(x, vec_t, model=model)
-        print(x.size())
+        #print(x.size())
         x, x_mean = predictor_update_fn(x, vec_t, model=model)
 
       return x_mean if denoise else x, sde.N * (n_steps + 1)
