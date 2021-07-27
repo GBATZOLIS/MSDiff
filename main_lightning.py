@@ -5,7 +5,7 @@ from absl import flags
 from ml_collections.config_flags import config_flags
 import pytorch_lightning as pl
 from matplotlib import pyplot as plt
-from lightning import SdeGenerativeModel
+from model_lightning import SdeGenerativeModel
 from models import ddpm, ncsnv2, fcn
 from SyntheticDataset import SyntheticDataModule
 from callbacks import VisualisationCallback

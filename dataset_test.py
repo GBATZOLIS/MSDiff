@@ -4,7 +4,7 @@ from absl import flags
 from ml_collections.config_flags import config_flags
 from SyntheticDataset import SyntheticDataModule
 from SyntheticDataset import scatter_plot
-from lightning import SdeGenerativeModel
+from model_lightning import SdeGenerativeModel
 
 
 FLAGS = flags.FLAGS

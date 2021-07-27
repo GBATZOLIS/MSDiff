@@ -11,8 +11,7 @@ from models import ddpm, ncsnv2, fcn
 class SdeGenerativeModel(pl.LightningModule):
     def __init__(self, config, *args, **kwargs):
         super().__init__()
-        self.save_hyperparameters()
-
+        self.save_hyperparameters(config)
         # Initialize model
         self.config = config
         self.score_model = mutils.create_model(config)
@@ -33,17 +32,17 @@ class SdeGenerativeModel(pl.LightningModule):
 
         # Set up loss functions
         # Build one-step training and evaluation functions
-        continuous = config.training.continuous
-        reduce_mean = config.training.reduce_mean
-        likelihood_weighting = config.training.likelihood_weighting
+        self.continuous = config.training.continuous
+        self.reduce_mean = config.training.reduce_mean
+        self.likelihood_weighting = config.training.likelihood_weighting
         self.train_step_fn = losses_lightning.get_step_fn(sde, train=True, 
-                                            reduce_mean=reduce_mean, continuous=continuous,
-                                            likelihood_weighting=likelihood_weighting)
+                                            reduce_mean=self.reduce_mean, continuous=self.continuous,
+                                            likelihood_weighting=self.likelihood_weighting)
 
         
         self.eval_step_fn = losses_lightning.get_step_fn(sde, train=False, 
-                                            reduce_mean=reduce_mean, continuous=continuous,
-                                            likelihood_weighting=likelihood_weighting)
+                                            reduce_mean=self.reduce_mean, continuous=self.continuous,
+                                            likelihood_weighting=self.likelihood_weighting)
         # Building sampling functions
         if config.training.snapshot_sampling:
             sampling_shape = (config.training.batch_size, config.data.dim)
@@ -54,11 +53,10 @@ class SdeGenerativeModel(pl.LightningModule):
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
     
-    #def validation_step(self, batch, batch_idx):
-        #batch=batch[0]
-        #return self.eval_step_fn(self.score_model, batch)
+    def validation_step(self, batch, batch_idx):
+        return self.eval_step_fn(self.score_model, batch)
     
-    def sample(self):
+    def sample(self):   
         sample, n = self.sampling_fn(self.score_model)
         return sample        
 
