@@ -10,7 +10,9 @@ from PIL import Image
 import torchvision.transforms as transforms
 import io
 
-def scatter_plot(x, x_lim=None, y_lim=None, labels=None):
+from torchvision.transforms.functional import normalize
+
+def scatter_plot(x, x_lim=None, y_lim=None, labels=None, save=False):
     assert len(x.shape)==2, 'x must have 2 dimensions to create a scatter plot.'
     fig = plt.figure()
     x1 = x[:,0].cpu().numpy()
@@ -21,6 +23,8 @@ def scatter_plot(x, x_lim=None, y_lim=None, labels=None):
         plt.ylim(y_lim)
     buf = io.BytesIO()
     plt.savefig(buf, format='jpeg')
+    if save:
+        plt.savefig('out.jpg', dpi=300)
     buf.seek(0)
     image = Image.open(buf)
     image = transforms.ToTensor()(image)
@@ -28,11 +32,11 @@ def scatter_plot(x, x_lim=None, y_lim=None, labels=None):
     return image
 
 class SyntheticDataset(Dataset):
-    def __init__(self, data_samples, dataset_type='GaussianBubbles', mixtures=4, return_mixtures=False):
+    def __init__(self, data_samples, dataset_type='GaussianBubbles', mixtures=4, return_mixtures=False, normalize=True):
         super(SyntheticDataset, self).__init__()
         #self.data, self.labels = self.read_dataset(filename)
         #self.transform = transforms.Compose([convert_to_robust_range])
-
+        self.normalize = normalize
         self.data_samples = data_samples
         self.dataset_type = dataset_type
         self.mixtures = mixtures
@@ -69,16 +73,19 @@ class SyntheticDataset(Dataset):
             #comp = D.independent.Independent(D.Normal(calculate_centers(n), 0.2*torch.ones(n,2)), 1)
             #gmm = D.mixture_same_family.MixtureSameFamily(mix, comp)
             #data = gmm.sample(torch.Size([data_samples])).float()
-
+            if normalize:
+                data[:,0] = data[:,0] / torch.max(torch.abs(data[:,0]))
+                data[:,1] = data[:,1] / torch.max(torch.abs(data[:,1]))
             return data, mixtures_indices
     
     def __getitem__(self, index):
         if self.return_mixtures:
             print(self.data[index].size())
-            return self.data[index], self.mixtures_indices[index]
+            item = self.data[index], self.mixtures_indices[index]
         else:
-            return self.data[index]
-    
+            item = self.data[index]
+        return item 
+
     def __len__(self):
         return len(self.data)
 
@@ -100,6 +107,8 @@ class SyntheticDataModule(pl.LightningDataModule):
         self.train_batch = config.training.batch_size
         self.val_batch = config.validation.batch_size
         self.test_batch = config.eval.batch_size
+
+        #self.normalize = config.normalize
         
     def setup(self, stage=None): 
         data = SyntheticDataset(self.data_samples, self.dataset_type, self.mixtures, self.return_mixtures)
