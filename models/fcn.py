@@ -25,8 +25,6 @@ class FCN(nn.Module):
             self.mlp.append(nn.ReLU())
         
         self.mlp.append(nn.Linear(hidden_nodes, output_size))
-        # WARNUNG!
-        self.mlp.append(nn.Sigmoid())
         self.mlp = nn.Sequential(*self.mlp)
              
     def forward(self, x, t):

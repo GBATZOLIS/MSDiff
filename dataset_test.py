@@ -4,6 +4,8 @@ from absl import flags
 from ml_collections.config_flags import config_flags
 from SyntheticDataset import SyntheticDataModule
 from SyntheticDataset import scatter_plot
+from lightning import SdeGenerativeModel
+
 
 FLAGS = flags.FLAGS
 
@@ -18,6 +20,10 @@ def main(argv):
     loader = data.train_dataloader()
     batch = next(iter(loader))
     scatter_plot(batch, save=True)
+
+    model = SdeGenerativeModel(config)
+    x = model.sample()
+    scatter_plot(x, save=True)
 
 if __name__ == "__main__":
   app.run(main)

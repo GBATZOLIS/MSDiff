@@ -32,7 +32,7 @@ def scatter_plot(x, x_lim=None, y_lim=None, labels=None, save=False):
     return image
 
 class SyntheticDataset(Dataset):
-    def __init__(self, data_samples, dataset_type='GaussianBubbles', mixtures=4, return_mixtures=False, normalize=True):
+    def __init__(self, data_samples, dataset_type='GaussianBubbles', mixtures=4, return_mixtures=False, normalize=False):
         super(SyntheticDataset, self).__init__()
         #self.data, self.labels = self.read_dataset(filename)
         #self.transform = transforms.Compose([convert_to_robust_range])

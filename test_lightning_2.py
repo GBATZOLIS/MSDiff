@@ -1,3 +1,4 @@
+from pytorch_lightning import callbacks
 import torch
 from absl import app
 from absl import flags
@@ -7,6 +8,7 @@ from matplotlib import pyplot as plt
 from lightning import SdeGenerativeModel
 from models import ddpm, ncsnv2, fcn
 from SyntheticDataset import SyntheticDataModule
+from callbacks import VisualisationCallback
 
 FLAGS = flags.FLAGS
 
@@ -16,7 +18,7 @@ flags.DEFINE_string("workdir", None, "Work directory.")
 flags.DEFINE_enum("mode", None, ["train", "eval"], "Running mode: train or eval")
 flags.DEFINE_string("eval_folder", "eval",
                     "The folder name for storing evaluation results")
-flags.mark_flags_as_required(["workdir", "config", "mode"])
+flags.mark_flags_as_required(["config", "mode"])
 
 
 def main(argv):
@@ -26,7 +28,7 @@ def main(argv):
   train_dataloader = datamodule.train_dataloader()
 
   model = SdeGenerativeModel(config)
-  trainer = pl.Trainer(gpus=1,max_steps=int(4e5))
+  trainer = pl.Trainer(gpus=1,max_steps=int(4e5), callbacks=[VisualisationCallback()])
   trainer.fit(model, train_dataloader)
 
 if __name__ == "__main__":

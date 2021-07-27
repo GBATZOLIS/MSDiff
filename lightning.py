@@ -6,6 +6,7 @@ import sampling
 from models.ema import ExponentialMovingAverage
 from models import utils as mutils
 from utils import plot
+from models import ddpm, ncsnv2, fcn
 
 class SdeGenerativeModel(pl.LightningModule):
     def __init__(self, config, *args, **kwargs):
@@ -64,13 +65,5 @@ class SdeGenerativeModel(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = losses_lightning.get_optimizer(self.config, self.score_model.parameters())
         return optimizer
-
-    def on_epoch_end(self):
-        # log sampled images
-        if self.current_epoch % 100 == 0:
-            samples = self.sample()
-            samples_np =  samples.cpu().numpy()
-            image = plot(samples_np[:,0],samples_np[:,1], 'samples')
-            self.logger.experiment.add_image('samples', image, self.current_epoch)
 
 
