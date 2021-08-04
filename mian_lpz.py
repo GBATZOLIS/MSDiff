@@ -5,7 +5,7 @@ from absl import flags
 from ml_collections.config_flags import config_flags
 import pytorch_lightning as pl
 from matplotlib import pyplot as plt
-from model_lightning import SdeGenerativeModel
+from grad_estimator import SdeGenerativeModel_GradientEstimation
 from models import ddpm, ncsnv2, fcn
 from SyntheticDataset import SyntheticDataModule
 from callbacks import VisualisationCallback
@@ -27,7 +27,7 @@ def main(argv):
   datamodule.setup()
   train_dataloader = datamodule.train_dataloader()
 
-  model = SdeGenerativeModel(config)
+  model = SdeGenerativeModel_GradientEstimation(config)
   trainer = pl.Trainer(gpus=1,max_steps=int(4e5), callbacks=[VisualisationCallback()])
   trainer.fit(model, train_dataloader)
 

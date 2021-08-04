@@ -3,7 +3,7 @@ import torch
 import pytorch_lightning as pl
 from sklearn import datasets
 from matplotlib import pyplot as plt
-from lightning import SdeGenerativeModel
+from model_lightning import SdeGenerativeModel
 from models import ddpm, ncsnv2, fcn
 from configs.vp.toy_moons import get_config
 config = get_config()

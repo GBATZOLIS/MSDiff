@@ -5,12 +5,26 @@ import logging
 from matplotlib import pyplot as plt
 import io
 import PIL
+from torch._C import device
 import torchvision.transforms as transforms
 
 def plot(x, y, title):
         fig = plt.figure()
         plt.title(title)
         plt.scatter(x, y)
+        buf = io.BytesIO()
+        plt.savefig(buf, format='jpeg')
+        buf.seek(0)
+        image = PIL.Image.open(buf)
+        image = transforms.ToTensor()(image)
+        plt.close()
+        return image
+
+def plot_line(x, y, title):
+
+        fig = plt.figure()
+        plt.title(title)
+        plt.plot(x, y)
         buf = io.BytesIO()
         plt.savefig(buf, format='jpeg')
         buf.seek(0)
@@ -46,3 +60,22 @@ def save_checkpoint(ckpt_dir, state):
     'epoch': state['epoch']
   }
   torch.save(saved_state, ckpt_dir)
+
+
+def compute_grad(f,x,t):
+  """
+  Args:
+      - f - function 
+      - x - tensor shape (B, ...) where B is batch size
+  Retruns:
+      - grads - tensor of gradients for each x
+  """
+  device = x.device
+  x.requires_grad=True
+  ftx =f(x,t)
+  gradients = torch.autograd.grad(outputs=ftx, inputs=x,
+                                  grad_outputs=torch.ones(ftx.size()).to(device),
+                                  create_graph=True, retain_graph=True, only_inputs=True)[0]
+  gradients = gradients.view(gradients.size(0), -1)
+  return gradients
+
