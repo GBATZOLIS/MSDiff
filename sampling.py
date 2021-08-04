@@ -391,28 +391,38 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
                                           snr=snr,
                                           n_steps=n_steps)
 
-  def pc_sampler(model):
+  def pc_sampler(model, return_evolution=False):
     """ The PC sampler function.
 
     Args:
       model: A score model.
+      return_evolution: Returns evolution
     Returns:
       Samples, number of function evaluations.
+      If return_evolutions: evolution, time steps
     """
     with torch.no_grad():
       # Initial sample
       x = sde.prior_sampling(shape).to(device)
+      if return_evolution:
+        evolution = [x]
       timesteps = torch.linspace(sde.T, eps, sde.N, device=device)
 
       for i in range(sde.N):
         t = timesteps[i]
         vec_t = torch.ones(shape[0], device=t.device) * t
-        #print(x.size())
+        
         x, x_mean = corrector_update_fn(x, vec_t, model=model)
-        #print(x.size())
         x, x_mean = predictor_update_fn(x, vec_t, model=model)
 
-      return x_mean if denoise else x, sde.N * (n_steps + 1)
+        if return_evolution and i%2==1:
+          evolution.append(x)
+      
+      if return_evolution:
+        evolution = torch.stack(evolution)
+        return x_mean if denoise else x, evolution, timesteps
+      else:
+        return x_mean if denoise else x, sde.N * (n_steps + 1)
 
   return pc_sampler
 

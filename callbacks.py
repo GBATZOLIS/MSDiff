@@ -5,7 +5,7 @@ from utils import plot, plot_line, compute_grad
 class VisualisationCallback(Callback):
 
     def on_train_start(self, trainer, pl_module):
-        # pl_module.logger.log_hyperparams(params=pl_module.config.to_dict())
+        # pl_module.logxger.log_hyperparams(params=pl_module.config.to_dict())
         self.visualise_samples(pl_module)
 
     def on_epoch_end(self,trainer, pl_module):

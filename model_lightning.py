@@ -56,9 +56,13 @@ class SdeGenerativeModel(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         return self.eval_step_fn(self.score_model, batch)
     
-    def sample(self):   
-        sample, n = self.sampling_fn(self.score_model)
-        return sample        
+    def sample(self, return_evolution=False):   
+        if return_evolution:
+            sample, evolution, times = self.sampling_fn(self.score_model, return_evolution=True)        
+            return sample, evolution, times
+        else:
+            sample, n = self.sampling_fn(self.score_model)
+            return sample
 
     def configure_optimizers(self):
         optimizer = losses_lightning.get_optimizer(self.config, self.score_model.parameters())
