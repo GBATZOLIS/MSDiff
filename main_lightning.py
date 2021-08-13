@@ -15,6 +15,7 @@ FLAGS = flags.FLAGS
 config_flags.DEFINE_config_file(
   "config", None, "Training configuration.", lock_config=True)
 flags.DEFINE_string("workdir", None, "Work directory.")
+flags.DEFINE_string("resume", None, "Checkpoint directory.")
 flags.DEFINE_enum("mode", "train", ["train", "eval"], "Running mode: train or eval")
 flags.DEFINE_string("eval_folder", "eval",
                     "The folder name for storing evaluation results")
@@ -28,7 +29,16 @@ def main(argv):
   train_dataloader = datamodule.train_dataloader()
 
   model = SdeGenerativeModel(config)
-  trainer = pl.Trainer(gpus=1,max_steps=int(4e5), callbacks=[VisualisationCallback()])
+  if FLAGS.resume is not None:
+    trainer = pl.Trainer(gpus=1,
+                        max_epochs=int(1e4), 
+                        #callbacks=[VisualisationCallback()], 
+                        resume_from_checkpoint=FLAGS.resume)
+  else:  
+    trainer = pl.Trainer(gpus=1,
+                        max_steps=int(4e5), 
+                        #callbacks=[VisualisationCallback()]
+                        )
   trainer.fit(model, train_dataloader)
 
 if __name__ == "__main__":

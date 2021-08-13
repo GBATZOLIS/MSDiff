@@ -401,11 +401,13 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
       Samples, number of function evaluations.
       If return_evolutions: evolution, time steps
     """
+    if return_evolution:
+        evolution = []
+        times = []
+
     with torch.no_grad():
       # Initial sample
       x = sde.prior_sampling(shape).to(device)
-      if return_evolution:
-        evolution = [x]
       timesteps = torch.linspace(sde.T, eps, sde.N, device=device)
 
       for i in range(sde.N):
@@ -417,10 +419,12 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
 
         if return_evolution and i%2==1:
           evolution.append(x)
+          times.append(t)
       
       if return_evolution:
         evolution = torch.stack(evolution)
-        return x_mean if denoise else x, evolution, timesteps
+        times = torch.stack(times)
+        return x_mean if denoise else x, evolution, times
       else:
         return x_mean if denoise else x, sde.N * (n_steps + 1)
 

@@ -5,13 +5,13 @@ import sde_lib
 import sampling
 from models.ema import ExponentialMovingAverage
 from models import utils as mutils
-from utils import plot
+from utils import scatter
 from models import ddpm, ncsnv2, fcn
 
 class SdeGenerativeModel(pl.LightningModule):
     def __init__(self, config, *args, **kwargs):
         super().__init__()
-        self.save_hyperparameters(config.to_dict())
+        self.save_hyperparameters()
         # Initialize model
         self.config = config
         self.score_model = mutils.create_model(config)
