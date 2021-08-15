@@ -44,8 +44,9 @@ class BaseSdeGenerativeModel(pl.LightningModule):
 
         # Building sampling functions
         if config.training.snapshot_sampling:
-            sampling_shape = (config.training.batch_size, config.data.shape)
-            self.sampling_fn = sampling.get_sampling_fn(config, self.sde, sampling_shape, self.sampling_eps)
+            sampling_shape = [config.training.batch_size] +  config.data.shape
+            inverse_scaler = lambda x: x
+            self.sampling_fn = sampling.get_sampling_fn(config, self.sde, sampling_shape, inverse_scaler, self.sampling_eps)
     
     def training_step(self, batch, batch_idx):
         loss = self.train_loss_fn(self.score_model, batch)

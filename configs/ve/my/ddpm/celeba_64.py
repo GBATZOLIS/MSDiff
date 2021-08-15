@@ -88,26 +88,28 @@ def get_config():
   model.dropout = 0.1
   model.embedding_type = 'fourier'
 
-  model.name = 'ncsn'
-  model.scale_by_sigma = False
-  model.sigma_max = 1
-  model.num_scales = 10
-  model.ema_rate = 0.
-  model.normalization = 'InstanceNorm'
-  model.nonlinearity = 'elu'
+  model.name = 'ddpm'
+  model.scale_by_sigma = True
+  model.ema_rate = 0.999
+  model.normalization = 'GroupNorm'
+  model.nonlinearity = 'swish'
   model.nf = 128
-  model.interpolation = 'bilinear'
+  model.ch_mult = (1, 1, 2)
+  model.num_res_blocks = 2
+  model.attn_resolutions = (16, 8, 4)
+  model.resamp_with_conv = True
+  model.conditional = True
+  model.conv_size = 3
   
   # optim
   config.optim = optim = ml_collections.ConfigDict()
   optim.weight_decay = 0
   optim.optimizer = 'Adam'
-  optim.lr = 1e-3
+  optim.lr = 2e-4
   optim.beta1 = 0.9
-  optim.amsgrad = False
   optim.eps = 1e-8
-  optim.warmup = 0
-  optim.grad_clip = -1.  
+  optim.warmup = 5000
+  optim.grad_clip = 1.
 
   config.seed = 42
   config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')

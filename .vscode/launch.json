@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["--config", "configs/ve/my/ncsn/celeba_64.py"],
+            "args": ["--config", "configs/ve/my/ddpm/celeba_64.py"],
             "console": "integratedTerminal"
         },
         {

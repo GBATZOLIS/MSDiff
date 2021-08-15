@@ -77,15 +77,14 @@ def get_corrector(name):
   return _CORRECTORS[name]
 
 
-def get_sampling_fn(config, sde, shape, eps):
+def get_sampling_fn(config, sde, shape, inverse_scaler, eps):
   """Create a sampling function.
-
   Args:
     config: A `ml_collections.ConfigDict` object that contains all configuration information.
     sde: A `sde_lib.SDE` object that represents the forward SDE.
     shape: A sequence of integers representing the expected shape of a single sample.
+    inverse_scaler: The inverse data normalizer function.
     eps: A `float` number. The reverse-time SDE is only integrated to `eps` for numerical stability.
-
   Returns:
     A function that takes random states and a replicated training state and outputs samples with the
       trailing dimensions matching `shape`.
@@ -96,6 +95,7 @@ def get_sampling_fn(config, sde, shape, eps):
   if sampler_name.lower() == 'ode':
     sampling_fn = get_ode_sampler(sde=sde,
                                   shape=shape,
+                                  inverse_scaler=inverse_scaler,
                                   denoise=config.sampling.noise_removal,
                                   eps=eps,
                                   device=config.device)
@@ -107,6 +107,7 @@ def get_sampling_fn(config, sde, shape, eps):
                                  shape=shape,
                                  predictor=predictor,
                                  corrector=corrector,
+                                 inverse_scaler=inverse_scaler,
                                  snr=config.sampling.snr,
                                  n_steps=config.sampling.n_steps_each,
                                  probability_flow=config.sampling.probability_flow,
@@ -133,11 +134,9 @@ class Predictor(abc.ABC):
   @abc.abstractmethod
   def update_fn(self, x, t):
     """One update of the predictor.
-
     Args:
       x: A PyTorch tensor representing the current state
       t: A Pytorch tensor representing the current time step.
-
     Returns:
       x: A PyTorch tensor of the next state.
       x_mean: A PyTorch tensor. The next state without random noise. Useful for denoising.
@@ -158,11 +157,9 @@ class Corrector(abc.ABC):
   @abc.abstractmethod
   def update_fn(self, x, t):
     """One update of the corrector.
-
     Args:
       x: A PyTorch tensor representing the current state
       t: A PyTorch tensor representing the current time step.
-
     Returns:
       x: A PyTorch tensor of the next state.
       x_mean: A PyTorch tensor. The next state without random noise. Useful for denoising.
@@ -180,7 +177,7 @@ class EulerMaruyamaPredictor(Predictor):
     z = torch.randn_like(x)
     drift, diffusion = self.rsde.sde(x, t)
     x_mean = x + drift * dt
-    x = x_mean + diffusion[:, None] * np.sqrt(-dt) * z
+    x = x_mean + diffusion[:, None, None, None] * np.sqrt(-dt) * z
     return x, x_mean
 
 
@@ -193,7 +190,7 @@ class ReverseDiffusionPredictor(Predictor):
     f, G = self.rsde.discretize(x, t)
     z = torch.randn_like(x)
     x_mean = x - f
-    x = x_mean + G[:, None] * z
+    x = x_mean + G[:, None, None, None] * z
     return x, x_mean
 
 
@@ -213,10 +210,10 @@ class AncestralSamplingPredictor(Predictor):
     sigma = sde.discrete_sigmas[timestep]
     adjacent_sigma = torch.where(timestep == 0, torch.zeros_like(t), sde.discrete_sigmas.to(t.device)[timestep - 1])
     score = self.score_fn(x, t)
-    x_mean = x + score * (sigma ** 2 - adjacent_sigma ** 2)[:, None]
+    x_mean = x + score * (sigma ** 2 - adjacent_sigma ** 2)[:, None, None, None]
     std = torch.sqrt((adjacent_sigma ** 2 * (sigma ** 2 - adjacent_sigma ** 2)) / (sigma ** 2))
     noise = torch.randn_like(x)
-    x = x_mean + std[:, None] * noise
+    x = x_mean + std[:, None, None, None] * noise
     return x, x_mean
 
   def vpsde_update_fn(self, x, t):
@@ -224,9 +221,9 @@ class AncestralSamplingPredictor(Predictor):
     timestep = (t * (sde.N - 1) / sde.T).long()
     beta = sde.discrete_betas.to(t.device)[timestep]
     score = self.score_fn(x, t)
-    x_mean = (x + beta[:, None] * score) / torch.sqrt(1. - beta)[:, None]
+    x_mean = (x + beta[:, None, None, None] * score) / torch.sqrt(1. - beta)[:, None, None, None]
     noise = torch.randn_like(x)
-    x = x_mean + torch.sqrt(beta)[:, None] * noise
+    x = x_mean + torch.sqrt(beta)[:, None, None, None] * noise
     return x, x_mean
 
   def update_fn(self, x, t):
@@ -268,21 +265,13 @@ class LangevinCorrector(Corrector):
       alpha = torch.ones_like(t)
 
     for i in range(n_steps):
-      print('-----corrector-------')
       grad = score_fn(x, t)
-      print(grad.size())
       noise = torch.randn_like(x)
-      print(noise.size())
       grad_norm = torch.norm(grad.reshape(grad.shape[0], -1), dim=-1).mean()
-      print(grad_norm.size())
       noise_norm = torch.norm(noise.reshape(noise.shape[0], -1), dim=-1).mean()
-      print(noise_norm.size())
       step_size = (target_snr * noise_norm / grad_norm) ** 2 * 2 * alpha
-      x_mean = x + step_size[:, None] * grad
-      print(x_mean.size())
-      x = x_mean + torch.sqrt(step_size * 2)[:, None] * noise
-      print(x.size())
-      print('------------')
+      x_mean = x + step_size[:, None, None, None] * grad
+      x = x_mean + torch.sqrt(step_size * 2)[:, None, None, None] * noise
 
     return x, x_mean
 
@@ -290,7 +279,6 @@ class LangevinCorrector(Corrector):
 @register_corrector(name='ald')
 class AnnealedLangevinDynamics(Corrector):
   """The original annealed Langevin dynamics predictor in NCSN/NCSNv2.
-
   We include this corrector only for completeness. It was not directly used in our paper.
   """
 
@@ -318,8 +306,8 @@ class AnnealedLangevinDynamics(Corrector):
       grad = score_fn(x, t)
       noise = torch.randn_like(x)
       step_size = (target_snr * std) ** 2 * 2 * alpha
-      x_mean = x + step_size[:, None] * grad
-      x = x_mean + noise * torch.sqrt(step_size * 2)[:, None]
+      x_mean = x + step_size[:, None, None, None] * grad
+      x = x_mean + noise * torch.sqrt(step_size * 2)[:, None, None, None]
 
     return x, x_mean
 
@@ -347,7 +335,7 @@ def shared_predictor_update_fn(x, t, sde, model, predictor, probability_flow, co
 
 
 def shared_corrector_update_fn(x, t, sde, model, corrector, continuous, snr, n_steps):
-  """A wrapper that configures and returns the update function of correctors."""
+  """A wrapper tha configures and returns the update function of correctors."""
   score_fn = mutils.get_score_fn(sde, model, train=False, continuous=continuous)
   if corrector is None:
     # Predictor-only sampler
@@ -357,16 +345,16 @@ def shared_corrector_update_fn(x, t, sde, model, corrector, continuous, snr, n_s
   return corrector_obj.update_fn(x, t)
 
 
-def get_pc_sampler(sde, shape, predictor, corrector, snr,
+def get_pc_sampler(sde, shape, predictor, corrector, inverse_scaler, snr,
                    n_steps=1, probability_flow=False, continuous=False,
                    denoise=True, eps=1e-3, device='cuda'):
   """Create a Predictor-Corrector (PC) sampler.
-
   Args:
     sde: An `sde_lib.SDE` object representing the forward SDE.
     shape: A sequence of integers. The expected shape of a single sample.
     predictor: A subclass of `sampling.Predictor` representing the predictor algorithm.
     corrector: A subclass of `sampling.Corrector` representing the corrector algorithm.
+    inverse_scaler: The inverse data normalizer.
     snr: A `float` number. The signal-to-noise ratio for configuring correctors.
     n_steps: An integer. The number of corrector steps per predictor update.
     probability_flow: If `True`, solve the reverse-time probability flow ODE when running the predictor.
@@ -374,7 +362,6 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
     denoise: If `True`, add one-step denoising to the final samples.
     eps: A `float` number. The reverse-time SDE and ODE are integrated to `epsilon` to avoid numerical issues.
     device: PyTorch device.
-
   Returns:
     A sampling function that returns samples and the number of function evaluations during sampling.
   """
@@ -391,54 +378,37 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
                                           snr=snr,
                                           n_steps=n_steps)
 
-  def pc_sampler(model, return_evolution=False):
-    """ The PC sampler function.
-
+  def pc_sampler(model):
+    """ The PC sampler funciton.
     Args:
       model: A score model.
-      return_evolution: Returns evolution
     Returns:
       Samples, number of function evaluations.
-      If return_evolutions: evolution, time steps
     """
-    if return_evolution:
-        evolution = []
-        times = []
-
     with torch.no_grad():
       # Initial sample
-      x = sde.prior_sampling(shape).to(device)
+      x = sde.prior_sampling(shape).to(device).type(torch.float32)
       timesteps = torch.linspace(sde.T, eps, sde.N, device=device)
 
       for i in range(sde.N):
         t = timesteps[i]
         vec_t = torch.ones(shape[0], device=t.device) * t
-        
         x, x_mean = corrector_update_fn(x, vec_t, model=model)
         x, x_mean = predictor_update_fn(x, vec_t, model=model)
 
-        if return_evolution and i%2==1:
-          evolution.append(x)
-          times.append(t)
-      
-      if return_evolution:
-        evolution = torch.stack(evolution)
-        times = torch.stack(times)
-        return x_mean if denoise else x, evolution, times
-      else:
-        return x_mean if denoise else x, sde.N * (n_steps + 1)
+      return inverse_scaler(x_mean if denoise else x), sde.N * (n_steps + 1)
 
   return pc_sampler
 
 
-def get_ode_sampler(sde, shape,
+def get_ode_sampler(sde, shape, inverse_scaler,
                     denoise=False, rtol=1e-5, atol=1e-5,
                     method='RK45', eps=1e-3, device='cuda'):
   """Probability flow ODE sampler with the black-box ODE solver.
-
   Args:
     sde: An `sde_lib.SDE` object that represents the forward SDE.
     shape: A sequence of integers. The expected shape of a single sample.
+    inverse_scaler: The inverse data normalizer.
     denoise: If `True`, add one-step denoising to final samples.
     rtol: A `float` number. The relative tolerance level of the ODE solver.
     atol: A `float` number. The absolute tolerance level of the ODE solver.
@@ -446,7 +416,6 @@ def get_ode_sampler(sde, shape,
       See the documentation of `scipy.integrate.solve_ivp`.
     eps: A `float` number. The reverse-time SDE/ODE will be integrated to `eps` for numerical stability.
     device: PyTorch device.
-
   Returns:
     A sampling function that returns samples and the number of function evaluations during sampling.
   """
@@ -467,7 +436,6 @@ def get_ode_sampler(sde, shape,
 
   def ode_sampler(model, z=None):
     """The probability flow ODE sampler with black-box ODE solver.
-
     Args:
       model: A score model.
       z: If present, generate samples from latent code `z`.
@@ -498,6 +466,7 @@ def get_ode_sampler(sde, shape,
       if denoise:
         x = denoise_update_fn(model, x)
 
+      x = inverse_scaler(x)
       return x, nfe
 
   return ode_sampler

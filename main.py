@@ -6,7 +6,7 @@ from lightning_models.base import BaseSdeGenerativeModel
 from models import ddpm, ncsnv2, fcn
 from lightning_data_modules.SyntheticDataset import SyntheticDataModule
 from lightning_data_modules.ImageDatasets import ImageDataModule
-from callbacks import VisualisationCallback, EMACallback
+from callbacks import VisualisationCallback, EMACallback, ImageVisulaizationCallback
 
 FLAGS = flags.FLAGS
 
@@ -26,16 +26,19 @@ def main(argv):
   datamodule.setup()
   train_dataloader = datamodule.train_dataloader()
 
+  callbacks=[EMACallback(),
+            ImageVisulaizationCallback()]
+            
   model = BaseSdeGenerativeModel(config)
   if FLAGS.resume is not None:
     trainer = pl.Trainer(gpus=1,
                         max_epochs=int(1e4), 
-                        callbacks=[EMACallback()], 
+                        callbacks=callbacks, 
                         resume_from_checkpoint=FLAGS.resume)
   else:  
     trainer = pl.Trainer(gpus=1,
                         max_steps=int(4e5), 
-                        callbacks=[EMACallback()]
+                        callbacks=callbacks
                         )
 
   trainer.fit(model, train_dataloader)

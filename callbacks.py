@@ -3,6 +3,7 @@ from pytorch_lightning.callbacks import Callback
 from utils import scatter, plot, compute_grad, create_video
 from pytorch_lightning.callbacks import Callback
 from models.ema import ExponentialMovingAverage
+import torchvision
 
 class EMACallback(Callback):
 
@@ -15,6 +16,28 @@ class EMACallback(Callback):
 
     def on_train_epoch_start(self, trainer, pl_module):
         pl_module.ema.restore(pl_module.score_model.parameters())
+
+
+class ImageVisulaizationCallback(Callback):
+     
+    #def on_train_start(self, trainer, pl_module):
+        # pl_module.logxger.log_hyperparams(params=pl_module.config.to_dict())
+        #samples = pl_module.sample()
+        #self.visualise_samples(samples, pl_module)
+         
+    
+    def on_epoch_end(self,trainer, pl_module):
+        samples = pl_module.sample()
+        self.visualise_samples(samples, pl_module)
+
+    
+    def visualise_samples(self, samples, pl_module):
+        # log sampled images
+        sample_imgs =  samples.cpu()
+        unnormalised_imgs = sample_imgs / 2 + 0.5 # improve this line
+        grid_images = torchvision.utils.make_grid(unnormalised_imgs)
+        pl_module.logger.experiment.add_image('generated_images', grid_images, pl_module.current_epoch)
+
 
 
 class VisualisationCallback(Callback):
