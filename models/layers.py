@@ -111,7 +111,9 @@ def ncsn_conv3x3(in_planes, out_planes, stride=1, bias=True, dilation=1, init_sc
   conv = nn.Conv2d(in_planes, out_planes, stride=stride, bias=bias,
                    dilation=dilation, padding=padding, kernel_size=3)
   conv.weight.data *= init_scale
-  conv.bias.data *= init_scale
+  # JAN: BUG 
+  if conv.bias is not None:
+    conv.bias.data *= init_scale
   return conv
 
 
@@ -161,7 +163,9 @@ class CondCRPBlock(nn.Module):
     self.norms = nn.ModuleList()
     self.normalizer = normalizer
     for i in range(n_stages):
+      # JAN BUG:
       self.norms.append(normalizer(features, num_classes, bias=True))
+      #self.norms.append(normalizer(features, bias=True))
       self.convs.append(ncsn_conv3x3(features, features, stride=1, bias=False))
 
     self.n_stages = n_stages
@@ -210,7 +214,9 @@ class CondRCUBlock(nn.Module):
 
     for i in range(n_blocks):
       for j in range(n_stages):
+        # JAN BUG:
         setattr(self, '{}_{}_norm'.format(i + 1, j + 1), normalizer(features, num_classes, bias=True))
+        #setattr(self, '{}_{}_norm'.format(i + 1, j + 1), normalizer(features, bias=True))
         setattr(self, '{}_{}_conv'.format(i + 1, j + 1), ncsn_conv3x3(features, features, stride=1, bias=False))
 
     self.stride = 1
@@ -262,7 +268,9 @@ class CondMSFBlock(nn.Module):
 
     for i in range(len(in_planes)):
       self.convs.append(ncsn_conv3x3(in_planes[i], features, stride=1, bias=True))
+      # JAN BUG
       self.norms.append(normalizer(in_planes[i], num_classes, bias=True))
+      #self.norms.append(normalizer(in_planes[i], bias=True))
 
   def forward(self, xs, y, shape):
     sums = torch.zeros(xs[0].shape[0], self.features, *shape, device=xs[0].device)
@@ -395,8 +403,9 @@ class UpsampleConv(nn.Module):
 
 
 class ConditionalResidualBlock(nn.Module):
+  # JAN: BUG dilation
   def __init__(self, input_dim, output_dim, num_classes, resample=1, act=nn.ELU(),
-               normalization=ConditionalInstanceNorm2dPlus, adjust_padding=False, dilation=None):
+               normalization=ConditionalInstanceNorm2dPlus, adjust_padding=False, dilation=-1):
     super().__init__()
     self.non_linearity = act
     self.input_dim = input_dim

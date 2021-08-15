@@ -155,7 +155,7 @@ class NoneNorm2d(nn.Module):
 
 
 class InstanceNorm2dPlus(nn.Module):
-  def __init__(self, num_features, bias=True):
+  def __init__(self, num_features, num_classes, bias=True):
     super().__init__()
     self.num_features = num_features
     self.bias = bias

@@ -6,7 +6,6 @@ import sampling
 from models.ema import ExponentialMovingAverage
 from models import utils as mutils
 from sde_lib import VESDE, VPSDE
-from models import ddpm, ncsnv2, fcn
 
 class BaseSdeGenerativeModel(pl.LightningModule):
     def __init__(self, config, *args, **kwargs):
@@ -45,7 +44,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
 
         # Building sampling functions
         if config.training.snapshot_sampling:
-            sampling_shape = (config.training.batch_size, config.data.dim)
+            sampling_shape = (config.training.batch_size, config.data.shape)
             self.sampling_fn = sampling.get_sampling_fn(config, self.sde, sampling_shape, self.sampling_eps)
     
     def training_step(self, batch, batch_idx):
