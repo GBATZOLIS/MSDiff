@@ -19,3 +19,7 @@ dist/
 
 # Other
 *.DS_Store
+
+
+#LOGS 
+lightning_logs/
