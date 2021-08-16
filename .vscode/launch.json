@@ -9,7 +9,9 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["--config", "configs/ve/my/ddpm/celeba_64.py"],
+            "args": ["--config", "configs/ve/my/ddpm/celeba_64.py",
+                    "--data_path", "/store/CIA/js2164/data/celeba",
+                    "--log_path", "./"],
             "console": "integratedTerminal"
         },
         {

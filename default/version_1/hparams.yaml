@@ -1,0 +1,119 @@
+config: !!python/object:ml_collections.config_dict.config_dict.ConfigDict
+  _convert_dict: true
+  _fields:
+    data: !!python/object:ml_collections.config_dict.config_dict.ConfigDict
+      _convert_dict: true
+      _fields:
+        centered: false
+        dataset: CELEBA
+        image_size: 64
+        num_channels: 3
+        random_flip: false
+        shape:
+        - 3
+        - 64
+        - 64
+        split:
+        - 0.8
+        - 0.1
+        - 0.1
+        uniform_dequantization: false
+      _locked: true
+      _type_safe: true
+    device: !!python/object/apply:torch.device
+    - cuda
+    - 0
+    eval: !!python/object:ml_collections.config_dict.config_dict.ConfigDict
+      _convert_dict: true
+      _fields:
+        batch_size: 512
+        begin_ckpt: 50
+        bpd_dataset: test
+        enable_bpd: false
+        enable_loss: true
+        enable_sampling: true
+        end_ckpt: 96
+        num_samples: 50000
+        workers: 4
+      _locked: true
+      _type_safe: true
+    model: !!python/object:ml_collections.config_dict.config_dict.ConfigDict
+      _convert_dict: true
+      _fields:
+        attn_resolutions: !!python/tuple
+        - 16
+        - 8
+        - 4
+        ch_mult: !!python/tuple
+        - 1
+        - 1
+        - 2
+        conditional: true
+        conv_size: 3
+        dropout: 0.1
+        ema_rate: 0.999
+        embedding_type: fourier
+        name: ddpm
+        nf: 128
+        nonlinearity: swish
+        normalization: GroupNorm
+        num_res_blocks: 2
+        num_scales: 1000
+        resamp_with_conv: true
+        scale_by_sigma: true
+        sigma_max: 320
+        sigma_min: 0.01
+      _locked: true
+      _type_safe: true
+    optim: !!python/object:ml_collections.config_dict.config_dict.ConfigDict
+      _convert_dict: true
+      _fields:
+        beta1: 0.9
+        eps: 1.0e-08
+        grad_clip: 1.0
+        lr: 0.0002
+        optimizer: Adam
+        warmup: 5000
+        weight_decay: 0
+      _locked: true
+      _type_safe: true
+    sampling: !!python/object:ml_collections.config_dict.config_dict.ConfigDict
+      _convert_dict: true
+      _fields:
+        corrector: langevin
+        method: pc
+        n_steps_each: 1
+        noise_removal: true
+        predictor: reverse_diffusion
+        probability_flow: false
+        snr: 0.15
+      _locked: true
+      _type_safe: true
+    seed: 42
+    training: !!python/object:ml_collections.config_dict.config_dict.ConfigDict
+      _convert_dict: true
+      _fields:
+        batch_size: 32
+        continuous: false
+        eval_freq: 2500
+        likelihood_weighting: false
+        log_freq: 50
+        n_iters: 500000
+        num_epochs: 10000
+        reduce_mean: false
+        sde: vesde
+        snapshot_freq: 5000
+        snapshot_freq_for_preemption: 5000
+        snapshot_sampling: true
+        workers: 4
+      _locked: true
+      _type_safe: true
+    validation: !!python/object:ml_collections.config_dict.config_dict.ConfigDict
+      _convert_dict: true
+      _fields:
+        batch_size: 500
+        workers: 4
+      _locked: true
+      _type_safe: true
+  _locked: true
+  _type_safe: true

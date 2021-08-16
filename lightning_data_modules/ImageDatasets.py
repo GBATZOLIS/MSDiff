@@ -24,9 +24,9 @@ class CelebA(ImageDataset):
 
 
 class ImageDataModule(pl.LightningDataModule):
-    def __init__(self, config):
-
-        self.path = config.data.path
+    def __init__(self, config, path):
+        
+        self.path = path
         self.resolution = config.data.image_size
         self.split = config.data.split
 

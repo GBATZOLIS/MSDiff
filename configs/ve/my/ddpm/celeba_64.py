@@ -69,16 +69,14 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.path = '/store/CIA/js2164/data/celeba'
   data.split = [0.8, 0.1, 0.1]
   data.dataset = 'CELEBA'
   data.image_size = 64
+  data.num_channels = 3
   data.random_flip = False
   data.uniform_dequantization = False
   data.centered = False
-  data.channels = 3
-  data.num_channels = data.channels
-  data.shape = [data.channels, data.image_size, data.image_size]
+  data.shape = [data.num_channels, data.image_size, data.image_size]
 
   # model
   config.model = model = ml_collections.ConfigDict()
