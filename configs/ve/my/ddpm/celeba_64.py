@@ -66,7 +66,7 @@ def get_config():
   evaluate.enable_loss = True
   evaluate.enable_bpd = False
   evaluate.bpd_dataset = 'test'
-
+ 
   # data
   config.data = data = ml_collections.ConfigDict()
   data.split = [0.8, 0.1, 0.1]

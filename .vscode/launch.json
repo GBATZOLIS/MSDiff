@@ -5,13 +5,33 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Synthetic",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                "--config",
+                "configs/ve/SyntheticDataset.py",
+                "--data_path",
+                "/store/CIA/js2164/data/celeba",
+                "--log_path",
+                "./"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "CelebA",
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["--config", "configs/ve/my/ddpm/celeba_64.py",
-                    "--data_path", "/store/CIA/js2164/data/celeba",
-                    "--log_path", "./"],
+            "args": [
+                "--config",
+                "configs/ve/my/ddpm/celeba_64.py",
+                "--data_path",
+                "/store/CIA/js2164/data/celeba",
+                "--log_path",
+                "./"
+            ],
             "console": "integratedTerminal"
         },
         {

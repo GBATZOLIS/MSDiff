@@ -16,6 +16,9 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         self.score_model = mutils.create_model(config)
         self.ema = ExponentialMovingAverage(self.score_model.parameters(), decay=config.model.ema_rate)
 
+        # Placeholder to store samples
+        self.samples=None
+
         # Setup SDEs
         self.load_sde(self.config)
         
@@ -42,7 +45,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
             else:
                 raise ValueError(f"Discrete training for {self.sde.__class__.__name__} is not recommended.")
 
-        # Building sampling functions
+        # Construct sampling functions
         if config.training.snapshot_sampling:
             sampling_shape = [config.training.batch_size] +  config.data.shape
             inverse_scaler = lambda x: x

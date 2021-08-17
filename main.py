@@ -6,7 +6,7 @@ from lightning_models.base import BaseSdeGenerativeModel
 from models import ddpm, ncsnv2, fcn
 from lightning_data_modules.SyntheticDataset import SyntheticDataModule
 from lightning_data_modules.ImageDatasets import ImageDataModule
-from callbacks import VisualisationCallback, EMACallback, ImageVisulaizationCallback
+from callbacks import TwoDimVizualizer, EMACallback, ImageVisulaizationCallback
 
 FLAGS = flags.FLAGS
 
@@ -23,16 +23,22 @@ flags.mark_flags_as_required(["config", "mode"])
 
 def main(argv):
   config = FLAGS.config
-  datamodule = ImageDataModule(config, path=FLAGS.data_path)
+  if config.data.dataset == 'Synthetic':
+    datamodule= SyntheticDataModule(config)
+  else:
+    datamodule = ImageDataModule(config, path=FLAGS.data_path)
   datamodule.setup()
   train_dataloader = datamodule.train_dataloader()
 
-  callbacks=[EMACallback(),
-            ImageVisulaizationCallback()]
+  callbacks=[EMACallback()]
+  if config.data.num_channels > 0:
+    callbacks = callbacks.append(ImageVisulaizationCallback())
+  else:
+    callbacks = callbacks.append(TwoDimVizualizer(show_evolution=True))
             
   model = BaseSdeGenerativeModel(config)
 
-  logger = pl.loggers.TensorBoardLogger(FLAGS.log_path)
+  logger = pl.loggers.TensorBoardLogger(FLAGS.log_path, name='lightning_logs')
 
   if FLAGS.checkpoint_path is not None:
     trainer = pl.Trainer(gpus=1,

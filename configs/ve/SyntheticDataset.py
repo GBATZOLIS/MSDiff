@@ -71,12 +71,14 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
+  data.dataset = 'Synthetic'
   data.dataset_type = 'GaussianBubbles'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
   data.data_samples = 50000
   data.mixtures = 4
   data.return_mixtures = False #whether to return the mixture class of each point in the mixture.
+  data.shape = [2]
   data.dim = 2
   data.num_channels = 0 
   
