@@ -20,7 +20,7 @@ import torch
 import torch.optim as optim
 import numpy as np
 from models import utils as mutils
-from sde_lib import VESDE, VPSDE
+from sde_lib import VESDE, VPSDE, cVESDE
 
 
 def get_optimizer(config, params):
@@ -54,7 +54,6 @@ def optimization_manager(config):
 
 def get_sde_loss_fn(sde, train, reduce_mean=True, continuous=True, likelihood_weighting=True, eps=1e-5):
   """Create a loss function for training with arbirary SDEs.
-
   Args:
     sde: An `sde_lib.SDE` object that represents the forward SDE.
     train: `True` for training loss and `False` for evaluation loss.
@@ -64,7 +63,6 @@ def get_sde_loss_fn(sde, train, reduce_mean=True, continuous=True, likelihood_we
     likelihood_weighting: If `True`, weight the mixture of score matching losses
       according to https://arxiv.org/abs/2101.09258; otherwise use the weighting recommended in our paper.
     eps: A `float` number. The smallest time step to sample from.
-
   Returns:
     A loss function.
   """
@@ -72,11 +70,9 @@ def get_sde_loss_fn(sde, train, reduce_mean=True, continuous=True, likelihood_we
 
   def loss_fn(model, batch):
     """Compute the loss function.
-
     Args:
       model: A score model.
       batch: A mini-batch of training data.
-
     Returns:
       loss: A scalar that represents the average loss value across the mini-batch.
     """
@@ -84,16 +80,15 @@ def get_sde_loss_fn(sde, train, reduce_mean=True, continuous=True, likelihood_we
     t = torch.rand(batch.shape[0], device=batch.device) * (sde.T - eps) + eps
     z = torch.randn_like(batch)
     mean, std = sde.marginal_prob(batch, t)
-    std_shape =[-1] +[1] * (len(batch.shape) -1)
-    perturbed_data = mean + std.view(*std_shape) * z
+    perturbed_data = mean + std[:, None, None, None] * z
     score = score_fn(perturbed_data, t)
 
     if not likelihood_weighting:
-      losses = torch.square(score * std.view(*std_shape) + z)
+      losses = torch.square(score * std[:, None, None, None] + z)
       losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1)
     else:
       g2 = sde.sde(torch.zeros_like(batch), t)[1] ** 2
-      losses = torch.square(score + z / std.view(*std_shape))
+      losses = torch.square(score + z / std[:, None, None, None])
       losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1) * g2
 
     loss = torch.mean(losses)
@@ -114,16 +109,60 @@ def get_smld_loss_fn(vesde, train, reduce_mean=False):
     model_fn = mutils.get_model_fn(model, train=train)
     labels = torch.randint(0, vesde.N, (batch.shape[0],), device=batch.device)
     sigmas = smld_sigma_array.to(batch.device)[labels]
-    sigmas_shape =[-1] +[1] * (len(batch.shape) -1)
-    noise = torch.randn_like(batch) * sigmas.view(*sigmas_shape)
+    noise = torch.randn_like(batch) * sigmas[:, None, None, None]
     perturbed_data = noise + batch
     score = model_fn(perturbed_data, labels)
-    target = -noise / (sigmas ** 2).view(*sigmas_shape)
+    target = -noise / (sigmas ** 2)[:, None, None, None]
     losses = torch.square(score - target)
     losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1) * sigmas ** 2
     loss = torch.mean(losses)
     return loss
 
+  return loss_fn
+
+def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_weighting=True):
+  reduce_op = torch.mean if reduce_mean else lambda *args, **kwargs: 0.5 * torch.sum(*args, **kwargs)
+
+  # Previous SMLD models assume descending sigmas
+  smld_sigma_array_y = torch.flip(sde[0].discrete_sigmas, dims=(0,)) #observed
+  smld_sigma_array_x = torch.flip(sde[1].discrete_sigmas, dims=(0,)) #unobserved
+  
+
+  def loss_fn(model, batch):
+    y, x = batch
+    model_fn = mutils.get_model_fn(model, train=train)
+    labels = torch.randint(0, sde[1].N, (x.shape[0],), device=x.device)
+
+    sigmas_y = smld_sigma_array_y.to(y.device)[labels]
+    sigmas_x = smld_sigma_array_x.to(x.device)[labels]
+
+    noise_y = torch.randn_like(y) * sigmas_y[:, None, None, None]
+    perturbed_data_y = noise_y + y
+    noise_x = torch.randn_like(x) * sigmas_x[:, None, None, None]
+    perturbed_data_x = noise_x + x
+
+    perturbed_data = torch.cat((perturbed_data_x, perturbed_data_y), dim=1)
+    score = model_fn(perturbed_data, labels)
+
+    target_x = -noise_x / (sigmas_x ** 2)[:, None, None, None]
+    target_y = -noise_y / (sigmas_y ** 2)[:, None, None, None]
+    
+    target = torch.cat((target_x, target_y), dim=1)
+
+    losses = torch.square(score - target)
+
+    if likelihood_weighting:
+      losses[:,:losses.size(1)//2,::]=losses[:,:losses.size(1)//2,::]*sigmas_x[:, None, None, None]**2
+      losses[:,losses.size(1)//2:,::]=losses[:,losses.size(1)//2:,::]*sigmas_y[:, None, None, None]**2
+      losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1)
+    else:
+      smld_weighting = (sigmas_x**2*sigmas_y**2)/(sigmas_x**2+sigmas_y**2) #smld weighting
+      losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1) * smld_weighting
+    
+    loss = torch.mean(losses)
+    
+    return loss
+  
   return loss_fn
 
 
@@ -136,12 +175,11 @@ def get_ddpm_loss_fn(vpsde, train, reduce_mean=True):
   def loss_fn(model, batch):
     model_fn = mutils.get_model_fn(model, train=train)
     labels = torch.randint(0, vpsde.N, (batch.shape[0],), device=batch.device)
-    shape =[-1] +[1] * (len(batch.shape) -1)
-    sqrt_alphas_cumprod = vpsde.sqrt_alphas_cumprod.type_as(batch)[labels].view(*shape)
-    sqrt_1m_alphas_cumprod = vpsde.sqrt_1m_alphas_cumprod.type_as(batch)[labels].view(*shape)
+    sqrt_alphas_cumprod = vpsde.sqrt_alphas_cumprod.to(batch.device)
+    sqrt_1m_alphas_cumprod = vpsde.sqrt_1m_alphas_cumprod.to(batch.device)
     noise = torch.randn_like(batch)
-    perturbed_data = sqrt_alphas_cumprod * batch + \
-                     sqrt_1m_alphas_cumprod * noise
+    perturbed_data = sqrt_alphas_cumprod[labels, None, None, None] * batch + \
+                     sqrt_1m_alphas_cumprod[labels, None, None, None] * noise
     score = model_fn(perturbed_data, labels)
     losses = torch.square(score - noise)
     losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1)
@@ -150,10 +188,11 @@ def get_ddpm_loss_fn(vpsde, train, reduce_mean=True):
 
   return loss_fn
 
+def get_inverse_problem_ddpm_loss_fn(vpsdes, train, reduce_mean=True):
+  return NotImplementedError
 
 def get_step_fn(sde, train, optimize_fn=None, reduce_mean=False, continuous=True, likelihood_weighting=False):
   """Create a one-step training/evaluation function.
-
   Args:
     sde: An `sde_lib.SDE` object that represents the forward SDE.
     optimize_fn: An optimization function.
@@ -161,7 +200,6 @@ def get_step_fn(sde, train, optimize_fn=None, reduce_mean=False, continuous=True
     continuous: `True` indicates that the model is defined to take continuous time steps.
     likelihood_weighting: If `True`, weight the mixture of score matching losses according to
       https://arxiv.org/abs/2101.09258; otherwise use the weighting recommended by our paper.
-
   Returns:
     A one-step function for training or evaluation.
   """
@@ -169,8 +207,17 @@ def get_step_fn(sde, train, optimize_fn=None, reduce_mean=False, continuous=True
     loss_fn = get_sde_loss_fn(sde, train, reduce_mean=reduce_mean,
                               continuous=True, likelihood_weighting=likelihood_weighting)
   else:
-    assert not likelihood_weighting, "Likelihood weighting is not supported for original SMLD/DDPM training."
-    if isinstance(sde, VESDE):
+    #assert not likelihood_weighting, "Likelihood weighting is not supported for original SMLD/DDPM training."
+    if isinstance(sde, list):
+      #this part of the code needs to be improved. We should check all elements of the sde list. We might have a mixture.
+      if isinstance(sde[0], VESDE) and isinstance(sde[1], cVESDE) and len(sde)==2:
+        loss_fn = get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=reduce_mean, likelihood_weighting=likelihood_weighting)
+      elif isinstance(sde[0], VPSDE) and isinstance(sde[1], VPSDE) and len(sde)==2:
+        loss_fn = get_inverse_problem_ddpm_loss_fn(sde, train, reduce_mean=reduce_mean)
+      else:
+        raise NotImplementedError('This combination of sdes is not supported for discrete training yet.')
+    
+    elif isinstance(sde, VESDE):
       loss_fn = get_smld_loss_fn(sde, train, reduce_mean=reduce_mean)
     elif isinstance(sde, VPSDE):
       loss_fn = get_ddpm_loss_fn(sde, train, reduce_mean=reduce_mean)
@@ -179,15 +226,12 @@ def get_step_fn(sde, train, optimize_fn=None, reduce_mean=False, continuous=True
 
   def step_fn(state, batch):
     """Running one step of training or evaluation.
-
     This function will undergo `jax.lax.scan` so that multiple steps can be pmapped and jit-compiled together
     for faster execution.
-
     Args:
       state: A dictionary of training information, containing the score model, optimizer,
        EMA status, and number of optimization steps.
       batch: A mini-batch of training/evaluation data.
-
     Returns:
       loss: The average loss value of this state.
     """

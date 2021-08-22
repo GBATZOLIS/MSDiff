@@ -3,7 +3,9 @@ from pytorch_lightning.callbacks import Callback
 from utils import scatter, plot, compute_grad, create_video
 from pytorch_lightning.callbacks import Callback
 import torchvision
+from . import utils
 
+@utils.register_callback('ema')
 class EMACallback(Callback):
 
     def on_before_zero_grad(self, trainer, pl_module, optimizer):
@@ -16,33 +18,47 @@ class EMACallback(Callback):
     def on_train_epoch_start(self, trainer, pl_module):
         pl_module.ema.restore(pl_module.score_model.parameters())
 
+@utils.register_callback('base')
+class ImageVisualizationCallback(Callback):
+    def __init__(self, show_evolution=False):
+        super().__init__()
+        self.show_evolution = show_evolution
 
-class ImageVisulaizationCallback(Callback):
-    
     def on_epoch_end(self, trainer, pl_module):
-        samples = pl_module.sample()
+        if self.show_evolution:
+            samples, sampling_info = pl_module.sample(show_evolution=True)
+            evolution = sampling_info['evolution']
+            self.visualise_evolution(evolution, pl_module)
+        else:
+            samples, _ = pl_module.sample(show_evolution=False)
+
         self.visualise_samples(samples, pl_module)
 
-    
     def visualise_samples(self, samples, pl_module):
         # log sampled images
         sample_imgs =  samples.cpu()
         grid_images = torchvision.utils.make_grid(sample_imgs, normalize=True)
         pl_module.logger.experiment.add_image('generated_images', grid_images, pl_module.current_epoch)
+    
+    def visualise_evolution(self, evolution, pl_module):
+        #to be implemented
+        return
 
 
-class GradinetVisualizer(Callback):
+@utils.register_callback('GradientVisualization')
+class GradientVisualizer(Callback):
 
     def on_epoch_end(self,trainer, pl_module):
         if pl_module.current_epoch % 500 == 0:
-            samples, evolution, times = pl_module.sample(return_evolution=True)
+            _, sampling_info = pl_module.sample(show_evolution=True)
+            evolution, times = sampling_info['evolution'], sampling_info['times']
             self.visualise_grad_norm(evolution, times, pl_module)
 
     def visualise_grad_norm(self, evolution, times, pl_module):
         grad_norm_t =[]
         for i in range(evolution.shape[0]):
             t = times[i]
-            samples=evolution[i]
+            samples = evolution[i]
             vec_t = torch.ones(times.shape[0], device=t.device) * t
             gradients = compute_grad(f=pl_module.score_model, x=samples, t=vec_t)
             grad_norm = gradients.norm(2, dim=1).max().item()
@@ -53,7 +69,7 @@ class GradinetVisualizer(Callback):
                         )
         pl_module.logger.experiment.add_image('grad_norms', image, pl_module.current_epoch)
 
-
+@utils.register_callback('2DVisualization')
 class TwoDimVizualizer(Callback):
     def __init__(self, show_evolution=False):
         super().__init__()
@@ -61,20 +77,19 @@ class TwoDimVizualizer(Callback):
 
     def on_train_start(self, trainer, pl_module):
         # pl_module.logxger.log_hyperparams(params=pl_module.config.to_dict())
-        samples = pl_module.sample()
+        samples, _ = pl_module.sample()
         self.visualise_samples(samples, pl_module)
 
     def on_epoch_end(self,trainer, pl_module):
-        if pl_module.current_epoch % 500 == 0:
-            if self.evolution:
-                samples, evolution, times = pl_module.sample(return_evolution=True)
-            else:
-                samples = pl_module.sample()
+        if pl_module.current_epoch % 500 == 0 \
+            and pl_module.current_epoch % 2500 != 0:
+            samples, _ = pl_module.sample()
             self.visualise_samples(samples, pl_module)
         if self.evolution and pl_module.current_epoch % 2500 == 0:
+            samples, sampling_info = pl_module.sample(show_evolution=True)
+            evolution = sampling_info['evolution']
             self.visualise_evolution(evolution, pl_module)
 
-    
     def visualise_samples(self, samples, pl_module):
         # log sampled images
         samples_np =  samples.cpu().numpy()
@@ -90,3 +105,5 @@ class TwoDimVizualizer(Callback):
                                     ylim=[-1,1])
         tag='Evolution_epoch_%d' % pl_module.current_epoch
         pl_module.logger.experiment.add_video(tag=tag, vid_tensor=video_tensor, fps=video_tensor.size(1)//20)
+
+

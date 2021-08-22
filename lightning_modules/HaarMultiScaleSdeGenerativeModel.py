@@ -8,14 +8,102 @@ from models.ema import ExponentialMovingAverage
 from models import utils as mutils
 from utils import scatter
 from models import ddpm, ncsnv2, fcn
-from base import BaseSdeGenerativeModel
+from BaseSdeGenerativeModel import BaseSdeGenerativeModel
+from iunets.layers import InvertibleDownsampling2D
+from . import utils
+from sampling.unconditional import inpainting_fn
 
-class MultiScaleSdeGenerativeModel(BaseSdeGenerativeModel):
+def permute_channels(haar_image, forward=True):
+        permuted_image = torch.zeros_like(haar_image)
+        if forward:
+            for i in range(4):
+                if i == 0:
+                    k = 1
+                elif i == 1:
+                    k = 0
+                else:
+                    k = i
+                for j in range(3):
+                    permuted_image[:, 3*k+j, :, :] = haar_image[:, 4*j+i, :, :]
+        else:
+            for i in range(4):
+                if i == 0:
+                    k = 1
+                elif i == 1:
+                    k = 0
+                else:
+                    k = i
+                
+                for j in range(3):
+                    permuted_image[:,4*j+k,:,:] = haar_image[:, 3*i+j, :, :]
+
+        return permuted_image
+
+@utils.register_lightning_module(name='haar_multiscale')
+class HaarMultiScaleSdeGenerativeModel(BaseSdeGenerativeModel):
+    def __init__(self, config, *args, **kwargs):
+        super().__init__()
+        self.haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
+        self.inpainting_fn = inpainting_fn(config, self.sde, self.sampling_eps)
+    
+    def training_step(self, batch, batch_idx):
+        batch = self.haar_transform(batch) #apply the haar transform
+        batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
+        loss = self.train_loss_fn(self.score_model, batch)
+        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        return loss
+    
+    def validation_step(self, batch, batch_idx):
+        batch = self.haar_transform(batch) 
+        batch = permute_channels(batch)
+        loss = self.eval_loss_fn(self.score_model, batch)
+        self.log('eval_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        return loss
+    
+    def sample(self, show_evolution=False, space='haar'):
+        if space=='haar':
+            return self.sampling_fn(self.score_model, show_evolution=show_evolution)
+        elif space=='image':
+            samples=self.sampling_fn(self.score_model, show_evolution=show_evolution)
+            back_permuted_samples = permute_channels(samples, forward=False)
+            image = self.haar_transform.inverse(back_permuted_samples)
+            return image
+    
+    def inpaint(self, dc_coefficients, space='haar'):
+        #input:dc coefficients
+        #output: the entire image in haar or image space
+        #functionality: inpaints the detail coefficients given the dc coefficients
+        shape = dc_coefficients.shape
+        new_shape = tuple([shape[0], shape[1]*4]+list(shape[2:]))
+        up_sample = torch.zeros(new_shape).astype(dc_coefficients)
+        up_sample[:,:3,::] = dc_coefficients
+        mask = torch.cat([torch.ones(3, dtype=torch.float32), torch.zeros(up_sample.size(1)-3, dtype=torch.float32)]).astype(up_sample)
+        mask = mask.view(1, up_sample.size(1), 1, 1)
+
+        inpainted_haar, _ = self.inpainting_fn(self.score_model, up_sample, mask)
+
+        if space=='haar':
+            return inpainted_haar
+        elif space=='image':
+            inpainted_haar = permute_channels(inpainted_haar, forward=False)
+            image = self.haar_transform.inverse(inpainted_haar)
+            return image
+
+
+    
+
+
+    
+    
 
 
 
 
 
+
+
+#what follows is the sampling code for multiple scales
+"""
     def load_scale_models(configs, workdir, num_samples):
     # Initialize models.
     scale = {}
@@ -130,3 +218,4 @@ class MultiScaleSdeGenerativeModel(BaseSdeGenerativeModel):
             fout = os.path.join(this_sample_dir, 'batch_%d' % j, "super_resolution_%d.png" % resolution)
             grid = make_grid(normalise_per_image(sample.cpu()), nrow=int(np.sqrt(sample.size(0))))
             save_image(grid, fout)
+"""

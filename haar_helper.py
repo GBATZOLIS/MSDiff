@@ -15,30 +15,30 @@ import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 
 def permute_channels(haar_image, forward=True):
-    permuted_image = torch.zeros_like(haar_image)
-    if forward:
-        for i in range(4):
-            if i == 0:
-                k = 1
-            elif i == 1:
-                k = 0
-            else:
-                k = i
-            for j in range(3):
-                permuted_image[:, 3*k+j, :, :] = haar_image[:, 4*j+i, :, :]
-    else:
-        for i in range(4):
-            if i == 0:
-                k = 1
-            elif i == 1:
-                k = 0
-            else:
-                k = i
-            
-            for j in range(3):
-                permuted_image[:,4*j+k,:,:] = haar_image[:, 3*i+j, :, :]
+        permuted_image = torch.zeros_like(haar_image)
+        if forward:
+            for i in range(4):
+                if i == 0:
+                    k = 1
+                elif i == 1:
+                    k = 0
+                else:
+                    k = i
+                for j in range(3):
+                    permuted_image[:, 3*k+j, :, :] = haar_image[:, 4*j+i, :, :]
+        else:
+            for i in range(4):
+                if i == 0:
+                    k = 1
+                elif i == 1:
+                    k = 0
+                else:
+                    k = i
+                
+                for j in range(3):
+                    permuted_image[:,4*j+k,:,:] = haar_image[:, 3*i+j, :, :]
 
-    return permuted_image
+        return permuted_image
 
 def normalise(x, value_range=None):
     if value_range is None:

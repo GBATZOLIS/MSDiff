@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import torchvision.transforms as transforms
 import io
-
+from . import utils
 from torchvision.transforms.functional import normalize
 
 def scatter_plot(x, x_lim=None, y_lim=None, labels=None, save=False):
@@ -89,6 +89,7 @@ class SyntheticDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
+@utils.register_lightning_datamodule('Synthetic')
 class SyntheticDataModule(pl.LightningDataModule):
     def __init__(self, config): 
         super(SyntheticDataModule, self).__init__()

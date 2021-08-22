@@ -2,7 +2,7 @@ import pytorch_lightning as pl
 from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision  import transforms, datasets
 import PIL.Image as Image
-
+from . import utils
 
 class ImageDataset(Dataset):
     def __init__(self, path, resolution, crop=False):
@@ -39,10 +39,10 @@ class CelebA(ImageDataset):
         ImageDataset.__init__(self, path=path, resolution=resolution)
 
 
+@utils.register_lightning_datamodule('image')
 class ImageDataModule(pl.LightningDataModule):
-    def __init__(self, config, path):
-        
-        self.path = path
+    def __init__(self, config):
+        self.path = config.data.base_dir
         self.resolution = config.data.image_size
         self.split = config.data.split
 
@@ -68,3 +68,4 @@ class ImageDataModule(pl.LightningDataModule):
   
     def test_dataloader(self): 
         return DataLoader(self.test_data, batch_size = self.test_batch, num_workers=self.test_workers) 
+

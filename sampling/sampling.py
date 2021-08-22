@@ -345,7 +345,7 @@ def shared_corrector_update_fn(x, t, sde, model, corrector, continuous, snr, n_s
   return corrector_obj.update_fn(x, t)
 
 
-def get_pc_sampler(sde, shape, predictor, corrector, inverse_scaler, snr,
+def get_pc_sampler(sde, shape, predictor, corrector, snr,
                    n_steps=1, probability_flow=False, continuous=False,
                    denoise=True, eps=1e-3, device='cuda'):
   """Create a Predictor-Corrector (PC) sampler.
@@ -354,7 +354,7 @@ def get_pc_sampler(sde, shape, predictor, corrector, inverse_scaler, snr,
     shape: A sequence of integers. The expected shape of a single sample.
     predictor: A subclass of `sampling.Predictor` representing the predictor algorithm.
     corrector: A subclass of `sampling.Corrector` representing the corrector algorithm.
-    inverse_scaler: The inverse data normalizer.
+    inverse_scaler: The inverse data normalizer. -> not used anymore
     snr: A `float` number. The signal-to-noise ratio for configuring correctors.
     n_steps: An integer. The number of corrector steps per predictor update.
     probability_flow: If `True`, solve the reverse-time probability flow ODE when running the predictor.
@@ -378,13 +378,16 @@ def get_pc_sampler(sde, shape, predictor, corrector, inverse_scaler, snr,
                                           snr=snr,
                                           n_steps=n_steps)
 
-  def pc_sampler(model):
+  def pc_sampler(model, show_evolution=False):
     """ The PC sampler funciton.
     Args:
       model: A score model.
     Returns:
       Samples, number of function evaluations.
     """
+    if show_evolution:
+      evolution = []
+
     with torch.no_grad():
       # Initial sample
       x = sde.prior_sampling(shape).to(device).type(torch.float32)
@@ -395,20 +398,30 @@ def get_pc_sampler(sde, shape, predictor, corrector, inverse_scaler, snr,
         vec_t = torch.ones(shape[0], device=t.device) * t
         x, x_mean = corrector_update_fn(x, vec_t, model=model)
         x, x_mean = predictor_update_fn(x, vec_t, model=model)
+        
+        if show_evolution:
+          evolution.append(x.cpu())
 
-      return inverse_scaler(x_mean if denoise else x), sde.N * (n_steps + 1)
+      samples = x_mean if denoise else x
+
+      if show_evolution:
+        sampling_info = {'evolution': torch.stack(evolution), 
+                        'times':timesteps, 'steps':sde.N * (n_steps + 1)}
+        return samples, sampling_info
+      else:
+        sampling_info = {'times':timesteps, 'steps':sde.N * (n_steps + 1)}
+        return samples, sampling_info
 
   return pc_sampler
 
 
-def get_ode_sampler(sde, shape, inverse_scaler,
-                    denoise=False, rtol=1e-5, atol=1e-5,
+def get_ode_sampler(sde, shape, denoise=False, rtol=1e-5, atol=1e-5,
                     method='RK45', eps=1e-3, device='cuda'):
   """Probability flow ODE sampler with the black-box ODE solver.
   Args:
     sde: An `sde_lib.SDE` object that represents the forward SDE.
     shape: A sequence of integers. The expected shape of a single sample.
-    inverse_scaler: The inverse data normalizer.
+    inverse_scaler: The inverse data normalizer. -> not used anymore. you can use it after you retrieve the samples
     denoise: If `True`, add one-step denoising to final samples.
     rtol: A `float` number. The relative tolerance level of the ODE solver.
     atol: A `float` number. The absolute tolerance level of the ODE solver.
@@ -466,7 +479,6 @@ def get_ode_sampler(sde, shape, inverse_scaler,
       if denoise:
         x = denoise_update_fn(model, x)
 
-      x = inverse_scaler(x)
       return x, nfe
 
   return ode_sampler
