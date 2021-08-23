@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 
 @utils.register_lightning_datamodule(name='paired')
 class PairedDataModule(pl.LightningDataModule):
-    def __init__(self, config, path):
+    def __init__(self, config):
         #DataLoader arguments
         self.config = config
         self.train_workers = config.training.workers
