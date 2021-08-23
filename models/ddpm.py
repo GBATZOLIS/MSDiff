@@ -23,7 +23,6 @@ import torch.nn as nn
 import functools
 
 from . import utils, layers, normalization
-import pytorch_lightning as pl
 
 RefineBlock = layers.RefineBlock
 ResidualBlock = layers.ResidualBlock
@@ -37,11 +36,19 @@ default_initializer = layers.default_init
 
 
 @utils.register_model(name='ddpm')
-class DDPM(pl.LightningModule):
+class DDPM(nn.Module):
   def __init__(self, config):
     super().__init__()
     self.act = act = get_act(config)
-    self.register_buffer('sigmas', torch.tensor(utils.get_sigmas(config)))
+
+    self.conditional = True if config.training.lightning_module=='conditional' else False
+    if self.conditional:
+      sigmas_x, sigmas_y = utils.get_sigmas(config)
+      self.register_buffer('sigmas_x', torch.tensor(sigmas_x, dtype=torch.float32))
+      self.register_buffer('sigmas_y', torch.tensor(sigmas_y, dtype=torch.float32))
+    else:
+      sigmas = utils.get_sigmas(config)
+      self.register_buffer('sigmas', torch.tensor(sigmas, dtype=torch.float32))
 
     self.nf = nf = config.model.nf
     ch_mult = config.model.ch_mult
@@ -175,7 +182,13 @@ class DDPM(pl.LightningModule):
       # Divide the output by sigmas. Useful for training with the NCSN loss.
       # The DDPM loss scales the network output by sigma in the loss function,
       # so no need of doing it here.
-      used_sigmas = self.sigmas[labels, None, None, None]
-      h = h / used_sigmas
+      if self.conditional:
+        h_x, h_y = torch.chunk(h, chunks=2, dim=1)
+        h_x = h_x / self.sigmas_x[labels, None, None, None]
+        h_y = h_y / self.sigmas_y[labels, None, None, None]
+        h = torch.cat((h_x, h_y), dim=1)
+      else:
+        used_sigmas = self.sigmas[labels, None, None, None]
+        h = h / used_sigmas
 
     return h

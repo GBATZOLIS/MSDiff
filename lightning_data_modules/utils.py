@@ -23,7 +23,6 @@ def register_lightning_datamodule(cls=None, *, name=None):
 
 
 def get_lightning_datamodule_by_name(name):
-  print(_LIGHTNING_DATA_MODULES.keys())
   return _LIGHTNING_DATA_MODULES[name]
 
 def create_lightning_datamodule(config):
