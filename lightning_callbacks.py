@@ -2,6 +2,7 @@ import torch
 from pytorch_lightning.callbacks import Callback
 from utils import scatter, plot, compute_grad, create_video
 import torchvision
+from torchvision.utils import make_grid
 from . import utils
 import numpy as np
 
@@ -35,7 +36,7 @@ def get_callbacks(visualization_callback, show_evolution):
 
   
   
-@utils.register_callback(name='ema')
+@register_callback(name='ema')
 class EMACallback(Callback):
 
     def on_before_zero_grad(self, trainer, pl_module, optimizer):
@@ -48,7 +49,7 @@ class EMACallback(Callback):
     def on_train_epoch_start(self, trainer, pl_module):
         pl_module.ema.restore(pl_module.score_model.parameters())
 
-@utils.register_callback(name='base')
+@register_callback(name='base')
 class ImageVisualizationCallback(Callback):
     def __init__(self, show_evolution=False):
         super().__init__()
@@ -76,7 +77,7 @@ class ImageVisualizationCallback(Callback):
 
 
 
-@utils.register_callback(name='GradientVisualization')
+@register_callback(name='GradientVisualization')
 class GradientVisualizer(Callback):
 
     def on_epoch_end(self,trainer, pl_module):
@@ -100,7 +101,7 @@ class GradientVisualizer(Callback):
                         )
         pl_module.logger.experiment.add_image('grad_norms', image, pl_module.current_epoch)
 
-@utils.register_callback(name='2DVisualization')
+@register_callback(name='2DVisualization')
 class TwoDimVizualizer(Callback):
     def __init__(self, show_evolution=False):
         super().__init__()
@@ -194,7 +195,7 @@ def create_supergrid(normalised_permuted_haar_images):
     super_grid = make_grid(haar_super_grid, nrow=int(np.sqrt(normalised_permuted_haar_images.size(0))))
     return super_grid
 
-@utils.register_callback(name='haar_multiscale')
+@register_callback(name='haar_multiscale')
 class HaarMultiScaleVisualizationCallback(Callback):
     def __init__(self, show_evolution=False):
         super().__init__()
@@ -223,7 +224,7 @@ class HaarMultiScaleVisualizationCallback(Callback):
         haar_super_grid_evolution = torch.stack(haar_super_grid_evolution).unsqueeze(0)
         pl_module.logger.experiment.add_video('haar_super_grid_evolution', haar_super_grid_evolution, pl_module.current_epoch, fps=50)
 
-@utils.register_callback(name='paired')
+@register_callback(name='paired')
 class PairedVisualizationCallback(Callback):
     def __init__(self, show_evolution=False):
         super().__init__()
