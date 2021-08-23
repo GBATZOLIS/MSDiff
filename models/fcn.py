@@ -1,9 +1,10 @@
 import torch.nn as nn
 import torch
 from . import utils
+import pytorch_lightning as pl
 
 @utils.register_model(name='fcn')
-class FCN(nn.Module):
+class FCN(pl.LightningModule):
     def __init__(self, config): 
         super(FCN, self).__init__()
         state_size = config.model.state_size

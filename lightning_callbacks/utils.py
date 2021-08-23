@@ -21,9 +21,9 @@ def register_callback(cls=None, *, name=None):
 def get_callback_by_name(name):
     return _CALLBACKS[name]
 
-def get_callbacks(config):
+def get_callbacks(visualization_callback, show_evolution):
     callbacks=[get_callback_by_name('ema')()]
-    callbacks.append(get_callback_by_name(config.training.callback_visualization)(show_evolution=config.training.show_evolution))
+    callbacks.append(get_callback_by_name(visualization_callback)(show_evolution=show_evolution))
     return callbacks
 
   

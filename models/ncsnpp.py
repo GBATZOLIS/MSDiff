@@ -20,6 +20,7 @@ import torch.nn as nn
 import functools
 import torch
 import numpy as np
+import pytorch_lightning as pl
 
 ResnetBlockDDPM = layerspp.ResnetBlockDDPMpp
 ResnetBlockBigGAN = layerspp.ResnetBlockBigGANpp
@@ -32,7 +33,7 @@ default_initializer = layers.default_init
 
 
 @utils.register_model(name='ncsnpp')
-class NCSNpp(nn.Module):
+class NCSNpp(pl.LightningModule):
   """NCSN++ model"""
 
   def __init__(self, config):

@@ -19,7 +19,7 @@ flags.DEFINE_string("log_path", "./", "Checkpoint directory.")
 flags.DEFINE_enum("mode", "train", ["train", "eval"], "Running mode: train or eval")
 flags.DEFINE_string("eval_folder", "eval",
                     "The folder name for storing evaluation results")
-flags.mark_flags_as_required(["config", "mode"])
+flags.mark_flags_as_required(["config", "mode", "log_path"])
 
 
 def main(argv):
@@ -27,20 +27,20 @@ def main(argv):
     config = FLAGS.config
 
     DataModule = get_datamodule_by_name(config.data.datamodule)(config)
-    callbacks = get_callbacks(config)
-    LightningModule = get_lightning_module_by_name(config.lightning_module)
+    callbacks = get_callbacks(config.training.visualization_callback, config.training.show_evolution)
+    LightningModule = get_lightning_module_by_name(config.training.lightning_module)
 
     logger = pl.loggers.TensorBoardLogger(FLAGS.log_path, name='lightning_logs')
 
     if FLAGS.checkpoint_path is not None:
-      trainer = pl.Trainer(gpus=1,
-                          max_epochs=int(1e4), 
+      trainer = pl.Trainer(gpus=config.training.gpus,
+                          max_steps=config.training.n_iters, 
                           callbacks=callbacks, 
                           logger = logger,
                           resume_from_checkpoint=FLAGS.checkpoint_path)
     else:  
-      trainer = pl.Trainer(gpus=1,
-                          max_steps=int(4e5), 
+      trainer = pl.Trainer(gpus=config.training.gpus,
+                          max_steps=config.training.n_iters, 
                           logger = logger,
                           callbacks=callbacks
                           )

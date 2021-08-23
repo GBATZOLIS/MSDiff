@@ -4,6 +4,7 @@ from utils import scatter, plot, compute_grad, create_video
 from pytorch_lightning.callbacks import Callback
 import torchvision
 from . import utils
+import numpy as np
 
 @utils.register_callback('ema')
 class EMACallback(Callback):
@@ -43,6 +44,7 @@ class ImageVisualizationCallback(Callback):
     def visualise_evolution(self, evolution, pl_module):
         #to be implemented
         return
+
 
 
 @utils.register_callback('GradientVisualization')

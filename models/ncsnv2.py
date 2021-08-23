@@ -18,7 +18,7 @@
 import torch
 import torch.nn as nn
 import functools
-
+import pytorch_lightning as pl
 from .utils import get_sigmas, register_model
 from .layers import (CondRefineBlock, RefineBlock, ResidualBlock, ncsn_conv3x3,
                      ConditionalResidualBlock, get_act)
@@ -41,7 +41,7 @@ def get_network(config):
 
 
 @register_model(name='ncsnv2_64')
-class NCSNv2(nn.Module):
+class NCSNv2(pl.LightningModule):
   def __init__(self, config):
     super().__init__()
     self.centered = config.data.centered
@@ -133,7 +133,7 @@ class NCSNv2(nn.Module):
 
 
 @register_model(name='ncsn')
-class NCSN(nn.Module):
+class NCSN(pl.LightningModule):
   def __init__(self, config):
     super().__init__()
     self.centered = config.data.centered
@@ -219,7 +219,7 @@ class NCSN(nn.Module):
 
 
 @register_model(name='ncsnv2_128')
-class NCSNv2_128(nn.Module):
+class NCSNv2_128(pl.LightningModule):
   """NCSNv2 model architecture for 128px images."""
   def __init__(self, config):
     super().__init__()
@@ -313,7 +313,7 @@ class NCSNv2_128(nn.Module):
 
 
 @register_model(name='ncsnv2_256')
-class NCSNv2_256(nn.Module):
+class NCSNv2_256(pl.LightningModule):
   """NCSNv2 model architecture for 256px images."""
   def __init__(self, config):
     super().__init__()
