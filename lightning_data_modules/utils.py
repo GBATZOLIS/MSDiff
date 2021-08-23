@@ -1,4 +1,4 @@
-LIGHTNING_DATA_MODULES = {}
+_LIGHTNING_DATA_MODULES = {}
 def register_lightning_datamodule(cls=None, *, name=None):
   """A decorator for registering model classes."""
 
@@ -7,9 +7,9 @@ def register_lightning_datamodule(cls=None, *, name=None):
       local_name = cls.__name__
     else:
       local_name = name
-    if local_name in LIGHTNING_DATA_MODULES:
+    if local_name in _LIGHTNING_DATA_MODULES:
       raise ValueError(f'Already registered model with name: {local_name}')
-    LIGHTNING_DATA_MODULES[local_name] = cls
+    _LIGHTNING_DATA_MODULES[local_name] = cls
     return cls
 
   if cls is None:
@@ -19,8 +19,8 @@ def register_lightning_datamodule(cls=None, *, name=None):
 
 
 def get_lightning_datamodule_by_name(name):
-  print(LIGHTNING_DATA_MODULES.keys())
-  return LIGHTNING_DATA_MODULES[name]
+  print(_LIGHTNING_DATA_MODULES.keys())
+  return _LIGHTNING_DATA_MODULES[name]
 
 def create_lightning_datamodule(config):
   datamodule = get_lightning_datamodule_by_name(config.data.datamodule)(config)

@@ -10,7 +10,7 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional'
   training.batch_size = 50
-  training.gpus = 1
+  training.gpus = 0
   training.workers = 4
   training.num_epochs = 10000
   training.n_iters = 2400001
