@@ -10,7 +10,7 @@ from models import ddpm, ncsnv2, fcn
 from . import BaseSdeGenerativeModel
 from iunets.layers import InvertibleDownsampling2D
 from . import utils
-from sampling.unconditional import inpainting_fn
+from sampling.unconditional import get_inpainting_fn
 
 def permute_channels(haar_image, forward=True):
         permuted_image = torch.zeros_like(haar_image)
@@ -43,7 +43,7 @@ class HaarMultiScaleSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeM
     def __init__(self, config, *args, **kwargs):
         super().__init__()
         self.haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
-        self.inpainting_fn = inpainting_fn(config, self.sde, self.sampling_eps)
+        self.inpainting_fn = get_inpainting_fn(config, self.sde, self.sampling_eps)
     
     def training_step(self, batch, batch_idx):
         batch = self.haar_transform(batch) #apply the haar transform
