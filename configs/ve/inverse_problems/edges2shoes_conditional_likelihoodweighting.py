@@ -70,7 +70,7 @@ def get_config():
   model.sigma_max_x = 64 #input range is [0,1] and resolution is 64^2
   #we do not want to perturb y a lot. 
   #A slight perturbation will result in better approximation of the conditional time-dependent score.
-  model.sigma_max_y = 1
+  model.sigma_max_y = 4
   model.sigma_min = 0.01
   model.beta_min = 0.1
   # We use an adjusted beta max 
