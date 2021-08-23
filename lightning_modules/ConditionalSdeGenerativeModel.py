@@ -8,7 +8,7 @@ from . import utils
 @utils.register_lightning_module(name='conditional')
 class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeModel):
     def __init__(self, config, *args, **kwargs):
-        super().__init__()
+        super().__init__(config)
 
         #Sampling settings
         self.data_shape = config.data_x.shape

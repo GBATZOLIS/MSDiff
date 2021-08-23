@@ -41,7 +41,7 @@ def permute_channels(haar_image, forward=True):
 @utils.register_lightning_module(name='haar_multiscale')
 class HaarMultiScaleSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeModel):
     def __init__(self, config, *args, **kwargs):
-        super().__init__()
+        super().__init__(config)
         self.haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
         self.inpainting_fn = get_inpainting_fn(config, self.sde, self.sampling_eps)
     
