@@ -19,7 +19,7 @@ def normalise(x, value_range=None):
         x /= value_range[1]
     return x
 
-@utils.register_callback('paired')
+@utils.register_callback(name='paired')
 class PairedVisualizationCallback(Callback):
     def __init__(self, show_evolution=False):
         super().__init__()

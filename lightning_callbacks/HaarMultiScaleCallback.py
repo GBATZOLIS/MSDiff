@@ -60,7 +60,7 @@ def create_supergrid(normalised_permuted_haar_images):
     super_grid = make_grid(haar_super_grid, nrow=int(np.sqrt(normalised_permuted_haar_images.size(0))))
     return super_grid
 
-@utils.register_callback('haar_multiscale')
+@utils.register_callback(name='haar_multiscale')
 class HaarMultiScaleVisualizationCallback(Callback):
     def __init__(self, show_evolution=False):
         super().__init__()

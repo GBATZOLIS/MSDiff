@@ -39,7 +39,7 @@ class CelebA(ImageDataset):
         ImageDataset.__init__(self, path=path, resolution=resolution)
 
 
-@utils.register_lightning_datamodule('image')
+@utils.register_lightning_datamodule(name='image')
 class ImageDataModule(pl.LightningDataModule):
     def __init__(self, config):
         self.path = config.data.base_dir

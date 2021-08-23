@@ -6,7 +6,7 @@ import torchvision
 from . import utils
 import numpy as np
 
-@utils.register_callback('ema')
+@utils.register_callback(name='ema')
 class EMACallback(Callback):
 
     def on_before_zero_grad(self, trainer, pl_module, optimizer):
@@ -19,7 +19,7 @@ class EMACallback(Callback):
     def on_train_epoch_start(self, trainer, pl_module):
         pl_module.ema.restore(pl_module.score_model.parameters())
 
-@utils.register_callback('base')
+@utils.register_callback(name='base')
 class ImageVisualizationCallback(Callback):
     def __init__(self, show_evolution=False):
         super().__init__()
@@ -47,7 +47,7 @@ class ImageVisualizationCallback(Callback):
 
 
 
-@utils.register_callback('GradientVisualization')
+@utils.register_callback(name='GradientVisualization')
 class GradientVisualizer(Callback):
 
     def on_epoch_end(self,trainer, pl_module):
@@ -71,7 +71,7 @@ class GradientVisualizer(Callback):
                         )
         pl_module.logger.experiment.add_image('grad_norms', image, pl_module.current_epoch)
 
-@utils.register_callback('2DVisualization')
+@utils.register_callback(name='2DVisualization')
 class TwoDimVizualizer(Callback):
     def __init__(self, show_evolution=False):
         super().__init__()

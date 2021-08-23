@@ -89,7 +89,7 @@ class SyntheticDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-@utils.register_lightning_datamodule('Synthetic')
+@utils.register_lightning_datamodule(name='Synthetic')
 class SyntheticDataModule(pl.LightningDataModule):
     def __init__(self, config): 
         super(SyntheticDataModule, self).__init__()

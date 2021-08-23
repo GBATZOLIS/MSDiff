@@ -140,7 +140,7 @@ class PairedDataset(data.Dataset):
         """Return the total number of images."""
         return len(self.image_paths['A'])
 
-@utils.register_lightning_datamodule('paired')
+@utils.register_lightning_datamodule(name='paired')
 class PairedDataModule(pl.LightningDataModule):
     def __init__(self, config, path):
         #DataLoader arguments

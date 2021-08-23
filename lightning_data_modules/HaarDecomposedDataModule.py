@@ -40,7 +40,7 @@ class HaarDecomposedDataset(data.Dataset):
       """Return the total number of images."""
       return len(self.image_files)
 
-@utils.register_lightning_datamodule('haar_multiscale')
+@utils.register_lightning_datamodule(name='haar_multiscale')
 class HaarDecomposedDataModule(pl.LightningDataModule):
     def __init__(self, config, path):
         #DataLoader arguments
