@@ -4,7 +4,7 @@ from ml_collections.config_flags import config_flags
 import pytorch_lightning as pl
 from lightning_modules.utils import get_lightning_module_by_name
 from lightning_data_modules.utils import get_lightning_datamodule_by_name
-from callbacks.utils import get_callbacks
+from lightning_callbacks.utils import get_callbacks
 
 from models import ddpm, ncsnv2, fcn
 
