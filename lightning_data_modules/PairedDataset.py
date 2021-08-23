@@ -7,6 +7,7 @@ import numpy as np
 from pathlib import Path
 from tqdm import tqdm
 from . import utils
+import pytorch_lightning as pl
 
 class PairedDataset(data.Dataset):
     """A template dataset class for you to implement custom datasets."""
