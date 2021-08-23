@@ -3,10 +3,10 @@ from pytorch_lightning.callbacks import Callback
 from utils import scatter, plot, compute_grad, create_video
 from pytorch_lightning.callbacks import Callback
 import torchvision
-from . import utils
+from .utils import register_callback
 import numpy as np
 
-@utils.register_callback(name='ema')
+@register_callback(name='ema')
 class EMACallback(Callback):
 
     def on_before_zero_grad(self, trainer, pl_module, optimizer):
