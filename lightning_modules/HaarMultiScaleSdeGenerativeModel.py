@@ -7,7 +7,7 @@ from models.ema import ExponentialMovingAverage
 from models import utils as mutils
 from utils import scatter
 from models import ddpm, ncsnv2, fcn
-from BaseSdeGenerativeModel import BaseSdeGenerativeModel
+from . import BaseSdeGenerativeModel
 from iunets.layers import InvertibleDownsampling2D
 from . import utils
 from sampling.unconditional import inpainting_fn
@@ -39,7 +39,7 @@ def permute_channels(haar_image, forward=True):
         return permuted_image
 
 @utils.register_lightning_module(name='haar_multiscale')
-class HaarMultiScaleSdeGenerativeModel(BaseSdeGenerativeModel):
+class HaarMultiScaleSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeModel):
     def __init__(self, config, *args, **kwargs):
         super().__init__()
         self.haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)

@@ -1,4 +1,4 @@
-from BaseSdeGenerativeModel import BaseSdeGenerativeModel
+from . import BaseSdeGenerativeModel
 from losses import get_sde_loss_fn, get_smld_loss_fn, get_ddpm_loss_fn, get_inverse_problem_smld_loss_fn, get_inverse_problem_ddpm_loss_fn
 from sde_lib import VESDE, VPSDE, cVESDE
 from sampling.conditional import get_conditional_sampling_fn
@@ -6,7 +6,7 @@ import sde_lib
 from . import utils
 
 @utils.register_lightning_module(name='conditional')
-class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel):
+class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeModel):
     def __init__(self, config, *args, **kwargs):
         super().__init__()
 
