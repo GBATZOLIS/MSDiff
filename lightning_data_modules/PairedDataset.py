@@ -8,8 +8,6 @@ from pathlib import Path
 from tqdm import tqdm
 
 
-
-
 class PairedDataset(data.Dataset):
     """A template dataset class for you to implement custom datasets."""
     def __init__(self,  config, phase, domain=None):
