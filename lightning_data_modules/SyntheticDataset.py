@@ -89,3 +89,39 @@ class SyntheticDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
+@utils.register_lightning_datamodule(name='Synthetic')
+class SyntheticDataModule(pl.LightningDataModule):
+    def __init__(self, config): 
+        super(SyntheticDataModule, self).__init__()
+        #Synthetic Dataset arguments
+        self.data_samples=config.data.data_samples
+        self.dataset_type=config.data.dataset_type
+        self.mixtures = config.data.mixtures
+        self.return_mixtures = config.data.return_mixtures
+        self.split = config.data.split
+
+        #DataLoader arguments
+        self.train_workers = config.training.workers
+        self.val_workers = config.validation.workers
+        self.test_workers = config.eval.workers
+
+        self.train_batch = config.training.batch_size
+        self.val_batch = config.validation.batch_size
+        self.test_batch = config.eval.batch_size
+
+        #self.normalize = config.normalize
+        
+    def setup(self, stage=None): 
+        data = SyntheticDataset.SyntheticDataset(self.data_samples, self.dataset_type, self.mixtures, self.return_mixtures)
+        l=len(data)
+        self.train_data, self.valid_data, self.test_data = random_split(data, [int(self.split[0]*l), int(self.split[1]*l), int(self.split[2]*l)]) 
+    
+    def train_dataloader(self):
+        return DataLoader(self.train_data, batch_size = self.train_batch, num_workers=self.train_workers) 
+  
+    def val_dataloader(self):
+        return DataLoader(self.valid_data, batch_size = self.val_batch, num_workers=self.val_workers) 
+  
+    def test_dataloader(self): 
+        return DataLoader(self.test_data, batch_size = self.test_batch, num_workers=self.test_workers) 
+    
