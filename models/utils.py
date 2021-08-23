@@ -54,10 +54,16 @@ def get_sigmas(config):
   Returns:
     sigmas: a jax numpy arrary of noise levels
   """
-  sigmas = np.exp(
-    np.linspace(np.log(config.model.sigma_max), np.log(config.model.sigma_min), config.model.num_scales))
-
-  return sigmas
+  if config.training.lightning_module == 'conditional':
+    sigmas_x = np.exp(
+      np.linspace(np.log(config.model.sigma_max_x), np.log(config.model.sigma_min), config.model.num_scales))
+    sigmas_y = np.exp(
+      np.linspace(np.log(config.model.sigma_max_y), np.log(config.model.sigma_min), config.model.num_scales))
+    return sigmas_x, sigmas_y
+  else:
+    sigmas = np.exp(
+      np.linspace(np.log(config.model.sigma_max), np.log(config.model.sigma_min), config.model.num_scales))
+    return sigmas
 
 
 def get_ddpm_params(config):
