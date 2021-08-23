@@ -2,8 +2,8 @@ from absl import app
 from absl import flags
 from ml_collections.config_flags import config_flags
 import pytorch_lightning as pl
-from lightning_modules.utils import create_lightning_datamodule
-from lightning_data_modules.utils import get_lightning_module_by_name
+from lightning_modules.utils import create_lightning_module
+from lightning_data_modules.utils import create_lightning_datamodule
 from lightning_callbacks.utils import get_callbacks
 
 from models import ddpm, ncsnv2, fcn
@@ -28,7 +28,7 @@ def main(argv):
 
     DataModule = create_lightning_datamodule(config)
     callbacks = get_callbacks(config.training.visualization_callback, config.training.show_evolution)
-    LightningModule = get_lightning_module_by_name(config.training.lightning_module)
+    LightningModule = create_lightning_module(config)
 
     logger = pl.loggers.TensorBoardLogger(FLAGS.log_path, name='lightning_logs')
 

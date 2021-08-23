@@ -20,3 +20,7 @@ def register_lightning_module(cls=None, *, name=None):
 
 def get_lightning_module_by_name(name):
   return LIGHTNING_MODULES[name]
+
+def create_lightning_module(config):
+  lightning_module = get_lightning_module_by_name(config.training.lightning_module)(config)
+  return lightning_module
