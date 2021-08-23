@@ -101,6 +101,47 @@ class SDE(abc.ABC):
 
     return RSDE()
 
+class cSDE(SDE): #conditional setting. Allow for conditional time-dependent score.
+  def reverse(self, score_fn, probability_flow=False):
+    """Create the reverse-time SDE/ODE.
+    Args:
+      score_fn: A time-dependent score-based model that takes x and t and returns the score.
+      probability_flow: If `True`, create the reverse-time ODE used for probability flow sampling.
+    """
+    N = self.N
+    T = self.T
+    sde_fn = self.sde
+    discretize_fn = self.discretize
+
+    # Build the class for reverse-time SDE.
+    class RSDE(self.__class__):
+      def __init__(self):
+        self.N = N
+        self.probability_flow = probability_flow
+
+      @property
+      def T(self):
+        return T
+
+      def sde(self, x, y, t):
+        """Create the drift and diffusion functions for the reverse SDE/ODE."""
+        drift, diffusion = sde_fn(x, t)
+        score_x = score_fn(x, y, t) #conditional score on y
+        drift = drift - diffusion[:, None, None, None] ** 2 * score_x * (0.5 if self.probability_flow else 1.)
+        # Set the diffusion function to zero for ODEs.
+        diffusion = 0. if self.probability_flow else diffusion
+        return drift, diffusion
+
+      def discretize(self, x, y, t):
+        """Create discretized iteration rules for the reverse diffusion sampler."""
+        f, G = discretize_fn(x, t)
+        rev_f = f - G[:, None, None, None] ** 2 * score_fn(x, y, t) * (0.5 if self.probability_flow else 1.)
+        rev_G = torch.zeros_like(G) if self.probability_flow else G
+        return rev_f, rev_G
+
+    return RSDE()
+
+
 
 class VPSDE(SDE):
   def __init__(self, beta_min=0.1, beta_max=20, N=1000):
@@ -130,7 +171,7 @@ class VPSDE(SDE):
     diffusion = torch.sqrt(beta_t)
     return drift, diffusion
 
-  def marginal_prob(self, x, t):
+  def marginal_prob(self, x, t): #perturbation kernel
     log_mean_coeff = -0.25 * t ** 2 * (self.beta_1 - self.beta_0) - 0.5 * t * self.beta_0
     mean = torch.exp(log_mean_coeff[:, None, None, None]) * x
     std = torch.sqrt(1. - torch.exp(2. * log_mean_coeff))
@@ -220,7 +261,7 @@ class VESDE(SDE):
                                                 device=t.device))
     return drift, diffusion
 
-  def marginal_prob(self, x, t):
+  def marginal_prob(self, x, t): #perturbation kernel P(X(t)|X(0)) parameters 
     std = self.sigma_min * (self.sigma_max / self.sigma_min) ** t
     mean = x
     return mean, std
@@ -290,3 +331,4 @@ class cVESDE(cSDE):
     f = torch.zeros_like(x)
     G = torch.sqrt(sigma ** 2 - adjacent_sigma ** 2)
     return f, G
+  
