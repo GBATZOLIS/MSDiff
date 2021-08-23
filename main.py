@@ -2,7 +2,6 @@ from absl import app
 from absl import flags
 from ml_collections.config_flags import config_flags
 import pytorch_lightning as pl
-from lightning_data_modules.utils import get_datamodule_by_name
 from lightning_modules.utils import get_lightning_module_by_name
 from lightning_data_modules.utils import get_lightning_datamodule_by_name
 from callbacks.utils import get_callbacks
