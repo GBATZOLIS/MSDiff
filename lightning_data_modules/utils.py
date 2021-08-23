@@ -19,4 +19,5 @@ def register_lightning_datamodule(cls=None, *, name=None):
 
 
 def get_lightning_datamodule_by_name(name):
+  print(LIGHTNING_DATA_MODULES.keys())
   return LIGHTNING_DATA_MODULES[name]
