@@ -3,7 +3,6 @@ from losses import get_sde_loss_fn, get_smld_loss_fn, get_ddpm_loss_fn
 import pytorch_lightning as pl
 import sde_lib
 from sampling.unconditional import get_sampling_fn
-from models.ema import ExponentialMovingAverage
 from models import utils as mutils
 from sde_lib import VESDE, VPSDE
 from . import utils
@@ -17,8 +16,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         # Initialize the score model
         self.config = config
         self.score_model = mutils.create_model(config)
-        self.ema = ExponentialMovingAverage(self.score_model.parameters(), decay=config.model.ema_rate)
-
+        
         # Placeholder to store samples
         self.samples = None
 
