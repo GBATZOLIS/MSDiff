@@ -2,7 +2,7 @@ import losses
 from losses import get_sde_loss_fn, get_smld_loss_fn, get_ddpm_loss_fn
 import pytorch_lightning as pl
 import sde_lib
-import sampling
+import sampling.sampling as sampling
 from models.ema import ExponentialMovingAverage
 from models import utils as mutils
 from sde_lib import VESDE, VPSDE
@@ -21,13 +21,6 @@ class BaseSdeGenerativeModel(pl.LightningModule):
 
         # Placeholder to store samples
         self.samples = None
-
-        # Configure SDE
-        self.configure_sde(self.config)
-        
-        # Configure trainining and validation loss functions.
-        self.train_loss_fn = self.configure_loss_fn(config, train=True)
-        self.eval_loss_fn = self.configure_loss_fn(config, train=False)
 
         #Sampling settings
         self.data_shape = config.data.shape

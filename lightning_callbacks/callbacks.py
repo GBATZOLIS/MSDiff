@@ -5,6 +5,16 @@ import torchvision
 from . import utils
 import numpy as np
 
+@utils.register_callback(name='configuration')
+class ConfigurationSetterCallback(Callback):
+    def on_fit_start(self, trainer, pl_module):
+        # Configure SDE
+        pl_module.configure_sde(pl_module.config)
+        
+        # Configure trainining and validation loss functions.
+        pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
+        pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
+
 @utils.register_callback(name='ema')
 class EMACallback(Callback):
 

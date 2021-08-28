@@ -29,7 +29,7 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
         else:
             raise NotImplementedError(f"SDE {config.training.sde} unknown.")
     
-    def configure_loss_functions(self, config, train):
+    def configure_loss_fn(self, config, train):
         if config.training.continuous:
             loss_fn = get_sde_loss_fn(self.sde, train, reduce_mean=config.training.reduce_mean,
                                     continuous=True, likelihood_weighting=config.training.likelihood_weighting)
