@@ -37,7 +37,7 @@ class ImageVisualizationCallback(Callback):
         super().__init__()
         self.show_evolution = show_evolution
 
-    def on_epoch_end(self, trainer, pl_module):
+    def on_validation_epoch_end(self, trainer, pl_module):
         if self.show_evolution:
             samples, sampling_info = pl_module.sample(show_evolution=True)
             evolution = sampling_info['evolution']
@@ -62,7 +62,7 @@ class ImageVisualizationCallback(Callback):
 @utils.register_callback(name='GradientVisualization')
 class GradientVisualizer(Callback):
 
-    def on_epoch_end(self,trainer, pl_module):
+    def on_validation_epoch_end(self,trainer, pl_module):
         if pl_module.current_epoch % 500 == 0:
             _, sampling_info = pl_module.sample(show_evolution=True)
             evolution, times = sampling_info['evolution'], sampling_info['times']
@@ -94,7 +94,7 @@ class TwoDimVizualizer(Callback):
         samples, _ = pl_module.sample()
         self.visualise_samples(samples, pl_module)
 
-    def on_epoch_end(self,trainer, pl_module):
+    def on_validation_epoch_end(self,trainer, pl_module):
         if pl_module.current_epoch % 500 == 0 \
             and pl_module.current_epoch % 2500 != 0:
             samples, _ = pl_module.sample()
