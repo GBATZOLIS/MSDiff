@@ -43,6 +43,7 @@ class HaarDecomposedDataset(data.Dataset):
 @utils.register_lightning_datamodule(name='haar_multiscale')
 class HaarDecomposedDataModule(pl.LightningDataModule):
     def __init__(self, config):
+        super().__init__()
         #DataLoader arguments
         self.config = config
         self.train_workers = config.training.workers

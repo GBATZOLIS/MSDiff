@@ -1,4 +1,4 @@
-import torch.utils.data as data
+import torch.utils.data as data, DataLoader
 from torchvision import transforms
 from PIL import Image, ImageOps
 import torch
@@ -137,6 +137,7 @@ class PairedDataset(data.Dataset):
 @utils.register_lightning_datamodule(name='paired')
 class PairedDataModule(pl.LightningDataModule):
     def __init__(self, config):
+        super().__init__()
         #DataLoader arguments
         self.config = config
         self.train_workers = config.training.workers
@@ -148,9 +149,9 @@ class PairedDataModule(pl.LightningDataModule):
         self.test_batch = config.eval.batch_size
 
     def setup(self, stage=None): 
-        self.train_dataset = PairedDataset.PairedDataset(self.config, phase='train')
-        self.val_dataset = PairedDataset.PairedDataset(self.config, phase='val')
-        self.test_dataset = PairedDataset.PairedDataset(self.config, phase='test')
+        self.train_dataset = PairedDataset(self.config, phase='train')
+        self.val_dataset = PairedDataset(self.config, phase='val')
+        self.test_dataset = PairedDataset(self.config, phase='test')
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size = self.train_batch, shuffle=True, num_workers=self.train_workers) 
