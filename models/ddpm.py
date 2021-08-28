@@ -21,7 +21,7 @@ https://github.com/hojonathanho/diffusion/blob/master/diffusion_tf/models/unet.p
 import torch
 import torch.nn as nn
 import functools
-
+import pytorch_lightning as pl
 from . import utils, layers, normalization
 
 RefineBlock = layers.RefineBlock
@@ -36,7 +36,7 @@ default_initializer = layers.default_init
 
 
 @utils.register_model(name='ddpm')
-class DDPM(nn.Module):
+class DDPM(pl.LightningModule):
   def __init__(self, config):
     super().__init__()
     self.act = act = get_act(config)
