@@ -2,7 +2,7 @@ import losses
 from losses import get_sde_loss_fn, get_smld_loss_fn, get_ddpm_loss_fn
 import pytorch_lightning as pl
 import sde_lib
-from sampling.sampling import get_sampling_fn
+from sampling.unconditional import get_sampling_fn
 from models.ema import ExponentialMovingAverage
 from models import utils as mutils
 from sde_lib import VESDE, VPSDE
@@ -72,9 +72,9 @@ class BaseSdeGenerativeModel(pl.LightningModule):
             sampling_shape = self.default_sampling_shape
         else:
             sampling_shape = [num_samples] +  self.config.data_shape
-        self.sampling_fn = get_sampling_fn(self.config, self.sde, sampling_shape, self.sampling_eps)
+        sampling_fn = get_sampling_fn(self.config, self.sde, sampling_shape, self.sampling_eps)
 
-        return self.sampling_fn(self.score_model, show_evolution=show_evolution)
+        return sampling_fn(self.score_model, show_evolution=show_evolution)
 
     def configure_optimizers(self):
         optimizer = losses.get_optimizer(self.config, self.score_model.parameters())
