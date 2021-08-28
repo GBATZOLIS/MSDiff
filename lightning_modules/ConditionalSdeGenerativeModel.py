@@ -51,7 +51,7 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
         return loss_fn
     
     def configure_default_sampling_shape(self, config):
-        self.data_shape = config.data_x.shape
+        self.data_shape = config.data.shape_x
         self.default_sampling_shape = [config.training.batch_size] +  self.data_shape
 
     def sample(self, y, show_evolution=False):

@@ -59,6 +59,8 @@ def get_config():
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
   data.image_size = 64 
+  data.shape_x = [3, data.image_size, data.image_size]
+  data.shape_y = [3, data.image_size, data.image_size]
   data.centered = False
   data.random_flip = False
   data.uniform_dequantization = False
