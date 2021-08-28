@@ -2,7 +2,7 @@ import losses
 from losses import get_sde_loss_fn, get_smld_loss_fn, get_ddpm_loss_fn
 import pytorch_lightning as pl
 import sde_lib
-import sampling.sampling as sampling
+from sampling.sampling import get_sampling_fn
 from models.ema import ExponentialMovingAverage
 from models import utils as mutils
 from sde_lib import VESDE, VPSDE
@@ -22,10 +22,6 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         # Placeholder to store samples
         self.samples = None
 
-        #Sampling settings
-        self.data_shape = config.data.shape
-        self.default_sampling_shape = [config.training.batch_size] +  self.data_shape
-    
     def configure_sde(self, config):
         # Setup SDEs
         if config.training.sde.lower() == 'vpsde':
@@ -55,6 +51,10 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         
         return loss_fn
 
+    def configure_default_sampling_shape(self, config):
+        #Sampling settings
+        self.data_shape = config.data.shape
+        self.default_sampling_shape = [config.training.batch_size] +  self.data_shape
 
     def training_step(self, batch, batch_idx):
         loss = self.train_loss_fn(self.score_model, batch)
@@ -72,7 +72,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
             sampling_shape = self.default_sampling_shape
         else:
             sampling_shape = [num_samples] +  self.config.data_shape
-        self.sampling_fn = sampling.get_sampling_fn(self.config, self.sde, sampling_shape, self.sampling_eps)
+        self.sampling_fn = get_sampling_fn(self.config, self.sde, sampling_shape, self.sampling_eps)
 
         return self.sampling_fn(self.score_model, show_evolution=show_evolution)
 

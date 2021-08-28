@@ -15,6 +15,9 @@ class ConfigurationSetterCallback(Callback):
         pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
         pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
 
+        # Configure default sampling shape
+        pl_module.configure_default_sampling_shape(pl_module.config)
+
 @utils.register_callback(name='ema')
 class EMACallback(Callback):
 

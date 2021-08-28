@@ -10,10 +10,6 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
     def __init__(self, config, *args, **kwargs):
         super().__init__(config)
 
-        #Sampling settings
-        self.data_shape = config.data_x.shape
-        self.default_sampling_shape = [config.training.batch_size] +  self.data_shape
-
     def configure_sde(self, config):
         if config.training.sde.lower() == 'vpsde':
             self.sde = sde_lib.VPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
@@ -54,6 +50,10 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
         
         return loss_fn
     
+    def configure_default_sampling_shape(self, config):
+        self.data_shape = config.data_x.shape
+        self.default_sampling_shape = [config.training.batch_size] +  self.data_shape
+
     def sample(self, y, show_evolution=False):
         sampling_shape = [y.size(0)]+self.config.data_shape
         conditional_sampling_fn = get_conditional_sampling_fn(self.config, self.sde, sampling_shape, self.sampling_eps)
