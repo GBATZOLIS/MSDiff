@@ -131,16 +131,13 @@ def get_model_fn(model, train=False):
 
   return model_fn
 
-
 def get_score_fn(sde, model, train=False, continuous=False):
   """Wraps `score_fn` so that the model output corresponds to a real time-dependent score function.
-
   Args:
     sde: An `sde_lib.SDE` object that represents the forward SDE.
     model: A score model.
     train: `True` for training and `False` for evaluation.
     continuous: If `True`, the score-based model is expected to directly take continuous time steps.
-
   Returns:
     A score function.
   """
@@ -162,10 +159,10 @@ def get_score_fn(sde, model, train=False, continuous=False):
         score = model_fn(x, labels)
         std = sde.sqrt_1m_alphas_cumprod.to(labels.device)[labels.long()]
 
-      score = -score / std[:, None]
+      score = -score / std[:, None, None, None] #-> why do they scale the output of the network by std ??
       return score
 
-  elif isinstance(sde, sde_lib.VESDE):
+  elif isinstance(sde, sde_lib.VESDE) or isinstance(sde, sde_lib.cVESDE):
     def score_fn(x, t):
       if continuous:
         labels = sde.marginal_prob(torch.zeros_like(x), t)[1]
