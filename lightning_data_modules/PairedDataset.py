@@ -1,4 +1,4 @@
-import torch.utils.data as data, DataLoader
+from torch.utils.data import  Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image, ImageOps
 import torch
@@ -9,7 +9,7 @@ from tqdm import tqdm
 from . import utils
 import pytorch_lightning as pl
 
-class PairedDataset(data.Dataset):
+class PairedDataset(Dataset):
     """A template dataset class for you to implement custom datasets."""
     def __init__(self,  config, phase, domain=None):
         #set domain to the domain you want to sample from. If domain is set to N we get paired samples from all domains.
