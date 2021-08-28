@@ -131,6 +131,8 @@ def get_model_fn(model, train=False):
 
   return model_fn
 
+
+
 def get_score_fn(sde, model, train=False, continuous=False):
   """Wraps `score_fn` so that the model output corresponds to a real time-dependent score function.
   Args:
@@ -180,6 +182,17 @@ def get_score_fn(sde, model, train=False, continuous=False):
 
   return score_fn
 
+def get_conditional_score_fn(score_fn, target_domain): #for standard inverse problems. It should be modified for general inverse problems (different resolutions etc.).
+  def conditional_score_fn(x, y, t):
+    score = score_fn(torch.cat((x,y),dim=1), t)
+    if target_domain == 'x':
+      return score[:, :score.size(1)//2, ::]
+    elif target_domain == 'y':
+      return score[:, score.size(1)//2:, ::]
+    else:
+      raise Exception('target_domain is not valid. Available options [x,y].')
+  
+  return conditional_score_fn
 
 def to_flattened_numpy(x):
   """Flatten a torch tensor `x` and convert it to numpy."""
