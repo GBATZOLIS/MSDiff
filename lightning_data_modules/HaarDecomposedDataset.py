@@ -55,9 +55,9 @@ class HaarDecomposedDataModule(pl.LightningDataModule):
         self.test_batch = config.eval.batch_size
 
     def setup(self, stage=None): 
-        self.train_dataset = HaarDecomposedDataset.HaarDecomposedDataset(self.config, phase='train')
-        self.val_dataset = HaarDecomposedDataset.HaarDecomposedDataset(self.config, phase='val')
-        self.test_dataset = HaarDecomposedDataset.HaarDecomposedDataset(self.config, phase='test')
+        self.train_dataset = HaarDecomposedDataset(self.config, phase='train')
+        self.val_dataset = HaarDecomposedDataset(self.config, phase='val')
+        self.test_dataset = HaarDecomposedDataset(self.config, phase='test')
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size = self.train_batch, shuffle=True, num_workers=self.train_workers) 

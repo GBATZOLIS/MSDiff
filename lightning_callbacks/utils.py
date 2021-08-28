@@ -22,7 +22,7 @@ def get_callback_by_name(name):
     return _CALLBACKS[name]
 
 def get_callbacks(visualization_callback, show_evolution):
-    callbacks=[get_callback_by_name('ema')()]
+    callbacks=[get_callback_by_name('ema')(), get_callback_by_name('configuration')()]
     callbacks.append(get_callback_by_name(visualization_callback)(show_evolution=show_evolution))
     return callbacks
 

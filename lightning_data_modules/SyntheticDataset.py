@@ -112,7 +112,7 @@ class SyntheticDataModule(pl.LightningDataModule):
         #self.normalize = config.normalize
         
     def setup(self, stage=None): 
-        data = SyntheticDataset.SyntheticDataset(self.data_samples, self.dataset_type, self.mixtures, self.return_mixtures)
+        data = SyntheticDataset(self.data_samples, self.dataset_type, self.mixtures, self.return_mixtures)
         l=len(data)
         self.train_data, self.valid_data, self.test_data = random_split(data, [int(self.split[0]*l), int(self.split[1]*l), int(self.split[2]*l)]) 
     

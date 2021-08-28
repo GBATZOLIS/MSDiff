@@ -57,7 +57,7 @@ class ImageDataModule(pl.LightningDataModule):
         self.test_batch = config.eval.batch_size
 
     def setup(self, stage=None): 
-        data = ImageDatasets.ImageDataset(self.path, self.resolution)
+        data = ImageDataset(self.path, self.resolution)
         l=len(data)
         self.train_data, self.valid_data, self.test_data = random_split(data, [int(self.split[0]*l), int(self.split[1]*l), l - int(self.split[0]*l) - int(self.split[1]*l)]) 
     
