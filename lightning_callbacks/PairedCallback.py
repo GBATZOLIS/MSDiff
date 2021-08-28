@@ -26,6 +26,9 @@ class PairedVisualizationCallback(Callback):
         self.show_evolution = show_evolution
 
     def on_validation_epoch_end(self, trainer, pl_module):
+        if pl_module.current_epoch == 0:
+            return 
+            
         dataloader_iterator = iter(trainer.datamodule.val_dataloader())
         num_batches = 1
         for i in range(num_batches):
