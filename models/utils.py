@@ -171,7 +171,7 @@ def get_score_fn(sde, model, train=False, continuous=False):
           #score = model_fn(x, labels)
         else:
           # For VE-trained models, t=0 corresponds to the highest noise level
-          labels = t*(sde.N - 1)
+          labels = t*(sde[1].N - 1)
           labels = torch.round(labels).long()
           score = model_fn(x, labels)
           score = divide_by_sigmas(score, labels, sde)
