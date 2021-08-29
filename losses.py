@@ -102,11 +102,11 @@ def get_smld_loss_fn(vesde, train, reduce_mean=False):
   assert isinstance(vesde, VESDE), "SMLD training only works for VESDEs."
 
   # Previous SMLD models assume descending sigmas
-  smld_sigma_array = torch.flip(vesde.discrete_sigmas, dims=(0,))
+  smld_sigma_array = vesde.discrete_sigmas
   reduce_op = torch.mean if reduce_mean else lambda *args, **kwargs: 0.5 * torch.sum(*args, **kwargs)
 
   def loss_fn(model, batch):
-    model_fn = mutils.get_model_fn(model, train=train)
+    model_fn = mutils.get_score_fn(model, train=train)
     labels = torch.randint(0, vesde.N, (batch.shape[0],), device=batch.device)
     sigmas = smld_sigma_array.to(batch.device)[labels]
     noise = torch.randn_like(batch) * sigmas[:, None, None, None]
@@ -124,13 +124,13 @@ def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_w
   reduce_op = torch.mean if reduce_mean else lambda *args, **kwargs: 0.5 * torch.sum(*args, **kwargs)
 
   # Previous SMLD models assume descending sigmas
-  smld_sigma_array_y = torch.flip(sde[0].discrete_sigmas, dims=(0,)) #observed
-  smld_sigma_array_x = torch.flip(sde[1].discrete_sigmas, dims=(0,)) #unobserved
+  smld_sigma_array_y = sde[0].discrete_sigmas #observed
+  smld_sigma_array_x = sde[1].discrete_sigmas #unobserved
   
 
   def loss_fn(model, batch):
     y, x = batch
-    model_fn = mutils.get_model_fn(model, train=train)
+    model_fn = mutils.get_score_fn(model, train=train)
     labels = torch.randint(0, sde[1].N, (x.shape[0],), device=x.device)
 
     sigmas_y = smld_sigma_array_y.to(y.device)[labels]
@@ -166,6 +166,7 @@ def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_w
   return loss_fn
 
 
+#I need to revisit this function when I implement conditional SDE with VPSDEs and discrete training procedure.
 def get_ddpm_loss_fn(vpsde, train, reduce_mean=True):
   """Legacy code to reproduce previous results on DDPM. Not recommended for new work."""
   assert isinstance(vpsde, VPSDE), "DDPM training only works for VPSDEs."

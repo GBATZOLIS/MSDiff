@@ -47,24 +47,26 @@ def get_model(name):
   return _MODELS[name]
 
 
-def get_sigmas(config):
-  """Get sigmas --- the set of noise levels for SMLD from config files.
-  Args:
-    config: A ConfigDict object parsed from the config file
-  Returns:
-    sigmas: a jax numpy arrary of noise levels
-  """
-  if config.training.lightning_module == 'conditional':
-    sigmas_x = np.exp(
-      np.linspace(np.log(config.model.sigma_max_x), np.log(config.model.sigma_min), config.model.num_scales))
-    sigmas_y = np.exp(
-      np.linspace(np.log(config.model.sigma_max_y), np.log(config.model.sigma_min), config.model.num_scales))
-    return sigmas_x, sigmas_y
-  else:
-    sigmas = np.exp(
-      np.linspace(np.log(config.model.sigma_max), np.log(config.model.sigma_min), config.model.num_scales))
-    return sigmas
+def divide_by_sigmas(h, labels, sde):
+  #inputs:
+  #h:the output of model_fn
+  #labels -> point to the right sigmas
+  #sde: the sdes used for diffusing the input tensor(s)
+  #outputs: the scaled activation
 
+  #calculate sigmas using sde and divide by sigmas
+  if isinstance(sde, list):
+    sigmas_x = sde[1].discrete_sigmas
+    sigmas_y = sde[0].discrete_sigmas
+    h_x, h_y = torch.chunk(h, chunks=2, dim=1)
+    h_x = h_x / sigmas_x[labels, None, None, None]
+    h_y = h_y / sigmas_y[labels, None, None, None]
+    h = torch.cat((h_x, h_y), dim=1)
+  else:
+    sigmas = sde.discrete_sigmas
+    h = h / sigmas[labels, None, None, None]
+  
+  return h
 
 def get_ddpm_params(config):
   """Get betas and alphas --- parameters used in the original DDPM paper."""
@@ -145,7 +147,27 @@ def get_score_fn(sde, model, train=False, continuous=False):
   """
   model_fn = get_model_fn(model, train=train)
 
-  if isinstance(sde, sde_lib.VPSDE) or isinstance(sde, sde_lib.subVPSDE):
+  if isinstance(sde, list):
+    if isinstance(sde[0], sde_lib.VPSDE) or isinstance(sde[0], sde_lib.subVPSDE):
+      raise NotImplementedError('This combination of sdes is not supported for conditional SDEs yet.')
+    elif isinstance(sde[0], sde_lib.VESDE) and isinstance(sde[1], sde_lib.cVESDE) and len(sde)==2:
+      def score_fn(x, t):
+        if continuous:
+          raise NotImplementedError('Continuous training is not supported yet for conditional SDE.')
+          #labels = sde.marginal_prob(torch.zeros_like(x), t)[1]
+          #score = model_fn(x, labels)
+        else:
+          # For VE-trained models, t=0 corresponds to the highest noise level
+          labels = t*(sde.N - 1)
+          labels = torch.round(labels).long()
+          score = model_fn(x, labels)
+          score = divide_by_sigmas(score, labels, sde)
+
+        return score
+    else:
+      raise NotImplementedError('This combination of SDEs is not supported for conditional SDEs yet.')
+
+  elif isinstance(sde, sde_lib.VPSDE) or isinstance(sde, sde_lib.subVPSDE):
     def score_fn(x, t):
       # Scale neural network output by standard deviation and flip sign
       if continuous or isinstance(sde, sde_lib.subVPSDE):
@@ -167,14 +189,16 @@ def get_score_fn(sde, model, train=False, continuous=False):
   elif isinstance(sde, sde_lib.VESDE) or isinstance(sde, sde_lib.cVESDE):
     def score_fn(x, t):
       if continuous:
-        labels = sde.marginal_prob(torch.zeros_like(x), t)[1]
+        raise NotImplementedError('Continuous training for VE SDE is not checked. Division by std should be included. Not completed yet.')
+        #labels = sde.marginal_prob(torch.zeros_like(x), t)[1]
+        #score = model_fn(x, labels)
       else:
-        # For VE-trained models, t=0 corresponds to the highest noise level
-        labels = sde.T - t
-        labels *= sde.N - 1
+        # For VE-trained models, t=0 corresponds to the lowest noise level
+        labels = t*(sde.N - 1)
         labels = torch.round(labels).long()
+        score = model_fn(x, labels)
+        score = divide_by_sigmas(score, labels, sde)
 
-      score = model_fn(x, labels)
       return score
 
   else:

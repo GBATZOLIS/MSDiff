@@ -41,15 +41,6 @@ class DDPM(pl.LightningModule):
     super().__init__()
     self.act = act = get_act(config)
 
-    self.conditional = True if config.training.lightning_module=='conditional' else False
-    if self.conditional:
-      sigmas_x, sigmas_y = utils.get_sigmas(config)
-      self.register_buffer('sigmas_x', torch.tensor(sigmas_x, dtype=torch.float32))
-      self.register_buffer('sigmas_y', torch.tensor(sigmas_y, dtype=torch.float32))
-    else:
-      sigmas = utils.get_sigmas(config)
-      self.register_buffer('sigmas', torch.tensor(sigmas, dtype=torch.float32))
-
     self.nf = nf = config.model.nf
     ch_mult = config.model.ch_mult
     self.num_res_blocks = num_res_blocks = config.model.num_res_blocks
@@ -111,8 +102,6 @@ class DDPM(pl.LightningModule):
     modules.append(nn.GroupNorm(num_channels=in_ch, num_groups=32, eps=1e-6))
     modules.append(conv3x3(in_ch, channels, init_scale=0.))
     self.all_modules = nn.ModuleList(modules)
-
-    self.scale_by_sigma = config.model.scale_by_sigma
 
   def forward(self, x, labels):
     modules = self.all_modules
@@ -177,18 +166,5 @@ class DDPM(pl.LightningModule):
     h = modules[m_idx](h)
     m_idx += 1
     assert m_idx == len(modules)
-
-    if self.scale_by_sigma:
-      # Divide the output by sigmas. Useful for training with the NCSN loss.
-      # The DDPM loss scales the network output by sigma in the loss function,
-      # so no need of doing it here.
-      if self.conditional:
-        h_x, h_y = torch.chunk(h, chunks=2, dim=1)
-        h_x = h_x / self.sigmas_x[labels, None, None, None]
-        h_y = h_y / self.sigmas_y[labels, None, None, None]
-        h = torch.cat((h_x, h_y), dim=1)
-      else:
-        used_sigmas = self.sigmas[labels, None, None, None]
-        h = h / used_sigmas
 
     return h
