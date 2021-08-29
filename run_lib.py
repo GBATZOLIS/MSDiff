@@ -12,7 +12,7 @@ from lightning_modules.utils import create_lightning_module
 
 def train(config, log_path, checkpoint_path):
     DataModule = create_lightning_datamodule(config)
-    callbacks = get_callbacks(config.training.visualization_callback, config.training.show_evolution)
+    callbacks = get_callbacks(config)
     LightningModule = create_lightning_module(config)
 
     logger = pl.loggers.TensorBoardLogger(log_path, name='lightning_logs')

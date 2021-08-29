@@ -8,7 +8,7 @@ def get_config():
 
   # training
   config.training = training = ml_collections.ConfigDict()
-  config.training.lightning_module = 'conditional'
+  config.training.lightning_module = 'conditional_decreasing_variance'
   training.batch_size = 40
   training.gpus = 1
   training.accumulate_grad_batches = 2

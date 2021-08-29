@@ -21,9 +21,15 @@ def register_callback(cls=None, *, name=None):
 def get_callback_by_name(name):
     return _CALLBACKS[name]
 
-def get_callbacks(visualization_callback, show_evolution):
-    callbacks=[get_callback_by_name('ema')(), get_callback_by_name('configuration')()]
-    callbacks.append(get_callback_by_name(visualization_callback)(show_evolution=show_evolution))
+def get_callbacks(config):
+    callbacks=[get_callback_by_name('ema')(), \
+    get_callback_by_name(config.training.visualization_callback)(show_evolution=config.training.show_evolution)]
+
+    if config.training.lightning_module == 'conditional_decreasing_variance':
+      callbacks.append(get_callback_by_name('decreasing_variance_configuration')())
+    else:
+      callbacks.append(get_callback_by_name('configuration')())
+
     return callbacks
 
   

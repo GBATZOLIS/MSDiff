@@ -19,6 +19,35 @@ class ConfigurationSetterCallback(Callback):
         # Configure default sampling shape
         pl_module.configure_default_sampling_shape(pl_module.config)
 
+@utils.register_callback(name='decreasing_variance_configuration')
+class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback):
+    def __init__(self,):
+        super().__init__()
+        self.reach_target_in_epochs = 64
+
+    def on_train_epoch_start(self, trainer, pl_module):
+        current_epoch = pl_module.current_epoch
+        if current_epoch <= self.reach_target_in_epochs:
+            sigma_max_y_start = pl_module.config.model.sigma_max_x
+            sigma_max_y_target = pl_module.config.model.sigma_max_y
+            current_sigma_max_y = self.calculate_current_sigma_max_y(current_epoch, sigma_max_y_start, sigma_max_y_target)
+            
+            # Reconfigure SDE
+            pl_module.configure_sde(pl_module.config, current_sigma_max_y)
+
+            # Reconfigure trainining and validation loss functions. -  we might not need to reconfigure here.
+            pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
+            pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
+
+
+    def calculate_current_sigma_max_y(self, current_epoch, start_value, target_value):
+        if current_epoch >= self.reach_target_in_epochs:
+            current_sigma_max_y = target_value
+        else:
+            current_sigma_max_y = start_value - current_epoch/self.reach_target_in_epochs*(start_value - target_value)
+
+        return current_sigma_max_y
+
 @utils.register_callback(name='ema')
 class EMACallback(Callback):
     def on_fit_start(self, trainer, pl_module):
