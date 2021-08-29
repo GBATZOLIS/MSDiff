@@ -19,7 +19,7 @@ import torch
 import torch.nn as nn
 import functools
 import pytorch_lightning as pl
-from .utils import get_sigmas, register_model
+from .utils import register_model
 from .layers import (CondRefineBlock, RefineBlock, ResidualBlock, ncsn_conv3x3,
                      ConditionalResidualBlock, get_act)
 from .normalization import get_normalization
@@ -49,7 +49,6 @@ class NCSNv2(pl.LightningModule):
     self.nf = nf = config.model.nf
 
     self.act = act = get_act(config)
-    self.register_buffer('sigmas', torch.tensor(get_sigmas(config)))
     self.config = config
 
     self.begin_conv = nn.Conv2d(config.data.num_channels, nf, 3, stride=1, padding=1)
@@ -125,9 +124,6 @@ class NCSNv2(pl.LightningModule):
     output = self.act(output)
     output = self.end_conv(output)
 
-    used_sigmas = self.sigmas[y].view(x.shape[0], *([1] * len(x.shape[1:])))
-
-    output = output / used_sigmas
 
     return output
 
@@ -227,7 +223,6 @@ class NCSNv2_128(pl.LightningModule):
     self.norm = get_normalization(config)
     self.nf = nf = config.model.nf
     self.act = act = get_act(config)
-    self.register_buffer('sigmas', torch.tensor(get_sigmas(config)))
     self.config = config
 
     self.begin_conv = nn.Conv2d(config.data.num_channels, nf, 3, stride=1, padding=1)
@@ -305,10 +300,6 @@ class NCSNv2_128(pl.LightningModule):
     output = self.act(output)
     output = self.end_conv(output)
 
-    used_sigmas = self.sigmas[y].view(x.shape[0], *([1] * len(x.shape[1:])))
-
-    output = output / used_sigmas
-
     return output
 
 
@@ -321,7 +312,6 @@ class NCSNv2_256(pl.LightningModule):
     self.norm = get_normalization(config)
     self.nf = nf = config.model.nf
     self.act = act = get_act(config)
-    self.register_buffer('sigmas', torch.tensor(get_sigmas(config)))
     self.config = config
 
     self.begin_conv = nn.Conv2d(config.data.num_channels, nf, 3, stride=1, padding=1)
@@ -408,9 +398,5 @@ class NCSNv2_256(pl.LightningModule):
     output = self.normalizer(output)
     output = self.act(output)
     output = self.end_conv(output)
-
-    used_sigmas = self.sigmas[y].view(x.shape[0], *([1] * len(x.shape[1:])))
-
-    output = output / used_sigmas
 
     return output

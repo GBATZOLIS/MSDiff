@@ -68,6 +68,19 @@ def divide_by_sigmas(h, labels, sde):
   
   return h
 
+def get_sigmas(config):
+  """Get sigmas --- the set of noise levels for SMLD from config files.
+  Args:
+    config: A ConfigDict object parsed from the config file
+  Returns:
+    sigmas: a jax numpy arrary of noise levels
+  """
+  sigmas = np.exp(
+    np.linspace(np.log(config.model.sigma_max), np.log(config.model.sigma_min), config.model.num_scales))
+
+  return sigmas
+
+
 def get_ddpm_params(config):
   """Get betas and alphas --- parameters used in the original DDPM paper."""
   num_diffusion_timesteps = 1000
