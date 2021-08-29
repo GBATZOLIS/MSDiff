@@ -10,9 +10,9 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional'
   training.batch_size = 50
-  training.gpus = 2
-  training.accumulate_grad_batches = 1
-  training.workers = 8
+  training.gpus = 1
+  training.accumulate_grad_batches = 2
+  training.workers = 4
   training.num_epochs = 10000
   training.n_iters = 2400001
   training.snapshot_freq = 5000
@@ -91,7 +91,7 @@ def get_config():
   model.nf = 128
   model.ch_mult = (1, 1, 2, 2)
   model.num_res_blocks = 2
-  model.attn_resolutions = (16, 8)
+  model.attn_resolutions = (32, 16, 8)
   model.resamp_with_conv = True
   model.conditional = True
   model.conv_size = 3
