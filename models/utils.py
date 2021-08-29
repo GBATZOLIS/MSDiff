@@ -59,10 +59,8 @@ def divide_by_sigmas(h, labels, sde):
     sigmas_x = sde[1].discrete_sigmas
     sigmas_y = sde[0].discrete_sigmas
     h_x, h_y = torch.chunk(h, chunks=2, dim=1)
-    sigmas_x_scale = sigmas_x[labels].view(1, sigmas_x[labels].size(), 1, 1)
-    sigmas_y_scale = sigmas_y[labels].view(1, sigmas_y[labels].size(), 1, 1)
-    h_x = h_x / sigmas_x_scale
-    h_y = h_y / sigmas_y_scale
+    h_x = h_x / sigmas_x[labels, None, None, None]
+    h_y = h_y / sigmas_y[labels, None, None, None]
     h = torch.cat((h_x, h_y), dim=1)
   else:
     sigmas = sde.discrete_sigmas
