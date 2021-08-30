@@ -106,13 +106,13 @@ def get_smld_loss_fn(vesde, train, reduce_mean=False):
   reduce_op = torch.mean if reduce_mean else lambda *args, **kwargs: 0.5 * torch.sum(*args, **kwargs)
 
   def loss_fn(model, batch):
-    model_fn = mutils.get_score_fn(vesde, model, train=train)
+    score_fn = mutils.get_score_fn(vesde, model, train=train)
     labels = torch.randint(0, vesde.N, (batch.shape[0],), device=batch.device)
     score_fn_labels = labels/(sde[1].N - 1)
     sigmas = smld_sigma_array.to(batch.device)[labels]
     noise = torch.randn_like(batch) * sigmas[:, None, None, None]
     perturbed_data = noise + batch
-    score = model_fn(perturbed_data, score_fn_labels)
+    score = score_fn(perturbed_data, score_fn_labels)
     target = -noise / (sigmas ** 2)[:, None, None, None]
     losses = torch.square(score - target)
     losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1) * sigmas ** 2
@@ -131,7 +131,7 @@ def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_w
 
   def loss_fn(model, batch):
     y, x = batch
-    model_fn = mutils.get_score_fn(sde, model, train=train)
+    score_fn = mutils.get_score_fn(sde, model, train=train)
     labels = torch.randint(0, sde[1].N, (x.shape[0],), device=x.device)
     score_fn_labels = labels/(sde[1].N - 1)
 
@@ -144,7 +144,7 @@ def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_w
     perturbed_data_x = noise_x + x
 
     perturbed_data = torch.cat((perturbed_data_x, perturbed_data_y), dim=1)
-    score = model_fn(perturbed_data, score_fn_labels)
+    score = score_fn(perturbed_data, score_fn_labels)
 
     target_x = -noise_x / (sigmas_x ** 2)[:, None, None, None]
     target_y = -noise_y / (sigmas_y ** 2)[:, None, None, None]

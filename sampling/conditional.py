@@ -41,12 +41,12 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr,
   """
   # Create predictor & corrector update functions
   predictor_update_fn = functools.partial(conditional_shared_predictor_update_fn,
-                                          sde=sde[1],
+                                          sde=sde,
                                           predictor=predictor,
                                           probability_flow=probability_flow,
                                           continuous=continuous)
   corrector_update_fn = functools.partial(conditional_shared_corrector_update_fn,
-                                          sde=sde[1],
+                                          sde=sde,
                                           corrector=corrector,
                                           continuous=continuous,
                                           snr=snr,
@@ -113,9 +113,9 @@ def conditional_shared_predictor_update_fn(x, y, t, sde, model, predictor, proba
 
   if predictor is None:
     # Corrector-only sampler
-    predictor_obj = NonePredictor(sde, score_fn, probability_flow)
+    predictor_obj = NonePredictor(sde[1], score_fn, probability_flow)
   else:
-    predictor_obj = predictor(sde, score_fn, probability_flow)
+    predictor_obj = predictor(sde[1], score_fn, probability_flow)
   return predictor_obj.update_fn(x, y, t)
 
 def conditional_shared_corrector_update_fn(x, y, t, sde, model, corrector, continuous, snr, n_steps):
@@ -125,7 +125,7 @@ def conditional_shared_corrector_update_fn(x, y, t, sde, model, corrector, conti
 
   if corrector is None:
     # Predictor-only sampler
-    corrector_obj = NoneCorrector(sde, score_fn, snr, n_steps)
+    corrector_obj = NoneCorrector(sde[1], score_fn, snr, n_steps)
   else:
-    corrector_obj = corrector(sde, score_fn, snr, n_steps)
+    corrector_obj = corrector(sde[1], score_fn, snr, n_steps)
   return corrector_obj.update_fn(x, y, t)

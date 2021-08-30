@@ -63,7 +63,7 @@ def divide_by_sigmas(h, labels, sde):
     h_y = h_y / sigmas_y[labels, None, None, None]
     h = torch.cat((h_x, h_y), dim=1)
   else:
-    sigmas = sde.discrete_sigmas
+    sigmas = sde.discrete_sigmas.type_as(h)
     h = h / sigmas[labels, None, None, None]
   
   return h
