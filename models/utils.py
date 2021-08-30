@@ -56,8 +56,8 @@ def divide_by_sigmas(h, labels, sde):
 
   #calculate sigmas using sde and divide by sigmas
   if isinstance(sde, list):
-    sigmas_x = sde[1].discrete_sigmas.as_type(h)
-    sigmas_y = sde[0].discrete_sigmas.as_type(h)
+    sigmas_x = sde[1].discrete_sigmas.type_as(h)
+    sigmas_y = sde[0].discrete_sigmas.type_as(h)
     h_x, h_y = torch.chunk(h, chunks=2, dim=1)
     h_x = h_x / sigmas_x[labels, None, None, None]
     h_y = h_y / sigmas_y[labels, None, None, None]
