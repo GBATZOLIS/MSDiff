@@ -135,8 +135,8 @@ def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_w
     labels = torch.randint(0, sde[1].N, (x.shape[0],), device=x.device)
     score_fn_labels = labels/(sde[1].N - 1)
 
-    sigmas_y = smld_sigma_array_y.to(y.device)[labels]
-    sigmas_x = smld_sigma_array_x.to(x.device)[labels]
+    sigmas_y = smld_sigma_array_y.as_type(y)[labels]
+    sigmas_x = smld_sigma_array_x.as_type(x)[labels]
 
     noise_y = torch.randn_like(y) * sigmas_y[:, None, None, None]
     perturbed_data_y = noise_y + y
