@@ -9,7 +9,7 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional_decreasing_variance'
-  training.batch_size = 40
+  training.batch_size = 50
   training.gpus = 1
   training.accumulate_grad_batches = 2
   training.workers = 4
@@ -45,7 +45,7 @@ def get_config():
   evaluate.workers = 4
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 36
+  evaluate.batch_size = 49
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -73,7 +73,7 @@ def get_config():
   model.sigma_max_x = 64 #input range is [0,1] and resolution is 64^2
   #we do not want to perturb y a lot. 
   #A slight perturbation will result in better approximation of the conditional time-dependent score.
-  model.sigma_max_y = 8
+  model.sigma_max_y = 1
   model.sigma_min = 0.01
   model.beta_min = 0.1
   # We use an adjusted beta max 
@@ -91,7 +91,7 @@ def get_config():
   model.nf = 128
   model.ch_mult = (1, 1, 2, 2)
   model.num_res_blocks = 2
-  model.attn_resolutions = (32, 16, 8)
+  model.attn_resolutions = (16, 8)
   model.resamp_with_conv = True
   model.conditional = True
   model.conv_size = 3

@@ -27,18 +27,19 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
 
     def on_train_epoch_start(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
+        sigma_max_y_start = pl_module.config.model.sigma_max_x
+        sigma_max_y_target = pl_module.config.model.sigma_max_y
         if current_epoch <= self.reach_target_in_epochs:
-            sigma_max_y_start = pl_module.config.model.sigma_max_x
-            sigma_max_y_target = pl_module.config.model.sigma_max_y
             current_sigma_max_y = self.calculate_current_sigma_max_y(current_epoch, sigma_max_y_start, sigma_max_y_target)
-            
             # Reconfigure SDE
             pl_module.configure_sde(pl_module.config, current_sigma_max_y)
-
-            # Reconfigure trainining and validation loss functions. -  we might not need to reconfigure here.
+            # Reconfigure trainining and validation loss functions. -  we might not need to reconfigure the losses.
             pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
             pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
-
+        else:
+            current_sigma_max_y = self.calculate_current_sigma_max_y(current_epoch, sigma_max_y_start, sigma_max_y_target)
+        
+        pl_module.logger.experiment.add_scalar('sigma_max_y', current_sigma_max_y, pl_module.current_epoch)
 
     def calculate_current_sigma_max_y(self, current_epoch, start_value, target_value):
         if current_epoch >= self.reach_target_in_epochs:
