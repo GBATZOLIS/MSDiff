@@ -65,7 +65,7 @@ def get_config():
   data.centered = False
   data.random_flip = False
   data.uniform_dequantization = False
-  data.num_channels = 6 #the number of channels the model sees as input.
+  data.num_channels = data.shape_x[0]+data.shape_y[0] #the number of channels the model sees as input.
 
   # model
   config.model = model = ml_collections.ConfigDict()
@@ -74,6 +74,11 @@ def get_config():
   #we do not want to perturb y a lot. 
   #A slight perturbation will result in better approximation of the conditional time-dependent score.
   model.sigma_max_y = 1
+  #-------The three subsequent settings configure the reduction schedule of sigma_max_y
+  model.sigma_max_y_reduction = 'inverse_exponentional' #choices=['linear', 'inverse_exponentional']
+  model.reach_target_sigma_max_y_in_epochs = 64
+  model.starting_transition_iterations = 2000
+  #-------
   model.sigma_min = 0.01
   model.beta_min = 0.1
   # We use an adjusted beta max 
@@ -104,8 +109,8 @@ def get_config():
   optim.lr = 2e-4
   optim.beta1 = 0.9
   optim.eps = 1e-8
-  optim.warmup = 5000
-  optim.grad_clip = 1.
+  optim.warmup = 0 #set it to 0 if you do not want to use warm up.
+  optim.grad_clip = 1 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.
 
   config.seed = 42
   #config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')

@@ -20,6 +20,7 @@ def train(config, log_path, checkpoint_path):
     if checkpoint_path is not None:
       trainer = pl.Trainer(gpus=config.training.gpus,
                           accumulate_grad_batches = config.training.accumulate_grad_batches,
+                          gradient_clip_val = config.optim.grad_clip,
                           max_steps=config.training.n_iters, 
                           callbacks=callbacks, 
                           logger = logger,
@@ -27,9 +28,10 @@ def train(config, log_path, checkpoint_path):
     else:  
       trainer = pl.Trainer(gpus=config.training.gpus,
                           accumulate_grad_batches = config.training.accumulate_grad_batches,
-                          max_steps=config.training.n_iters, 
-                          logger = logger,
-                          callbacks=callbacks
+                          gradient_clip_val = config.optim.grad_clip,
+                          max_steps=config.training.n_iters,
+                          callbacks=callbacks,
+                          logger = logger                          
                           )
 
     trainer.fit(LightningModule, datamodule=DataModule)

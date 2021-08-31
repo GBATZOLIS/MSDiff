@@ -21,33 +21,69 @@ class ConfigurationSetterCallback(Callback):
 
 @utils.register_callback(name='decreasing_variance_configuration')
 class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback):
-    def __init__(self,):
+    def __init__(self, reduction, reach_target_in_epochs, starting_transition_iterations):
         super().__init__()
-        self.reach_target_in_epochs = 64
+        self.reduction = reduction
+        self.reach_target_in_epochs = reach_target_in_epochs
+        self.starting_transition_iterations = starting_transition_iterations
+        self.sigma_max_y_fn = self.get_sigma_max_y_calculator(reduction)
 
     def on_train_epoch_start(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
+        global_step = pl_module.global_step
         sigma_max_y_start = pl_module.config.model.sigma_max_x
         sigma_max_y_target = pl_module.config.model.sigma_max_y
-        if current_epoch <= self.reach_target_in_epochs:
-            current_sigma_max_y = self.calculate_current_sigma_max_y(current_epoch, sigma_max_y_start, sigma_max_y_target)
-            # Reconfigure SDE
-            pl_module.configure_sde(pl_module.config, current_sigma_max_y)
-            # Reconfigure trainining and validation loss functions. -  we might not need to reconfigure the losses.
-            pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
-            pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
-        else:
-            current_sigma_max_y = self.calculate_current_sigma_max_y(current_epoch, sigma_max_y_start, sigma_max_y_target)
-        
+
+        #calculate current sigma_max_y
+        current_sigma_max_y = self.sigma_max_y_fn(global_step, current_epoch, sigma_max_y_start, sigma_max_y_target)
+
+        # Reconfigure SDE
+        pl_module.configure_sde(pl_module.config, current_sigma_max_y)
+        # Reconfigure trainining and validation loss functions. -  we might not need to reconfigure the losses.
+        pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
+        pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
+
         pl_module.logger.experiment.add_scalar('sigma_max_y', current_sigma_max_y, pl_module.current_epoch)
 
-    def calculate_current_sigma_max_y(self, current_epoch, start_value, target_value):
-        if current_epoch >= self.reach_target_in_epochs:
-            current_sigma_max_y = target_value
-        else:
-            current_sigma_max_y = start_value - current_epoch/self.reach_target_in_epochs*(start_value - target_value)
 
-        return current_sigma_max_y
+    def get_sigma_max_y_calculator(self, reduction='linear'):
+        if reduction == 'linear':
+            def sigma_max_y(global_step, current_epoch, start_value, target_value):
+                if current_epoch >= self.reach_target_in_epochs:
+                    current_sigma_max_y = target_value
+                else:
+                    current_sigma_max_y = start_value - current_epoch/self.reach_target_in_epochs*(start_value - target_value)
+
+                return current_sigma_max_y
+                
+        elif reduction == 'inverse_exponentional':
+            def sigma_max_y(global_step, current_epoch, start_value, target_value):
+                x_prev = 0
+                x_next = self.starting_transition_iterations
+
+                while global_step > x_next:
+                    x_prev = x_next
+                    x_next = 2*x_next
+                    start_value = start_value/2
+
+                target_value = start_value/2
+                current_sigma_max_y = start_value - (global_step-x_prev)/(x_next-x_prev)*(start_value - target_value)
+                return current_sigma_max_y
+        else:
+            raise NotImplementedError('Reduction type %s is not supported yet.' % reduction)
+
+        return sigma_max_y
+                
+                
+
+
+
+
+                
+
+
+    
+
 
 @utils.register_callback(name='ema')
 class EMACallback(Callback):
