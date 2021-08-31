@@ -11,7 +11,7 @@ def get_config():
   config.training.lightning_module = 'conditional_decreasing_variance'
   training.batch_size = 50
   training.gpus = 1
-  training.accumulate_grad_batches = 2
+  training.accumulate_grad_batches = 1
   training.workers = 4
   training.num_epochs = 10000
   training.n_iters = 2400001
