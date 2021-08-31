@@ -60,10 +60,12 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
             def sigma_max_y(global_step, current_epoch, start_value, target_value):
                 x_prev = 0
                 x_next = self.starting_transition_iterations
+                x_add = self.starting_transition_iterations
 
                 while global_step > x_next:
+                    x_add *= 2
                     x_prev = x_next
-                    x_next = 2*x_next
+                    x_next = x_add + x_prev
                     start_value = start_value/2
 
                 target_value = start_value/2
