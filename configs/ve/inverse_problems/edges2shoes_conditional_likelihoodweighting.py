@@ -75,7 +75,7 @@ def get_config():
   #A slight perturbation will result in better approximation of the conditional time-dependent score.
   model.sigma_max_y = 1
   #-------The three subsequent settings configure the reduction schedule of sigma_max_y
-  model.sigma_max_y_reduction = 'inverse_exponentional' #choices=['linear', 'inverse_exponentional']
+  model.reduction = 'inverse_exponentional' #choices=['linear', 'inverse_exponentional']
   model.reach_target_sigma_max_y_in_epochs = 64
   model.starting_transition_iterations = 2000
   #-------
