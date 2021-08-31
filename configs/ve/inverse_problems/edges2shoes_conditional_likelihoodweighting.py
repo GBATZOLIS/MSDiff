@@ -76,7 +76,7 @@ def get_config():
   model.sigma_max_y = 1
   #-------The three subsequent settings configure the reduction schedule of sigma_max_y
   model.reduction = 'inverse_exponentional' #choices=['linear', 'inverse_exponentional']
-  model.reach_target_sigma_max_y_in_epochs = 64
+  model.reach_target_in_epochs = 64
   model.starting_transition_iterations = 2000
   #-------
   model.sigma_min = 0.01
