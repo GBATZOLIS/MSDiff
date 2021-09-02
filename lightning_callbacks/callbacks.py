@@ -20,8 +20,8 @@ class ConfigurationSetterCallback(Callback):
         pl_module.configure_default_sampling_shape(pl_module.config)
     
     def on_test_start(self, trainer, pl_module):
-        current_epoch = pl_module.current_epoch
-        global_step = pl_module.global_step
+        current_epoch = trainer.current_epoch
+        global_step = trainer.global_step
         sigma_max_y_start = pl_module.config.model.sigma_max_x
         sigma_max_y_target = pl_module.config.model.sigma_max_y
 
