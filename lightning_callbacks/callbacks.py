@@ -20,7 +20,27 @@ class ConfigurationSetterCallback(Callback):
         pl_module.configure_default_sampling_shape(pl_module.config)
     
     def on_test_start(self, trainer, pl_module):
-        self.on_fit_start(trainer, pl_module)
+        current_epoch = pl_module.current_epoch
+        global_step = pl_module.global_step
+        sigma_max_y_start = pl_module.config.model.sigma_max_x
+        sigma_max_y_target = pl_module.config.model.sigma_max_y
+
+        #calculate current sigma_max_y
+        reduction =  pl_module.config.model.reduction
+        reach_target_in_epochs = pl_module.config.model.reach_target_in_epochs
+        starting_transition_iterations = pl_module.config.model.starting_transition_iterations
+        sigma_max_y_fn = get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_transition_iterations)
+        current_sigma_max_y = sigma_max_y_fn(global_step, current_epoch, sigma_max_y_start, sigma_max_y_target)
+
+        # Reconfigure SDE
+        pl_module.configure_sde(pl_module.config, current_sigma_max_y)
+        
+        # Reconfigure trainining and validation loss functions. -  we might not need to reconfigure the losses.
+        pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
+        pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
+
+        # Configure default sampling shape
+        pl_module.configure_default_sampling_shape(pl_module.config)
 
 @utils.register_callback(name='decreasing_variance_configuration')
 class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback):
@@ -29,7 +49,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         self.reduction = reduction
         self.reach_target_in_epochs = reach_target_in_epochs
         self.starting_transition_iterations = starting_transition_iterations
-        self.sigma_max_y_fn = self.get_sigma_max_y_calculator(reduction)
+        self.sigma_max_y_fn = get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_transition_iterations)
 
     def on_train_epoch_start(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
@@ -49,35 +69,35 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         pl_module.logger.experiment.add_scalar('sigma_max_y', current_sigma_max_y, pl_module.current_epoch)
 
 
-    def get_sigma_max_y_calculator(self, reduction='linear'):
-        if reduction == 'linear':
-            def sigma_max_y(global_step, current_epoch, start_value, target_value):
-                if current_epoch >= self.reach_target_in_epochs:
-                    current_sigma_max_y = target_value
-                else:
-                    current_sigma_max_y = start_value - current_epoch/self.reach_target_in_epochs*(start_value - target_value)
+def get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_transition_iterations):
+    if reduction == 'linear':
+        def sigma_max_y(global_step, current_epoch, start_value, target_value):
+            if current_epoch >= reach_target_in_epochs:
+                current_sigma_max_y = target_value
+            else:
+                current_sigma_max_y = start_value - current_epoch/reach_target_in_epochs*(start_value - target_value)
 
-                return current_sigma_max_y
+            return current_sigma_max_y
                 
-        elif reduction == 'inverse_exponentional':
-            def sigma_max_y(global_step, current_epoch, start_value, target_value):
-                x_prev = 0
-                x_next = self.starting_transition_iterations
-                x_add = self.starting_transition_iterations
+    elif reduction == 'inverse_exponentional':
+        def sigma_max_y(global_step, current_epoch, start_value, target_value):
+            x_prev = 0
+            x_next = starting_transition_iterations
+            x_add = starting_transition_iterations
 
-                while global_step > x_next:
-                    x_add *= 2
-                    x_prev = x_next
-                    x_next = x_add + x_prev
-                    start_value = start_value/2
+            while global_step > x_next:
+                x_add *= 2
+                x_prev = x_next
+                x_next = x_add + x_prev
+                start_value = start_value/2
 
-                target_value = start_value/2
-                current_sigma_max_y = start_value - (global_step-x_prev)/(x_next-x_prev)*(start_value - target_value)
-                return current_sigma_max_y
-        else:
-            raise NotImplementedError('Reduction type %s is not supported yet.' % reduction)
+            target_value = start_value/2
+            current_sigma_max_y = start_value - (global_step-x_prev)/(x_next-x_prev)*(start_value - target_value)
+            return current_sigma_max_y
+    else:
+        raise NotImplementedError('Reduction type %s is not supported yet.' % reduction)
 
-        return sigma_max_y
+    return sigma_max_y
                 
                 
 
