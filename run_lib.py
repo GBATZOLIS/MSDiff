@@ -38,22 +38,18 @@ def train(config, log_path, checkpoint_path):
 
 def test(config, log_path, checkpoint_path):
   DataModule = create_lightning_datamodule(config)
-  DataModule.setup()
-  test_dataloader = DataModule.test_dataloader()
-
   callbacks = get_callbacks(config)
   LightningModule = create_lightning_module(config)
   logger = pl.loggers.TensorBoardLogger(log_path, name='test_lightning_logs')
 
   assert checkpoint_path is not None, 'checkpoint path was not provided.'
   trainer = pl.Trainer(gpus=config.training.gpus,
+                       callbacks=callbacks,
+                       logger = logger,
                        resume_from_checkpoint = checkpoint_path)
-  
-  print('step : ', trainer.global_step)
-  print('epoch : ', trainer.current_epoch)
-  
+
   # test (pass in the model)
-  trainer.test(LightningModule, test_dataloader)
+  trainer.fit(LightningModule, DataModule)
 
 
 

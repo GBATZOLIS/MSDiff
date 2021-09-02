@@ -55,6 +55,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
     def on_train_epoch_start(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
         global_step = pl_module.global_step
+        print('global step: %d'%global_step)
         sigma_max_y_start = pl_module.config.model.sigma_max_x
         sigma_max_y_target = pl_module.config.model.sigma_max_y
 
