@@ -51,6 +51,8 @@ def test(config, log_path, checkpoint_path):
                        logger = logger,
                        resume_from_checkpoint = checkpoint_path)
   
+  print(trainer.global_step)
+  
   # test (pass in the model)
   trainer.test(LightningModule, test_dataloader)
 
