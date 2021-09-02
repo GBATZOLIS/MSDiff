@@ -61,6 +61,7 @@ class PairedVisualizationCallback(Callback):
             self.visualise_paired_samples(y, conditional_samples, pl_module, i+1)
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
+        y, x = batch
         _, sampling_info = pl_module.sample(batch, show_evolution=True)
         evolution = sampling_info['evolution']
         self.visualise_evolution(evolution, pl_module, batch_idx)
