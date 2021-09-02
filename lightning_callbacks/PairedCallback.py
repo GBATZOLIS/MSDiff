@@ -23,7 +23,7 @@ def normalise_evolution(evolution):
     normalised_evolution = torch.ones_like(evolution)
     for i in range(evolution.size(0)):
         normalised_evolution[i] = normalise_per_image(evolution[i])
-    return normalise_evolution
+    return normalised_evolution
 
 def create_video_grid(evolution):
     video_grid = []
