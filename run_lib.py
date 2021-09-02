@@ -47,10 +47,10 @@ def test(config, log_path, checkpoint_path):
 
   assert checkpoint_path is not None, 'checkpoint path was not provided.'
   trainer = pl.Trainer(gpus=config.training.gpus,
-                       logger = logger,
                        resume_from_checkpoint = checkpoint_path)
   
   print('step : ', trainer.global_step)
+  print('epoch : ', trainer.current_epoch)
   
   # test (pass in the model)
   trainer.test(LightningModule, test_dataloader)
