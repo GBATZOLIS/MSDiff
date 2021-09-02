@@ -61,7 +61,7 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr,
         y_mean, y_std = sde[0].marginal_prob(y, vec_t)
         y_perturbed = y_mean + torch.randn_like(y) * y_std[:, None, None, None]
         x, x_mean = update_fn(x=x, y=y_perturbed, t=vec_t, model=model)
-        return x, x_mean
+        return x, x_mean, y_perturbed, y_mean
 
     return conditional_update_fn
 
@@ -83,23 +83,29 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr,
       # Initial sample
       x = sde[1].prior_sampling(shape).to(model.device)
       if show_evolution:
-        evolution = [x.cpu()]
+        evolution = {'x':[], 'y':[]}
 
       timesteps = torch.linspace(sde[1].T, eps, sde[1].N, device=model.device)
 
       for i in tqdm(range(sde[1].N)):
         t = timesteps[i]
         vec_t = torch.ones(shape[0], device=model.device) * t
-        x, x_mean = predictor_conditional_update_fn(x, y, vec_t, model)
+        x, x_mean, y_perturbed, y_mean = predictor_conditional_update_fn(x, y, vec_t, model)
 
         for _ in range(corrections_steps(i)):
-          x, x_mean = corrector_conditional_update_fn(x, y, vec_t, model)
+          x, x_mean, y_perturbed, y_mean = corrector_conditional_update_fn(x, y, vec_t, model)
         
         if show_evolution:
-          evolution.append(x.cpu())
+          evolution['x'].append(x.cpu())
+          evolution['y'].append(y_perturbed.cpu())
 
       if show_evolution:
-        sampling_info = {'evolution': torch.stack(evolution)}
+        #check the effect of denoising
+        evolution['x'].append(x_mean.cpu())
+        evolution['y'].append(y_mean.cpu())
+
+        evolution['x'], evolution['y'] = torch.stack(evolution['x']), torch.stack(evolution['y'])
+        sampling_info = {'evolution': evolution}
         return x_mean if denoise else x, sampling_info
       else:
         return x_mean if denoise else x, {}

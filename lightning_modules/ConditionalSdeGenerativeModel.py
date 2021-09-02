@@ -82,3 +82,6 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
         else:
             raise NotImplementedError(f"SDE {config.training.sde} unknown.")
     
+    def test_step(self, batch, batch_idx):
+        samples, sampling_info = self.sample(batch, show_evolution=True)
+        evolution = sampling_info['evolution']

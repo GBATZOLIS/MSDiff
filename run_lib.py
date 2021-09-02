@@ -35,3 +35,22 @@ def train(config, log_path, checkpoint_path):
                           )
 
     trainer.fit(LightningModule, datamodule=DataModule)
+
+def test(config, log_path, checkpoint_path):
+  DataModule = create_lightning_datamodule(config)
+  callbacks = get_callbacks(config)
+  LightningModule = create_lightning_module(config)
+  logger = pl.loggers.TensorBoardLogger(log_path, name='test_lightning_logs')
+
+  assert checkpoint_path is not None, 'checkpoint path was not provided.'
+  model = LightningModule.load_from_checkpoint(checkpoint_path=checkpoint_path)
+
+  trainer = pl.Trainer(gpus=config.training.gpus,
+                       callbacks=callbacks,
+                       logger = logger)
+  
+  # test (pass in the model)
+  trainer.test(model, DataModule)
+
+
+
