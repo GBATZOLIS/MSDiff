@@ -18,6 +18,9 @@ class ConfigurationSetterCallback(Callback):
 
         # Configure default sampling shape
         pl_module.configure_default_sampling_shape(pl_module.config)
+    
+    def on_test_start(self, trainer, pl_module):
+        self.on_fit_start(trainer, pl_module)
 
 @utils.register_callback(name='decreasing_variance_configuration')
 class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback):
