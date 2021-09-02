@@ -38,6 +38,9 @@ def train(config, log_path, checkpoint_path):
 
 def test(config, log_path, checkpoint_path):
   DataModule = create_lightning_datamodule(config)
+  DataModule.setup()
+  test_dataloader = DataModule.test_dataloader()
+
   callbacks = get_callbacks(config)
   LightningModule = create_lightning_module(config)
   logger = pl.loggers.TensorBoardLogger(log_path, name='test_lightning_logs')
@@ -50,7 +53,7 @@ def test(config, log_path, checkpoint_path):
                        logger = logger)
   
   # test (pass in the model)
-  trainer.test(model, DataModule)
+  trainer.test(model, test_dataloader)
 
 
 
