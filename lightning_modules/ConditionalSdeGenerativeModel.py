@@ -83,4 +83,4 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
             raise NotImplementedError(f"SDE {config.training.sde} unknown.")
     
     def test_step(self, batch, batch_idx):
-        print('batch %d' % batch)
+        print('Test batch %d' % batch_idx)
