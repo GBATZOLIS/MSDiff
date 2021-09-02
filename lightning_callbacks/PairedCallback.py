@@ -54,7 +54,7 @@ class PairedVisualizationCallback(Callback):
             if self.show_evolution:
                 conditional_samples, sampling_info = pl_module.sample(y.to(pl_module.device), show_evolution=True)
                 evolution = sampling_info['evolution']
-                self.visualise_evolution(evolution, pl_module)
+                self.visualise_evolution(evolution, pl_module, i+1)
             else:
                 conditional_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=False)
 
@@ -62,16 +62,17 @@ class PairedVisualizationCallback(Callback):
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         y, x = batch
-        _, sampling_info = pl_module.sample(y.to(pl_module.device), show_evolution=True) #sample x conditioned on y
+        samples, sampling_info = pl_module.sample(y.to(pl_module.device), show_evolution=True) #sample x conditioned on y
         evolution = sampling_info['evolution']
-        self.visualise_evolution(evolution, pl_module, batch_idx)
+        self.visualise_paired_samples(y, samples, pl_module, batch_idx, phase='test')
+        #self.visualise_evolution(evolution, pl_module, batch_idx)
 
-    def visualise_paired_samples(self, y, x, pl_module, batch_idx):
+    def visualise_paired_samples(self, y, x, pl_module, batch_idx, phase='train'):
         # log sampled images
         y_norm, x_norm = normalise_per_image(y).cpu(), normalise_per_image(x).cpu()
         concat_sample = torch.cat([y_norm, x_norm], dim=-1)
         grid_images = make_grid(concat_sample, nrow=int(np.sqrt(concat_sample.size(0))), normalize=False)
-        pl_module.logger.experiment.add_image('generated_images_batch_%d' % batch_idx, grid_images, pl_module.current_epoch)
+        pl_module.logger.experiment.add_image('generated_images_%sbatch_%d' % (phase, batch_idx), grid_images, pl_module.current_epoch)
     
     def visualise_evolution(self, evolution, pl_module, batch_idx):
         norm_evolution_x = normalise_evolution(evolution['x'])

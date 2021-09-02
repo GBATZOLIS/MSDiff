@@ -25,12 +25,13 @@ class ConfigurationSetterCallback(Callback):
         sigma_max_y_start = pl_module.config.model.sigma_max_x
         sigma_max_y_target = pl_module.config.model.sigma_max_y
 
-        #calculate current sigma_max_y
+        #calculate current sigma_max_y and configure the SDEs.
         reduction =  pl_module.config.model.reduction
         reach_target_in_epochs = pl_module.config.model.reach_target_in_epochs
         starting_transition_iterations = pl_module.config.model.starting_transition_iterations
         sigma_max_y_fn = get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_transition_iterations)
         current_sigma_max_y = sigma_max_y_fn(global_step, current_epoch, sigma_max_y_start, sigma_max_y_target)
+        print('Used sigma-max-y for testing: %.3f' % current_sigma_max_y)
 
         # Reconfigure SDE
         pl_module.configure_sde(pl_module.config, current_sigma_max_y)
