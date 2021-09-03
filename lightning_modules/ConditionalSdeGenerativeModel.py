@@ -64,6 +64,7 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
 class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeModel):
     def __init__(self, config, *args, **kwargs):
         super().__init__(config)
+        self.register_buffer('sigma_max_y', torch.tensor(config.model.sigma_max_x))
     
     def configure_sde(self, config, sigma_max_y = None):
         if config.training.sde.lower() == 'vpsde':
@@ -75,8 +76,6 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
         elif config.training.sde.lower() == 'vesde':
             if sigma_max_y is None:
                 sigma_max_y = config.model.sigma_max_x 
-            
-            self.register_buffer('sigma_max_y', torch.tensor(sigma_max_y))
 
             sde_y = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=sigma_max_y, N=config.model.num_scales)
             sde_x = sde_lib.cVESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max_x, N=config.model.num_scales)

@@ -42,7 +42,6 @@ def test(config, log_path, checkpoint_path):
 
   callbacks = get_callbacks(config)
   LightningModule = create_lightning_module(config)
-  LightningModule.configure_sde(config)
 
   LightningModule = LightningModule.load_from_checkpoint(checkpoint_path)
 
