@@ -9,19 +9,8 @@ import numpy as np
 @utils.register_callback(name='configuration')
 class ConfigurationSetterCallback(Callback):
     def on_fit_start(self, trainer, pl_module):
-        # Configure SDE
-        pl_module.configure_sde(pl_module.config)
-        
-        # Configure trainining and validation loss functions.
-        pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
-        pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
-
-        # Configure default sampling shape
-        pl_module.configure_default_sampling_shape(pl_module.config)
-    
-    def on_test_start(self, trainer, pl_module):
-        current_epoch = trainer.current_epoch
-        global_step = trainer.global_step
+        current_epoch = pl_module.current_epoch
+        global_step = pl_module.global_step
         sigma_max_y_start = pl_module.config.model.sigma_max_x
         sigma_max_y_target = pl_module.config.model.sigma_max_y
 
@@ -31,7 +20,7 @@ class ConfigurationSetterCallback(Callback):
         starting_transition_iterations = pl_module.config.model.starting_transition_iterations
         sigma_max_y_fn = get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_transition_iterations)
         current_sigma_max_y = sigma_max_y_fn(global_step, current_epoch, sigma_max_y_start, sigma_max_y_target)
-        print('Used sigma-max-y for testing: %.3f' % current_sigma_max_y)
+        print('Starting sigma_max_y: %.3f' % current_sigma_max_y)
 
         # Reconfigure SDE
         pl_module.configure_sde(pl_module.config, current_sigma_max_y)
@@ -42,6 +31,9 @@ class ConfigurationSetterCallback(Callback):
 
         # Configure default sampling shape
         pl_module.configure_default_sampling_shape(pl_module.config)
+
+    def on_test_start(self, trainer, pl_module):
+        self.on_fit_star(trainer, pl_module)
 
 @utils.register_callback(name='decreasing_variance_configuration')
 class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback):
@@ -55,7 +47,6 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
     def on_train_epoch_start(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
         global_step = pl_module.global_step
-        print('global step: %d'%global_step)
         sigma_max_y_start = pl_module.config.model.sigma_max_x
         sigma_max_y_target = pl_module.config.model.sigma_max_y
 
