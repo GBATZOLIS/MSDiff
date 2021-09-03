@@ -46,7 +46,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         pl_module.logger.experiment.add_scalar('sigma_max_y', current_sigma_max_y, pl_module.current_epoch)
 
     def on_test_epoch_start(self, trainer, pl_module):
-        trainer.checkpoint_connector.restore_training_state(trainer.checkpoint_connector._ckpt_path)
+        trainer.checkpoint_connector.restore(trainer.checkpoint_connector.resume_checkpoint_path)
         current_epoch = trainer.current_epoch
         print('Testing epoch: %d' % current_epoch)
         global_step = trainer.global_step
