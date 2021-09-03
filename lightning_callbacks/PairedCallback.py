@@ -52,6 +52,7 @@ class PairedVisualizationCallback(Callback):
                 break
 
             if self.show_evolution:
+                print('sde_y sigma_max: %.5f ' % pl_module.sde[0].sigma_max)
                 conditional_samples, sampling_info = pl_module.sample(y.to(pl_module.device), show_evolution=True)
                 evolution = sampling_info['evolution']
                 self.visualise_evolution(evolution, pl_module, i+1)
