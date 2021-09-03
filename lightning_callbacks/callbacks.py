@@ -28,6 +28,9 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         self.starting_transition_iterations = starting_transition_iterations
         self.sigma_max_y_fn = get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_transition_iterations)
 
+    def on_sanity_check_start(self, trainer, pl_module):
+        self.on_train_start(trainer, pl_module)
+        
     def on_train_start(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
         global_step = pl_module.global_step
@@ -52,7 +55,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         pl_module.logger.experiment.add_scalar('sigma_max_y', current_sigma_max_y, pl_module.current_epoch)
 
     def on_train_epoch_start(self, trainer, pl_module):
-        self.on_fit_start(trainer, pl_module)
+        self.on_train_start(trainer, pl_module)
 
     def on_test_epoch_start(self, trainer, pl_module):
         sigma_max_y = pl_module.get_buffer('sigma_max_y')
