@@ -4,6 +4,7 @@ from sde_lib import VESDE, VPSDE, cVESDE
 from sampling.conditional import get_conditional_sampling_fn
 import sde_lib
 from . import utils
+import torch
 
 @utils.register_lightning_module(name='conditional')
 class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeModel):
