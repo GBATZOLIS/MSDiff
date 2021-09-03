@@ -21,12 +21,14 @@ class ConfigurationSetterCallback(Callback):
 
 @utils.register_callback(name='decreasing_variance_configuration')
 class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback):
-    def __init__(self, reduction, reach_target_in_epochs, starting_transition_iterations):
+    def __init__(self, reduction, reach_target_in_epochs, starting_transition_iterations, checkpoint_path=None):
         super().__init__()
         self.reduction = reduction
         self.reach_target_in_epochs = reach_target_in_epochs
         self.starting_transition_iterations = starting_transition_iterations
         self.sigma_max_y_fn = get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_transition_iterations)
+        
+        self.checkpoint_path = checkpoint_path #used for proper resuming and instantiation of functions
 
     def on_train_epoch_start(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
@@ -46,7 +48,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         pl_module.logger.experiment.add_scalar('sigma_max_y', current_sigma_max_y, pl_module.current_epoch)
 
     def on_test_epoch_start(self, trainer, pl_module):
-        trainer.checkpoint_connector.restore(trainer.checkpoint_connector.resume_checkpoint_path)
+        trainer.checkpoint_connector.restore(self.checkpoint_path)
         current_epoch = trainer.current_epoch
         print('Testing epoch: %d' % current_epoch)
         global_step = trainer.global_step
