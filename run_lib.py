@@ -46,4 +46,4 @@ def test(config, log_path, checkpoint_path):
   LightningModule = LightningModule.load_from_checkpoint(checkpoint_path)
 
   for buf in LightningModule.buffers():
-    print(type(buf), buf.size())
+    print(buf)
