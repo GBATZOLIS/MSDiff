@@ -28,17 +28,6 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         self.starting_transition_iterations = starting_transition_iterations
         self.sigma_max_y_fn = get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_transition_iterations)
 
-    def on_fit_start(self, trainer, pl_module):
-        # Configure SDE
-        pl_module.configure_sde(pl_module.config)
-        
-        # Configure trainining and validation loss functions.
-        pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
-        pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
-
-        # Configure default sampling shape
-        pl_module.configure_default_sampling_shape(pl_module.config)
-
     def on_train_epoch_start(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
         global_step = pl_module.global_step
@@ -47,9 +36,9 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
 
         #calculate current sigma_max_y
         current_sigma_max_y = self.sigma_max_y_fn(global_step, current_epoch, sigma_max_y_start, sigma_max_y_target)
-        pl_module.register_buffer('sigma_max_y', torch.tensor(current_sigma_max_y))
-        test_sigma_max_y = pl_module.get_buffer('sigma_max_y')
-        print('test_sigma_max_y: ', test_sigma_max_y)
+        #pl_module.register_buffer('sigma_max_y', torch.tensor(current_sigma_max_y))
+        current_sigma_max_y = pl_module.get_buffer('sigma_max_y')
+        #print('test_sigma_max_y: ', test_sigma_max_y)
         print('current_sigma_max_y: ', current_sigma_max_y)
 
         # Reconfigure SDE
@@ -59,17 +48,6 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
 
         pl_module.logger.experiment.add_scalar('sigma_max_y', current_sigma_max_y, pl_module.current_epoch)
-
-    def on_test_start(self, trainer, pl_module):
-        # Configure SDE
-        pl_module.configure_sde(pl_module.config)
-        
-        # Configure trainining and validation loss functions.
-        pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
-        pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
-
-        # Configure default sampling shape
-        pl_module.configure_default_sampling_shape(pl_module.config)
 
     def on_test_epoch_start(self, trainer, pl_module):
         sigma_max_y = pl_module.get_buffer('sigma_max_y')
