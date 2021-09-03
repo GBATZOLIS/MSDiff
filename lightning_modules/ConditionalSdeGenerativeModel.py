@@ -74,6 +74,7 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
         elif config.training.sde.lower() == 'vesde':
             if sigma_max_y is None:
                 sigma_max_y = config.model.sigma_max_x 
+            self.register_buffer('sigma_max_y', sigma_max_y)
 
             sde_y = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=sigma_max_y, N=config.model.num_scales)
             sde_x = sde_lib.cVESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max_x, N=config.model.num_scales)

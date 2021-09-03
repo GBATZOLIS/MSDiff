@@ -21,7 +21,7 @@ def register_callback(cls=None, *, name=None):
 def get_callback_by_name(name):
     return _CALLBACKS[name]
 
-def get_callbacks(config, checkpoint_path):
+def get_callbacks(config):
     callbacks=[get_callback_by_name('ema')(), \
     get_callback_by_name(config.training.visualization_callback)(show_evolution=config.training.show_evolution)]
 
@@ -29,7 +29,6 @@ def get_callbacks(config, checkpoint_path):
       callbacks.append(get_callback_by_name('decreasing_variance_configuration')(
         reduction=config.model.reduction, reach_target_in_epochs=config.model.reach_target_in_epochs,
         starting_transition_iterations = config.model.starting_transition_iterations,
-        checkpoint_path=checkpoint_path
       ))
     else:
       callbacks.append(get_callback_by_name('configuration')())

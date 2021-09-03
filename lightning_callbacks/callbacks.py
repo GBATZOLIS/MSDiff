@@ -21,14 +21,12 @@ class ConfigurationSetterCallback(Callback):
 
 @utils.register_callback(name='decreasing_variance_configuration')
 class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback):
-    def __init__(self, reduction, reach_target_in_epochs, starting_transition_iterations, checkpoint_path=None):
+    def __init__(self, reduction, reach_target_in_epochs, starting_transition_iterations):
         super().__init__()
         self.reduction = reduction
         self.reach_target_in_epochs = reach_target_in_epochs
         self.starting_transition_iterations = starting_transition_iterations
         self.sigma_max_y_fn = get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_transition_iterations)
-        
-        self.checkpoint_path = checkpoint_path #used for proper resuming and instantiation of functions
 
     def on_train_epoch_start(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
@@ -38,6 +36,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
 
         #calculate current sigma_max_y
         current_sigma_max_y = self.sigma_max_y_fn(global_step, current_epoch, sigma_max_y_start, sigma_max_y_target)
+        print('current_sigma_max_y: %d', current_sigma_max_y)
 
         # Reconfigure SDE
         pl_module.configure_sde(pl_module.config, current_sigma_max_y)
@@ -48,19 +47,8 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         pl_module.logger.experiment.add_scalar('sigma_max_y', current_sigma_max_y, pl_module.current_epoch)
 
     def on_test_epoch_start(self, trainer, pl_module):
-        current_epoch = trainer.checkpoint_connector._loaded_checkpoint["epoch"]
-        print('Testing epoch: %d' % current_epoch)
-        global_step = trainer.checkpoint_connector._loaded_checkpoint["global_step"]
-        print('Global step: %d' % global_step)
-        sigma_max_y_start = pl_module.config.model.sigma_max_x
-        sigma_max_y_target = pl_module.config.model.sigma_max_y
-
-        #calculate current sigma_max_y and configure the SDEs.
-        current_sigma_max_y = self.sigma_max_y_fn(global_step, current_epoch, sigma_max_y_start, sigma_max_y_target)
-        print('Testing sigma-max-y: %.3f' % current_sigma_max_y)
-
         # Reconfigure SDE
-        pl_module.configure_sde(pl_module.config, current_sigma_max_y)
+        pl_module.configure_sde(pl_module.config, pl_module.sigma_max_y)
         
         # Reconfigure trainining and validation loss functions. -  we might not need to reconfigure the losses.
         pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)

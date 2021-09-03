@@ -39,7 +39,7 @@ class PairedVisualizationCallback(Callback):
 
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
-        if current_epoch == 0 or current_epoch % 5 != 0:
+        if current_epoch == 0 or current_epoch % 5 != 1:
             return 
         
         dataloader_iterator = iter(trainer.datamodule.val_dataloader())
@@ -62,7 +62,6 @@ class PairedVisualizationCallback(Callback):
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         y, x = batch
-        print('trainer.global_step: %d', trainer.global_step)
         print('sde_y sigma_max: %.5f ' % pl_module.sde[0].sigma_max)
         samples, sampling_info = pl_module.sample(y.to(pl_module.device), show_evolution=True) #sample x conditioned on y
         evolution = sampling_info['evolution']
