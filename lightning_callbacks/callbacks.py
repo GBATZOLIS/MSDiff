@@ -37,7 +37,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         #calculate current sigma_max_y
         current_sigma_max_y = self.sigma_max_y_fn(global_step, current_epoch, sigma_max_y_start, sigma_max_y_target)
         #pl_module.register_buffer('sigma_max_y', torch.tensor(current_sigma_max_y))
-        current_sigma_max_y = pl_module.get_buffer('sigma_max_y')
+        current_sigma_max_y = pl_module.get_buffer('sigma_max_y').item()
         #print('test_sigma_max_y: ', test_sigma_max_y)
         print('current_sigma_max_y: ', current_sigma_max_y)
 
