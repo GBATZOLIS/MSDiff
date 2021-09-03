@@ -37,7 +37,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         #calculate current sigma_max_y
         current_sigma_max_y = self.sigma_max_y_fn(global_step, current_epoch, sigma_max_y_start, sigma_max_y_target)
         pl_module.register_buffer('sigma_max_y', torch.tensor(current_sigma_max_y))
-        print('current_sigma_max_y: %d', current_sigma_max_y)
+        print('current_sigma_max_y: %d' % current_sigma_max_y)
 
         # Reconfigure SDE
         pl_module.configure_sde(pl_module.config, current_sigma_max_y)
@@ -49,7 +49,8 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
 
     def on_test_epoch_start(self, trainer, pl_module):
         # Reconfigure SDE
-        pl_module.configure_sde(pl_module.config, pl_module.sigma_max_y)
+        sigma_max_y = pl_module.buffers()['sigma_max_y']
+        pl_module.configure_sde(pl_module.config, sigma_max_y)
         
         # Reconfigure trainining and validation loss functions. -  we might not need to reconfigure the losses.
         pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
