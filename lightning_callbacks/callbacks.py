@@ -28,6 +28,18 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         self.starting_transition_iterations = starting_transition_iterations
         self.sigma_max_y_fn = get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_transition_iterations)
 
+    def setup(self, trainer, pl_module, stage=None):
+        if stage in ['fit', 'test']:
+            # Configure SDE
+            pl_module.configure_sde(pl_module.config)
+            
+            # Configure trainining and validation loss functions.
+            pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
+            pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
+
+            # Configure default sampling shape
+            pl_module.configure_default_sampling_shape(pl_module.config)
+
     def on_sanity_check_start(self, trainer, pl_module):
         self.on_train_start(trainer, pl_module)
 
@@ -57,8 +69,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
     def on_train_epoch_start(self, trainer, pl_module):
         self.on_train_start(trainer, pl_module)
 
-    def setup(self, trainer, pl_module, stage=None):
-        self.on_train_start(trainer, pl_module)
+    
 
     def on_test_epoch_start(self, trainer, pl_module):
         print(trainer.current_epoch)
