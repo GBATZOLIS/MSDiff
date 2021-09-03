@@ -49,7 +49,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
 
     def on_test_epoch_start(self, trainer, pl_module):
         # Reconfigure SDE
-        sigma_max_y = pl_module.buffers()['sigma_max_y']
+        sigma_max_y = pl_module.get_buffer('sigma_max_y')
         pl_module.configure_sde(pl_module.config, sigma_max_y)
         
         # Reconfigure trainining and validation loss functions. -  we might not need to reconfigure the losses.
