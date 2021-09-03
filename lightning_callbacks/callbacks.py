@@ -49,6 +49,8 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
 
     def on_test_epoch_start(self, trainer, pl_module):
         # Reconfigure SDE
+        for buf in pl_module.buffers():
+            print(type(buf), buf.size())
         sigma_max_y = pl_module.get_buffer('sigma_max_y')
         pl_module.configure_sde(pl_module.config, sigma_max_y)
         
