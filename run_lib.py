@@ -41,28 +41,7 @@ def test(config, log_path, checkpoint_path):
   DataModule.setup() #instantiate the datasets
 
   callbacks = get_callbacks(config)
-  LightningModule = create_lightning_module(config)
-  
-  logger = pl.loggers.TensorBoardLogger(log_path, name='test_lightning_logs')
+  LightningModule = create_lightning_module(config).load_from_checkpoint(checkpoint_path)
 
-  assert checkpoint_path is not None, 'checkpoint path was not provided.'
-  trainer = pl.Trainer(gpus=config.training.gpus,
-                       callbacks=callbacks,
-                       logger = logger,
-                       resume_from_checkpoint=checkpoint_path)
-
-  # Configure SDE
-  LightningModule.configure_sde(LightningModule.config)
-        
-  # Configure trainining and validation loss functions.
-  LightningModule.train_loss_fn = LightningModule.configure_loss_fn(LightningModule.config, train=True)
-  LightningModule.eval_loss_fn = LightningModule.configure_loss_fn(LightningModule.config, train=False)
-
-  # Configure default sampling shape
-  LightningModule.configure_default_sampling_shape(LightningModule.config)
-
-  # test (pass in the model)
-  trainer.test(LightningModule, DataModule.test_dataloader())
-
-
-
+  for buf in LightningModule.buffers():
+    print(type(buf), buf.size())
