@@ -44,6 +44,4 @@ def test(config, log_path, checkpoint_path):
   LightningModule = create_lightning_module(config)
 
   LightningModule = LightningModule.load_from_checkpoint(checkpoint_path)
-
-  for buf in LightningModule.buffers():
-    print(buf)
+  print(LightningModule.sigma_max_y)
