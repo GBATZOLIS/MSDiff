@@ -51,6 +51,16 @@ def test(config, log_path, checkpoint_path):
                        logger = logger,
                        resume_from_checkpoint=checkpoint_path)
 
+  # Configure SDE
+  LightningModule.configure_sde(LightningModule.config)
+        
+  # Configure trainining and validation loss functions.
+  LightningModule.train_loss_fn = LightningModule.configure_loss_fn(LightningModule.config, train=True)
+  LightningModule.eval_loss_fn = LightningModule.configure_loss_fn(LightningModule.config, train=False)
+
+  # Configure default sampling shape
+  LightningModule.configure_default_sampling_shape(LightningModule.config)
+
   # test (pass in the model)
   trainer.test(LightningModule, DataModule.test_dataloader())
 
