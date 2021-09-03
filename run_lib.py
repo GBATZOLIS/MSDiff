@@ -38,9 +38,11 @@ def train(config, log_path, checkpoint_path):
 
 def test(config, log_path, checkpoint_path):
   DataModule = create_lightning_datamodule(config)
+  DataModule.setup() #instantiate the datasets
+  
   callbacks = get_callbacks(config)
   LightningModule = create_lightning_module(config)
-  LightningModule.setup()
+  
   logger = pl.loggers.TensorBoardLogger(log_path, name='test_lightning_logs')
 
   assert checkpoint_path is not None, 'checkpoint path was not provided.'
