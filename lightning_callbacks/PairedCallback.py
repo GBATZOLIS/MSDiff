@@ -55,7 +55,7 @@ class PairedVisualizationCallback(Callback):
                 print('sde_y sigma_max: %.5f ' % pl_module.sde[0].sigma_max)
                 conditional_samples, sampling_info = pl_module.sample(y.to(pl_module.device), show_evolution=True)
                 evolution = sampling_info['evolution']
-                self.visualise_evolution(evolution, pl_module, i+1)
+                self.visualise_evolution(evolution, pl_module, tag='val_joint_evolution_batch_%d_epoch_%d' % (i, current_epoch))
             else:
                 conditional_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=False)
 
@@ -67,7 +67,7 @@ class PairedVisualizationCallback(Callback):
         samples, sampling_info = pl_module.sample(y.to(pl_module.device), show_evolution=True) #sample x conditioned on y
         evolution = sampling_info['evolution']
         self.visualise_paired_samples(y, samples, pl_module, batch_idx, phase='test')
-        #self.visualise_evolution(evolution, pl_module, batch_idx)
+        self.visualise_evolution(evolution, pl_module, tag='test_joint_evolution_batch_%d' % batch)
 
     def visualise_paired_samples(self, y, x, pl_module, batch_idx, phase='train'):
         # log sampled images
@@ -76,9 +76,9 @@ class PairedVisualizationCallback(Callback):
         grid_images = make_grid(concat_sample, nrow=int(np.sqrt(concat_sample.size(0))), normalize=False)
         pl_module.logger.experiment.add_image('generated_images_%sbatch_%d' % (phase, batch_idx), grid_images, pl_module.current_epoch)
     
-    def visualise_evolution(self, evolution, pl_module, batch_idx):
+    def visualise_evolution(self, evolution, pl_module, tag):
         norm_evolution_x = normalise_evolution(evolution['x'])
         norm_evolution_y = normalise_evolution(evolution['y'])
         joint_evolution = torch.cat([norm_evolution_y, norm_evolution_x], dim=-1)
         video_grid = create_video_grid(joint_evolution)
-        pl_module.logger.experiment.add_video('joint_evolution_batch_%d' % batch_idx, video_grid.unsqueeze(0), fps=50)
+        pl_module.logger.experiment.add_video(tage, video_grid.unsqueeze(0), fps=50)

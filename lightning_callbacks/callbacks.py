@@ -30,7 +30,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
 
     def on_sanity_check_start(self, trainer, pl_module):
         self.on_train_start(trainer, pl_module)
-        
+
     def on_train_start(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
         global_step = pl_module.global_step
@@ -58,6 +58,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         self.on_train_start(trainer, pl_module)
 
     def on_test_epoch_start(self, trainer, pl_module):
+        print(trainer.current_epoch)
         sigma_max_y = pl_module.get_buffer('sigma_max_y')
         pl_module.configure_sde(pl_module.config, sigma_max_y)
         
