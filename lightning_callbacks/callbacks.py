@@ -39,7 +39,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         pl_module.register_buffer('sigma_max_y', torch.tensor(current_sigma_max_y))
         test_sigma_max_y = pl_module.get_buffer('sigma_max_y')
         print('test_sigma_max_y: ', test_sigma_max_y)
-        print('current_sigma_max_y: ' % current_sigma_max_y)
+        print('current_sigma_max_y: ', current_sigma_max_y)
 
         # Reconfigure SDE
         pl_module.configure_sde(pl_module.config, current_sigma_max_y)
