@@ -41,7 +41,10 @@ def test(config, log_path, checkpoint_path):
   DataModule.setup() #instantiate the datasets
 
   callbacks = get_callbacks(config)
-  LightningModule = create_lightning_module(config).load_from_checkpoint(checkpoint_path)
+  LightningModule = create_lightning_module(config)
+  LightningModule.configure_sde(config)
+
+  LightningModule = LightningModule.load_from_checkpoint(checkpoint_path)
 
   for buf in LightningModule.buffers():
     print(type(buf), buf.size())
