@@ -51,6 +51,7 @@ def test(config, log_path, checkpoint_path):
                           max_steps=config.training.n_iters, 
                           callbacks=callbacks, 
                           logger = logger,
+                          limit_val_batches=0,
                           resume_from_checkpoint=checkpoint_path)
   
   trainer.fit(LightningModule, datamodule=DataModule)
