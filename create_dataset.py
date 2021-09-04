@@ -97,7 +97,7 @@ def create_haar_dataset(base_image_dir, dataset, target_resolution, levels, spli
         if dataset in ['celeba', 'celebA']:
             image = center_crop(image, 9, 9, 39, 19)
 
-        assert image.size[0]==image.size[1], 'Image size is not square, revisit the data generation code.'
+        assert image.size[0]==image.size[1], 'Image size is not square, revisit the data generation code. Image dimension: (%d, %d)' % (image.size[0], image.size[1])
         
         try:
             assert image.size[0] == target_resolution
