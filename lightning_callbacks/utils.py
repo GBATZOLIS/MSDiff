@@ -21,7 +21,7 @@ def register_callback(cls=None, *, name=None):
 def get_callback_by_name(name):
     return _CALLBACKS[name]
 
-def get_callbacks(config):
+def get_callbacks(config, phase='train'):
     callbacks=[get_callback_by_name('ema')(), \
     get_callback_by_name(config.training.visualization_callback)(show_evolution=config.training.show_evolution)]
 
@@ -32,6 +32,9 @@ def get_callbacks(config):
       ))
     else:
       callbacks.append(get_callback_by_name('configuration')())
+    
+    if phase=='test':
+      callbacks.append(get_callback_by_name('test')())
 
     return callbacks
 

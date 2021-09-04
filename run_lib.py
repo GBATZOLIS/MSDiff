@@ -40,7 +40,7 @@ def test(config, log_path, checkpoint_path):
   DataModule = create_lightning_datamodule(config)
   DataModule.setup() #instantiate the datasets
 
-  callbacks = get_callbacks(config)
+  callbacks = get_callbacks(config, phase='test')
   LightningModule = create_lightning_module(config)
   logger = pl.loggers.TensorBoardLogger(log_path, name='lightning_logs')
 
