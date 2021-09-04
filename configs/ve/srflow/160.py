@@ -74,7 +74,7 @@ def get_config():
   # data
   config.data = data = ml_collections.ConfigDict()
   data.base_dir = 'datasets'
-  data.dataset = 'celebΑ'
+  data.dataset = 'celebA'
   data.create_dataset = True
   data.split = [0.925, 0.05, 0.025]
   data.target_resolution = 160 #this should remain constant for an experiment
