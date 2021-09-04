@@ -73,7 +73,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = '/home/gb511/datasets'
+  data.base_dir = 'datasets'
   data.dataset = 'celebΑ'
   data.create_dataset = True
   data.split = [0.925, 0.05, 0.025]
