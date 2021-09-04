@@ -93,7 +93,7 @@ def create_haar_dataset(base_image_dir, dataset, target_resolution, levels, spli
 
     for counter, img_file in tqdm(enumerate(sorted(os.listdir(os.path.join(base_image_dir, dataset))))):
         image = Image.open(os.path.join(base_image_dir, dataset, img_file))
-
+        print('dimensions: (%d,%d)'%(image.size[0], image.size[1]))
         if dataset in ['celeba', 'celebA']:
             image = center_crop(image, 9, 9, 39, 19)
 
