@@ -67,7 +67,7 @@ class PairedVisualizationCallback(Callback):
         samples, sampling_info = pl_module.sample(y.to(pl_module.device), show_evolution=True) #sample x conditioned on y
         evolution = sampling_info['evolution']
         #self.visualise_paired_samples(y, samples, pl_module, batch_idx, phase='test')
-        self.visualise_evolution(evolution, pl_module, tag='test_joint_evolution_batch_%d' % batch)
+        self.visualise_evolution(evolution, pl_module, tag='test_joint_evolution_batch_%d' % batch_idx)
 
     def visualise_paired_samples(self, y, x, pl_module, batch_idx, phase='train'):
         # log sampled images
