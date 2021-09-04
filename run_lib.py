@@ -42,6 +42,16 @@ def test(config, log_path, checkpoint_path):
 
   callbacks = get_callbacks(config)
   LightningModule = create_lightning_module(config)
+  logger = pl.loggers.TensorBoardLogger(log_path, name='lightning_logs')
 
-  LightningModule = LightningModule.load_from_checkpoint(checkpoint_path)
-  print(LightningModule.sigma_max_y)
+  if checkpoint_path is not None:
+      trainer = pl.Trainer(gpus=config.training.gpus,
+                          accumulate_grad_batches = config.training.accumulate_grad_batches,
+                          gradient_clip_val = config.optim.grad_clip,
+                          max_steps=config.training.n_iters, 
+                          callbacks=callbacks, 
+                          logger = logger,
+                          resume_from_checkpoint=checkpoint_path)
+  
+  trainer.fit(LightningModule, datamodule=DataModule)
+  trainer.test(LightningModule, datamodule=DataModule.test_dataloader())
