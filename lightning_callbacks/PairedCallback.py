@@ -81,4 +81,4 @@ class PairedVisualizationCallback(Callback):
         norm_evolution_y = normalise_evolution(evolution['y'])
         joint_evolution = torch.cat([norm_evolution_y, norm_evolution_x], dim=-1)
         video_grid = create_video_grid(joint_evolution)
-        pl_module.logger.experiment.add_video(tage, video_grid.unsqueeze(0), fps=50)
+        pl_module.logger.experiment.add_video(tag, video_grid.unsqueeze(0), fps=50)
