@@ -63,7 +63,7 @@ class PairedVisualizationCallback(Callback):
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         y, x = batch
-        print('sde_y sigma_max: %.5f ' % pl_module.sde[0].sigma_max)
+        print('sde_y sigma_max: %.3f ' % pl_module.sigma_max_y)
         samples, sampling_info = pl_module.sample(y.to(pl_module.device), show_evolution=True) #sample x conditioned on y
         evolution = sampling_info['evolution']
         self.visualise_paired_samples(y, samples, pl_module, batch_idx, phase='test')
