@@ -42,7 +42,7 @@ def test(config, log_path, checkpoint_path):
 
   callbacks = get_callbacks(config, phase='test')
   LightningModule = create_lightning_module(config)
-  logger = pl.loggers.TensorBoardLogger(log_path, name='lightning_logs')
+  logger = pl.loggers.TensorBoardLogger(log_path, name='test_lightning_logs')
 
   if checkpoint_path is not None:
       trainer = pl.Trainer(gpus=config.training.gpus,
