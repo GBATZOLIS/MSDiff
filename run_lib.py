@@ -10,7 +10,12 @@ from lightning_data_modules.utils import create_lightning_datamodule
 from lightning_modules import BaseSdeGenerativeModel, HaarMultiScaleSdeGenerativeModel, ConditionalSdeGenerativeModel #need for lightning module registration
 from lightning_modules.utils import create_lightning_module
 
+import create_dataset
+
 def train(config, log_path, checkpoint_path):
+    if config.data.create_dataset:
+      create_dataset.create_dataset(config)
+
     DataModule = create_lightning_datamodule(config)
     callbacks = get_callbacks(config)
     LightningModule = create_lightning_module(config)
