@@ -88,7 +88,7 @@ def create_haar_dataset(base_image_dir, dataset, target_resolution, levels, spli
     haar_level_ranges={}
     approx_level_ranges={}
 
-    total_num_images = len(os.listdir(os.path.join(base_image_dir, dataset)))
+    total_num_images = len(os.listdir(os.path.realpath(os.path.join(base_image_dir, dataset))))
     phase_dataset = create_train_val_test_index_dict(total_num_images, split)
 
     for counter, img_file in tqdm(enumerate(sorted(os.listdir(os.path.join(base_image_dir, dataset))))):
