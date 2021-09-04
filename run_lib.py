@@ -54,4 +54,4 @@ def test(config, log_path, checkpoint_path):
                           resume_from_checkpoint=checkpoint_path)
   
   trainer.fit(LightningModule, datamodule=DataModule)
-  trainer.test(LightningModule, datamodule=DataModule.test_dataloader())
+  trainer.test(LightningModule, DataModule.test_dataloader())
