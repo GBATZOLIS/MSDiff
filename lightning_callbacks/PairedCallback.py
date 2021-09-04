@@ -66,7 +66,7 @@ class PairedVisualizationCallback(Callback):
         print('sde_y sigma_max: %.5f ' % pl_module.sde[0].sigma_max)
         samples, sampling_info = pl_module.sample(y.to(pl_module.device), show_evolution=True) #sample x conditioned on y
         evolution = sampling_info['evolution']
-        self.visualise_paired_samples(y, samples, pl_module, batch_idx, phase='test')
+        #self.visualise_paired_samples(y, samples, pl_module, batch_idx, phase='test')
         self.visualise_evolution(evolution, pl_module, tag='test_joint_evolution_batch_%d' % batch)
 
     def visualise_paired_samples(self, y, x, pl_module, batch_idx, phase='train'):
