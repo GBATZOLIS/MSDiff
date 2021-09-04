@@ -69,8 +69,14 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
 
     
     def on_test_epoch_start(self, trainer, pl_module):
-        sigma_max_y = pl_module.get_buffer('sigma_max_y').item()
-        pl_module.configure_sde(pl_module.config, sigma_max_y)
+        current_epoch = pl_module.current_epoch
+        global_step = pl_module.global_step
+        sigma_max_y_start = pl_module.config.model.sigma_max_x
+        sigma_max_y_target = pl_module.config.model.sigma_max_y
+
+        #calculate current sigma_max_y
+        current_sigma_max_y = self.sigma_max_y_fn(global_step, current_epoch, sigma_max_y_start, sigma_max_y_target)
+        pl_module.configure_sde(pl_module.config, current_sigma_max_y)
         
         # Reconfigure trainining and validation loss functions. -  we might not need to reconfigure the losses.
         pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
