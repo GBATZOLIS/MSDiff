@@ -124,6 +124,9 @@ def conditional_shared_predictor_update_fn(x, y, t, sde, model, predictor, proba
     predictor_obj = NonePredictor(sde[1], score_fn, probability_flow)
   else:
     predictor_obj = predictor(sde[1], score_fn, probability_flow)
+  print(x.size())
+  print(y.size())
+  print(t.size())
   return predictor_obj.update_fn(x, y, t)
 
 def conditional_shared_corrector_update_fn(x, y, t, sde, model, corrector, continuous, snr, n_steps, x_channels):
