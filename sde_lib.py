@@ -137,7 +137,8 @@ class cSDE(SDE): #conditional setting. Allow for conditional time-dependent scor
         f, G = discretize_fn(x, t)
         print(f.size())
         print(score_fn(x, y, t).size())
-        rev_f = f - G[:, None, None, None] ** 2 * score_fn(x, y, t) * (0.5 if self.probability_flow else 1.)
+        #rev_f = f - G[:, None, None, None] ** 2 * score_fn(x, y, t) * (0.5 if self.probability_flow else 1.)
+        rev_f = f
         rev_G = torch.zeros_like(G) if self.probability_flow else G
         return rev_f, rev_G
 
