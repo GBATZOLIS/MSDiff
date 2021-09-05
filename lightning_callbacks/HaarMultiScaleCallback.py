@@ -103,7 +103,7 @@ class HaarMultiScaleVisualizationCallback(Callback):
         if batch_idx==0:
             orig_batch = batch.clone().cpu()
             
-            batch = pl_module.haar_transform(batch) 
+            batch = pl_module.haar_transform(batch.to(pl_module.device)) 
             batch = permute_channels(batch)
             y, x = batch[:,:3,::], batch[:,3:,:,:]
             sampled_x, _ = pl_module.sample(y, self.show_evolution)
