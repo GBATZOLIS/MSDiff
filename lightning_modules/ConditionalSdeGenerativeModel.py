@@ -88,7 +88,7 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
         print('Test batch %d' % batch_idx)
 
 @utils.register_lightning_module(name='haar_conditional_decreasing_variance')
-class HaarDecreasingVarianceConditionalSdeGenerativeModel(DecreasingVarianceConditionalSdeGenerativeModel)
+class HaarDecreasingVarianceConditionalSdeGenerativeModel(DecreasingVarianceConditionalSdeGenerativeModel):
     def __init__(self, config, *args, **kwargs):
         super().__init__(config)
         self.haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
