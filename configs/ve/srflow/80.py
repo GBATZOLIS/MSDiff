@@ -116,7 +116,7 @@ def get_config():
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 128
-  model.ch_mult = (1, 1, 2, 2)
+  model.ch_mult = (1, 1, 2)
   model.num_res_blocks = 2
   model.attn_resolutions = ()
   model.resamp_with_conv = True
