@@ -65,7 +65,7 @@ class DDPM(pl.LightningModule):
     self.centered = config.data.centered
     channels = config.data.num_channels
 
-    # Downsampling block
+    # ddpm_conv3x3
     modules.append(conv3x3(channels, nf))
     hs_c = [nf]
     in_ch = nf
