@@ -38,7 +38,7 @@ def get_config():
   training.log_freq = 250
   training.eval_freq = 2500
   #------              --------
- training.visualization_callback = 'conditional_haar_multiscale'
+  training.visualization_callback = 'conditional_haar_multiscale'
   training.show_evolution = False
   ## store additional checkpoints for preemption in cloud computing environments
   training.snapshot_freq_for_preemption = 5000
