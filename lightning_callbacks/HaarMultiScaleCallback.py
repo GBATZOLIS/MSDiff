@@ -101,13 +101,13 @@ class HaarMultiScaleVisualizationCallback(Callback):
     
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         if batch_idx==0:
-            orig_batch = batch.clone().cpu()
+            orig_batch = batch.clone()
+            orig_batch = orig_batch.cpu()
             
-            batch = pl_module.haar_transform(batch.to(pl_module.device)) 
+            batch = pl_module.haar_transform(batch) 
             batch = permute_channels(batch)
-            y, x = batch[:,:3,::], batch[:,3:,:,:]
-            print(y.size())
-            '''
+            y = batch[:,:3,::]
+
             sampled_x, _ = pl_module.sample(y, self.show_evolution)
             concat_samples = torch.cat([y, sampled_x], dim=1)
             back_permuted_samples = permute_channels(concat_samples, forward=False)
@@ -119,5 +119,3 @@ class HaarMultiScaleVisualizationCallback(Callback):
 
             image_grid = make_grid(super_batch, nrow=int(np.sqrt(super_batch.size(0))))
             pl_module.logger.experiment.add_image('samples_%d' % pl_module.current_epoch, image_grid, pl_module.current_epoch)
-
-            '''
