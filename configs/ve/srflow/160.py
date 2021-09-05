@@ -92,7 +92,15 @@ def get_config():
   # model
   config.model = model = ml_collections.ConfigDict()
   model.num_scales = 1000
-  model.sigma_max = 278 
+  model.sigma_max_x = 300 #600 #input range is [0,1] and resolution is 64^2
+  #we do not want to perturb y a lot. 
+  #A slight perturbation will result in better approximation of the conditional time-dependent score.
+  model.sigma_max_y = 1
+  #-------The three subsequent settings configure the reduction schedule of sigma_max_y
+  model.reduction = 'inverse_exponentional' #choices=['linear', 'inverse_exponentional']
+  model.reach_target_in_epochs = 64
+  model.starting_transition_iterations = 2000
+
   model.sigma_min = 0.01
   model.beta_min = 0.1
   # We use an adjusted beta max 
