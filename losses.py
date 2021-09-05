@@ -154,8 +154,8 @@ def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_w
     losses = torch.square(score - target)
 
     if likelihood_weighting:
-      losses[:,:losses.size(1)//2,::]=losses[:,:losses.size(1)//2,::]*sigmas_x[:, None, None, None]**2
-      losses[:,losses.size(1)//2:,::]=losses[:,losses.size(1)//2:,::]*sigmas_y[:, None, None, None]**2
+      losses[:,:x_channels,::]=losses[:,:x_channels,::]*sigmas_x[:, None, None, None]**2
+      losses[:,x_channels:,::]=losses[:,x_channels:,::]*sigmas_y[:, None, None, None]**2
       losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1)
     else:
       smld_weighting = (sigmas_x**2*sigmas_y**2)/(sigmas_x**2+sigmas_y**2) #smld weighting
