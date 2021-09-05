@@ -117,4 +117,4 @@ class HaarMultiScaleVisualizationCallback(Callback):
             super_batch = torch.cat([normalise_per_image(DC_coeff_interp), normalise_per_image(sampled_images), normalise_per_image(orig_batch)], dim=-1)
 
             image_grid = make_grid(super_batch, nrow=int(np.sqrt(super_batch.size(0))))
-            pl_module.logger.experiment.add_image('samples_%d' % pl_module.current_epoch, image_grid, pl_module.current_epoch)
+            pl_module.logger.experiment.add_image('samples_batch_%d_epoch_%d' % (batch_idx, pl_module.current_epoch), image_grid, pl_module.current_epoch)

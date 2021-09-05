@@ -68,11 +68,14 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
     def on_train_epoch_start(self, trainer, pl_module):
         current_sigma_max_y = self.reconfigure_sigma_max_y(trainer, pl_module)
         pl_module.sigma_max_y = torch.tensor(current_sigma_max_y)
-        pl_module.logger.experiment.add_scalar('sigma_max_y', current_sigma_max_y, pl_module.current_epoch)
-    
+
+    def on_train_batch_start(self, trainer, pl_module):
+        current_sigma_max_y = self.reconfigure_sigma_max_y(trainer, pl_module)
+        pl_module.sigma_max_y = torch.tensor(current_sigma_max_y)
+        pl_module.logger.experiment.add_scalar('sigma_max_y', current_sigma_max_y, pl_module.global_step)
+
     def on_test_epoch_start(self, trainer, pl_module):
         _ = self.reconfigure_sigma_max_y(trainer, pl_module)
-
         # Configure default sampling shape
         pl_module.configure_default_sampling_shape(pl_module.config)
 
