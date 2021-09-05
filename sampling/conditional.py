@@ -45,14 +45,14 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr,
                                           predictor=predictor,
                                           probability_flow=probability_flow,
                                           continuous=continuous,
-                                          x_channels=shape[0])
+                                          x_channels=shape[1])
   corrector_update_fn = functools.partial(conditional_shared_corrector_update_fn,
                                           sde=sde,
                                           corrector=corrector,
                                           continuous=continuous,
                                           snr=snr,
                                           n_steps=n_steps,
-                                          x_channels=shape[0])
+                                          x_channels=shape[1])
 
   def get_conditional_update_fn(update_fn):
     """Modify the update function of predictor & corrector to incorporate data information."""
@@ -124,7 +124,7 @@ def conditional_shared_predictor_update_fn(x, y, t, sde, model, predictor, proba
     predictor_obj = NonePredictor(sde[1], score_fn, probability_flow)
   else:
     predictor_obj = predictor(sde[1], score_fn, probability_flow)
-    
+
   return predictor_obj.update_fn(x, y, t)
 
 def conditional_shared_corrector_update_fn(x, y, t, sde, model, corrector, continuous, snr, n_steps, x_channels):
