@@ -47,11 +47,11 @@ class HaarDecomposedDataModule(pl.LightningDataModule):
         #DataLoader arguments
         self.config = config
         self.train_workers = config.training.workers
-        self.val_workers = config.validation.workers
+        self.val_workers = config.eval.workers
         self.test_workers = config.eval.workers
 
         self.train_batch = config.training.batch_size
-        self.val_batch = config.validation.batch_size
+        self.val_batch = config.eval.batch_size
         self.test_batch = config.eval.batch_size
 
     def setup(self, stage=None): 
