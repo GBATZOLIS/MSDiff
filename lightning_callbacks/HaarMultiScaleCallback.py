@@ -101,10 +101,9 @@ class HaarMultiScaleVisualizationCallback(Callback):
     
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         if batch_idx==0:
-            orig_batch = batch.clone()
-            orig_batch = orig_batch.cpu()
+            orig_batch = batch.clone().cpu()
             
-            batch = pl_module.haar_transform(batch) 
+            batch = pl_module.haar_transform(batch.to(pl_module.device)) 
             batch = permute_channels(batch)
             y = batch[:,:3,::]
 
