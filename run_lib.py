@@ -64,4 +64,5 @@ def test(config, log_path, checkpoint_path):
   print(LightningModule.sigma_max_y)
   #trainer.test(LightningModule, DataModule.test_dataloader())
 
-def multi_scale_test(configs, log_path, checkpoint_paths)
+def multi_scale_test(configs, log_path, checkpoint_paths):
+  return
