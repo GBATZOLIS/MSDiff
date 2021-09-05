@@ -13,16 +13,16 @@ class HaarDecomposedDataset(data.Dataset):
     self.dataset = config.data.dataset
     self.level = config.data.level #target resolution - level 0.
     if config.data.level == 0: #data are saved as png files.
-      self.image_files = glob.glob(os.path.join(config.data.base_dir, config.data.dataset, str(config.data.image_size), phase, '*.png'))
+      self.image_files = glob.glob(os.path.join(config.data.base_dir, config.data.dataset+'_'+str(config.data.image_size), phase, '*.png'))
     elif config.data.level >= 1: #data are saved as numpy arrays to minimise the reconstruction.
-      self.image_files = glob.glob(os.path.join(config.data.base_dir, config.data.dataset, str(config.data.image_size), phase, '*.npy'))
+      self.image_files = glob.glob(os.path.join(config.data.base_dir, config.data.dataset+'_'+str(config.data.image_size), phase, '*.npy'))
     else:
       raise Exception('Invalid haar level.')
 
     print(self.image_files)
     
     #preprocessing operations
-    self.random_flip = config.data.random_flip
+    #self.random_flip = config.data.random_flip
   
   def __getitem__(self, index):
     if self.level==0:

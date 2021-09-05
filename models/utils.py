@@ -47,7 +47,7 @@ def get_model(name):
   return _MODELS[name]
 
 
-def divide_by_sigmas(h, labels, sde):
+def divide_by_sigmas(h, labels, sde, x_channels=3):
   #inputs:
   #h:the output of model_fn
   #labels -> point to the right sigmas
@@ -58,7 +58,7 @@ def divide_by_sigmas(h, labels, sde):
   if isinstance(sde, list):
     sigmas_x = sde[1].discrete_sigmas.type_as(h)
     sigmas_y = sde[0].discrete_sigmas.type_as(h)
-    h_x, h_y = torch.chunk(h, chunks=2, dim=1)
+    h_x, h_y = h[:,:x_channels,::], h[:,x_channels:,::]
     h_x = h_x / sigmas_x[labels, None, None, None]
     h_y = h_y / sigmas_y[labels, None, None, None]
     h = torch.cat((h_x, h_y), dim=1)
@@ -148,7 +148,7 @@ def get_model_fn(model, train=False):
 
 
 
-def get_score_fn(sde, model, train=False, continuous=False):
+def get_score_fn(sde, model, train=False, continuous=False, x_channels=3):
   """Wraps `score_fn` so that the model output corresponds to a real time-dependent score function.
   Args:
     sde: An `sde_lib.SDE` object that represents the forward SDE.
@@ -174,7 +174,7 @@ def get_score_fn(sde, model, train=False, continuous=False):
           labels = t*(sde[1].N - 1)
           labels = torch.round(labels.float()).long()
           score = model_fn(x, labels)
-          score = divide_by_sigmas(score, labels, sde)
+          score = divide_by_sigmas(score, labels, sde, x_channels)
 
         return score
     else:
@@ -210,7 +210,7 @@ def get_score_fn(sde, model, train=False, continuous=False):
         labels = t*(sde.N - 1)
         labels = torch.round(labels).long()
         score = model_fn(x, labels)
-        score = divide_by_sigmas(score, labels, sde)
+        score = divide_by_sigmas(score, labels, sde) #needs generalisation
 
       return score
 
@@ -219,13 +219,14 @@ def get_score_fn(sde, model, train=False, continuous=False):
 
   return score_fn
 
-def get_conditional_score_fn(score_fn, target_domain): #for standard inverse problems. It should be modified for general inverse problems (different resolutions etc.).
+#needs shape generalisation
+def get_conditional_score_fn(score_fn, target_domain, x_channels=3): #for standard inverse problems. It should be modified for general inverse problems (different resolutions etc.).
   def conditional_score_fn(x, y, t):
     score = score_fn(torch.cat((x,y),dim=1), t)
     if target_domain == 'x':
-      return score[:, :score.size(1)//2, ::]
+      return score[:, :x_channels, ::]
     elif target_domain == 'y':
-      return score[:, score.size(1)//2:, ::]
+      return score[:, x_channels:, ::]
     else:
       raise Exception('target_domain is not valid. Available options [x,y].')
   

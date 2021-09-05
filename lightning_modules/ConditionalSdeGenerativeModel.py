@@ -5,6 +5,7 @@ from sampling.conditional import get_conditional_sampling_fn
 import sde_lib
 from . import utils
 import torch
+from iunets.layers import InvertibleDownsampling2D
 
 @utils.register_lightning_module(name='conditional')
 class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeModel):
@@ -36,7 +37,7 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
                 #this part of the code needs to be improved. We should check all elements of the sde list. We might have a mixture.
                 if isinstance(self.sde[0], VESDE) and isinstance(self.sde[1], cVESDE) and len(self.sde)==2:
                     loss_fn = get_inverse_problem_smld_loss_fn(self.sde, train, reduce_mean=config.training.reduce_mean, \
-                        likelihood_weighting=config.training.likelihood_weighting)
+                        likelihood_weighting=config.training.likelihood_weighting, x_channels=config.data.shape_x[0])
                 elif isinstance(self.sde[0], VPSDE) and isinstance(self.sde[1], VPSDE) and len(self.sde)==2:
                     loss_fn = get_inverse_problem_ddpm_loss_fn(self.sde, train, reduce_mean=config.training.reduce_mean)
                 else:
@@ -85,3 +86,27 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
     
     def test_step(self, batch, batch_idx):
         print('Test batch %d' % batch_idx)
+
+@utils.register_lightning_module(name='haar_conditional_decreasing_variance')
+class HaarDecreasingVarianceConditionalSdeGenerativeModel(DecreasingVarianceConditionalSdeGenerativeModel)
+    def __init__(self, config, *args, **kwargs):
+        super().__init__(config)
+        self.haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
+    
+    def training_step(self, batch, batch_idx):
+        batch = self.haar_transform(batch) #apply the haar transform
+        batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
+        batch = [batch[:,:3,::], batch[:,3:,:,:]] #[y,x]
+        loss = self.train_loss_fn(self.score_model, batch)
+        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        return loss
+    
+    def validation_step(self, batch, batch_idx):
+        batch = self.haar_transform(batch) 
+        batch = permute_channels(batch)
+        batch = [batch[:,:3,::], batch[:,3:,:,:]] #[y,x]
+        loss = self.eval_loss_fn(self.score_model, batch)
+        self.log('eval_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        return loss
+
+    

@@ -38,7 +38,7 @@ def get_config():
   training.log_freq = 250
   training.eval_freq = 2500
   #------              --------
-  training.visualization_callback = 'paired' #this should be slightly modified
+ training.visualization_callback = 'conditional_haar_multiscale'
   training.show_evolution = False
   ## store additional checkpoints for preemption in cloud computing environments
   training.snapshot_freq_for_preemption = 5000
@@ -75,7 +75,8 @@ def get_config():
   config.data = data = ml_collections.ConfigDict()
   data.base_dir = 'datasets'
   data.dataset = 'celebA'
-  data.create_dataset = True
+  data.datamodule = 'haar_multiscale'
+  data.create_dataset = False
   data.split = [0.925, 0.05, 0.025]
   data.target_resolution = 160 #this should remain constant for an experiment
   data.image_size = 160 #we vary this for training on different resolutions
@@ -86,6 +87,7 @@ def get_config():
   data.random_flip = False
   data.uniform_dequantization = False
   data.num_channels = 12 #because of the haar tranform we have 12 channels.
+  data.shape_x = [9, data.effective_image_size, data.effective_image_size]
 
   # model
   config.model = model = ml_collections.ConfigDict()

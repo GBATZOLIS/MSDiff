@@ -121,7 +121,7 @@ def get_smld_loss_fn(vesde, train, reduce_mean=False):
 
   return loss_fn
 
-def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_weighting=True):
+def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_weighting=True, x_channels=3):
   reduce_op = torch.mean if reduce_mean else lambda *args, **kwargs: 0.5 * torch.sum(*args, **kwargs)
 
   # Previous SMLD models assume descending sigmas
@@ -131,7 +131,7 @@ def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_w
 
   def loss_fn(model, batch):
     y, x = batch
-    score_fn = mutils.get_score_fn(sde, model, train=train)
+    score_fn = mutils.get_score_fn(sde, model, train=train, x_channels=x_channels)
     labels = torch.randint(0, sde[1].N, (x.shape[0],), device=x.device)
     score_fn_labels = labels/(sde[1].N - 1)
 

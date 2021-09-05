@@ -44,13 +44,15 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr,
                                           sde=sde,
                                           predictor=predictor,
                                           probability_flow=probability_flow,
-                                          continuous=continuous)
+                                          continuous=continuous,
+                                          x_channels=shape[0])
   corrector_update_fn = functools.partial(conditional_shared_corrector_update_fn,
                                           sde=sde,
                                           corrector=corrector,
                                           continuous=continuous,
                                           snr=snr,
-                                          n_steps=n_steps)
+                                          n_steps=n_steps,
+                                          x_channels=shape[0])
 
   def get_conditional_update_fn(update_fn):
     """Modify the update function of predictor & corrector to incorporate data information."""
@@ -112,10 +114,10 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr,
         
   return pc_conditional_sampler
 
-def conditional_shared_predictor_update_fn(x, y, t, sde, model, predictor, probability_flow, continuous):
+def conditional_shared_predictor_update_fn(x, y, t, sde, model, predictor, probability_flow, continuous, x_channels):
   """A wrapper that configures and returns the update function of predictors."""
-  score_fn = mutils.get_score_fn(sde, model, train=False, continuous=continuous)
-  score_fn = mutils.get_conditional_score_fn(score_fn, target_domain='x')
+  score_fn = mutils.get_score_fn(sde, model, train=False, continuous=continuous, x_channels=x_channels)
+  score_fn = mutils.get_conditional_score_fn(score_fn, target_domain='x', x_channels=x_channels)
 
   if predictor is None:
     # Corrector-only sampler
@@ -124,10 +126,10 @@ def conditional_shared_predictor_update_fn(x, y, t, sde, model, predictor, proba
     predictor_obj = predictor(sde[1], score_fn, probability_flow)
   return predictor_obj.update_fn(x, y, t)
 
-def conditional_shared_corrector_update_fn(x, y, t, sde, model, corrector, continuous, snr, n_steps):
+def conditional_shared_corrector_update_fn(x, y, t, sde, model, corrector, continuous, snr, n_steps, x_channels):
   """A wrapper that configures and returns the update function of correctors."""
-  score_fn = mutils.get_score_fn(sde, model, train=False, continuous=continuous)
-  score_fn = mutils.get_conditional_score_fn(score_fn, target_domain='x')
+  score_fn = mutils.get_score_fn(sde, model, train=False, continuous=continuous, x_channels=x_channels)
+  score_fn = mutils.get_conditional_score_fn(score_fn, target_domain='x', x_channels=x_channels)
 
   if corrector is None:
     # Predictor-only sampler
