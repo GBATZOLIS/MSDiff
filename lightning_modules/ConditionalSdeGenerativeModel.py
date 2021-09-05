@@ -109,4 +109,28 @@ class HaarDecreasingVarianceConditionalSdeGenerativeModel(DecreasingVarianceCond
         self.log('eval_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
 
-    
+def permute_channels(haar_image, forward=True):
+        permuted_image = torch.zeros_like(haar_image)
+        if forward:
+            for i in range(4):
+                if i == 0:
+                    k = 1
+                elif i == 1:
+                    k = 0
+                else:
+                    k = i
+                for j in range(3):
+                    permuted_image[:, 3*k+j, :, :] = haar_image[:, 4*j+i, :, :]
+        else:
+            for i in range(4):
+                if i == 0:
+                    k = 1
+                elif i == 1:
+                    k = 0
+                else:
+                    k = i
+                
+                for j in range(3):
+                    permuted_image[:,4*j+k,:,:] = haar_image[:, 3*i+j, :, :]
+
+        return permuted_image
