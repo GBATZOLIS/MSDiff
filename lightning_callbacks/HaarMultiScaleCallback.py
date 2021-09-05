@@ -106,6 +106,8 @@ class HaarMultiScaleVisualizationCallback(Callback):
             batch = pl_module.haar_transform(batch.to(pl_module.device)) 
             batch = permute_channels(batch)
             y, x = batch[:,:3,::], batch[:,3:,:,:]
+            print(y.size())
+            '''
             sampled_x, _ = pl_module.sample(y, self.show_evolution)
             concat_samples = torch.cat([y, sampled_x], dim=1)
             back_permuted_samples = permute_channels(concat_samples, forward=False)
@@ -118,3 +120,4 @@ class HaarMultiScaleVisualizationCallback(Callback):
             image_grid = make_grid(super_batch, nrow=int(np.sqrt(super_batch.size(0))))
             pl_module.logger.experiment.add_image('samples_%d' % pl_module.current_epoch, image_grid, pl_module.current_epoch)
 
+            '''
