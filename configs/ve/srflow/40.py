@@ -27,7 +27,7 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'haar_conditional_decreasing_variance'
-  config.training.batch_size = 64
+  config.training.batch_size = 128
   training.gpus = 1
   training.accumulate_grad_batches = 1
   training.workers = 4
@@ -79,7 +79,7 @@ def get_config():
   data.create_dataset = False
   data.split = [0.925, 0.05, 0.025]
   data.target_resolution = 160 #this should remain constant for an experiment
-  data.image_size = 80 #we vary this for training on different resolutions
+  data.image_size = 40 #we vary this for training on different resolutions
   data.level = math.log(data.target_resolution // data.image_size, 2)
   data.effective_image_size = data.image_size // 2 #actual image size after preprocessing. Divided by two when using haar tranform.
   data.max_haar_depth = 2 #maximum depth of multi-level haar tranform -> 1+data.max_haar_depth resolution levels.
