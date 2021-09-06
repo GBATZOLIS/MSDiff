@@ -68,11 +68,11 @@ def test(config, log_path, checkpoint_path):
   print(LightningModule.sigma_max_y)
   #trainer.test(LightningModule, DataModule.test_dataloader())
 
-def multi_scale_test(configs, log_path):
+def multi_scale_test(master_config, log_path):
   logger = pl.loggers.TensorBoardLogger(log_path, name='autoregressive_samples')
 
   scale_info = {}
-  for config in configs:
+  for config_name, config in master_config.items():
     scale = config.data.image_size
     scale_info[scale] = {}
 
