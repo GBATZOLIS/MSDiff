@@ -94,7 +94,7 @@ def multi_scale_test(master_config, log_path):
                         resume_from_checkpoint=config.model.checkpoint_path)
     
     trainer.fit(LightningModule, datamodule=DataModule) #proper resuming of training state
-    scale_info[scale]['LightningModule'] = LightningModule
+    scale_info[scale]['LightningModule'] = LightningModule.to('cuda:0')
     
   def get_autoregressive_sampler(scale_info):
     def autoregressive_sampler(dc, return_intermediate_images = False):
@@ -143,7 +143,7 @@ def multi_scale_test(master_config, log_path):
     return concat_upsampled_images
 
   for i, batch in enumerate(test_dataloader):
-    batch = smallest_scale_lightning_module.haar_forward(batch)[:,:3,:,:]
+    batch = smallest_scale_lightning_module.haar_forward(batch.to('cuda:0'))[:,:3,:,:]
     intermediate_images = autoregressive_sampler(batch, return_intermediate_images=True)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
     logger.experiment.add_image('Autoregressive_Sampling_batch_%d' % i, concat_upsampled_images)

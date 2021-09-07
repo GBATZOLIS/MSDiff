@@ -19,7 +19,6 @@ class HaarDecomposedDataset(data.Dataset):
     else:
       raise Exception('Invalid haar level.')
 
-    print(self.image_files)
     
     #preprocessing operations
     #self.random_flip = config.data.random_flip
