@@ -91,7 +91,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = None
+  model.checkpoint_path = 'beatSRFLOW/160/lightning_logs/version_0/checkpoints/epoch=25-step=148537.ckpt'
   model.num_scales = 1000
   model.sigma_max_x = 300 #600 #input range is [0,1] and resolution is 64^2
   #we do not want to perturb y a lot. 
