@@ -1,5 +1,6 @@
 from models import ddpm, ncsnv2, fcn #needed for model registration
 import pytorch_lightning as pl
+import numpy as np
 
 from torchvision.utils import make_grid
 
