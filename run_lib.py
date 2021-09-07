@@ -107,6 +107,7 @@ def multi_scale_test(master_config, log_path):
         scales_dc.append(dc)
 
       for scale in sorted(scale_info.keys()):
+        print(scale_info[scale]['LightningModule'].sigma_max_y)
         hf, _ = scale_info[scale]['LightningModule'].sample(dc) #inpaint the high frequencies of the next resolution level
         haar_image = torch.cat([dc,hf], dim=1)
         dc = scale_info[scale]['LightningModule'].haar_backward(haar_image) #inverse the haar transform to get the dc coefficients of the new scale
@@ -150,7 +151,7 @@ def multi_scale_test(master_config, log_path):
     batch = smallest_scale_lightning_module.haar_forward(batch.to('cuda:0'))[:,:3,:,:]
     intermediate_images = autoregressive_sampler(batch, return_intermediate_images=True)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
-    concat_grid = make_grid(concat_upsampled_images, nrow=concat_upsampled_images.size(0))
+    concat_grid = make_grid(concat_upsampled_images, nrow=1)
     print(concat_grid.size())
     logger.experiment.add_image('Autoregressive_Sampling_batch_%d' % i, concat_grid)
 
