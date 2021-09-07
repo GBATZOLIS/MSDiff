@@ -86,8 +86,14 @@ def multi_scale_test(master_config, log_path):
 
     callbacks = get_callbacks(config, phase='test')
 
-    LightningModule = create_lightning_module(config).load_from_checkpoint(config.model.checkpoint_path)
-    LightningModule.configure_sde(config, sigma_max_y = config.model.sigma_max_y) 
+    LightningModule = create_lightning_module(config)
+    LightningModule.configure_sde(config, sigma_max_y = config.model.sigma_max_y)
+    print(LightningModule.sigma_max_y)
+    LightningModule = LightningModule.load_from_checkpoint(config.model.checkpoint_path)
+    print(LightningModule.sigma_max_y)
+
+    #needed to correct wrong self.sigma_max_y value
+    LightningModule.configure_sde(config, sigma_max_y = config.model.sigma_max_y)
 
     '''
     assert config.model.checkpoint_path is not None, 'Checkpoint path is not provided'
