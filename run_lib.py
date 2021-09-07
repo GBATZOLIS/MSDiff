@@ -123,6 +123,7 @@ def multi_scale_test(master_config, log_path):
   smallest_scale_datamodule = scale_info[smallest_scale]['DataModule']
   smallest_scale_datamodule.setup()
   test_dataloader = smallest_scale_datamodule.test_dataloader()
+  smallest_scale_lightning_module = scale_info[smallest_scale]['LightningModule']
 
   def rescale_and_concatenate(intermediate_images):
     #rescale all images to the highest detected resolution with NN interpolation
@@ -142,6 +143,7 @@ def multi_scale_test(master_config, log_path):
     return concat_upsampled_images
 
   for i, batch in enumerate(test_dataloader):
+    batch = smallest_scale_lightning_module.haar_forward(batch)[:,:3,:,:]
     intermediate_images = autoregressive_sampler(batch, return_intermediate_images=True)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
     logger.experiment.add_image('Autoregressive_Sampling_batch_%d' % i, concat_upsampled_images)
