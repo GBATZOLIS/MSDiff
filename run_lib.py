@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 from torchvision.utils import make_grid
 
 from lightning_callbacks import callbacks, HaarMultiScaleCallback, PairedCallback #needed for callback registration
-from lightning_callbacks.HaarMultiScaleCallback import normalise_per_image
+from lightning_callbacks.HaarMultiScaleCallback import normalise_per_image, permute_channels
 from lightning_callbacks.utils import get_callbacks
 
 from lightning_data_modules import HaarDecomposedDataset, ImageDatasets, PairedDataset, SyntheticDataset #needed for datamodule registration
@@ -110,6 +110,7 @@ def multi_scale_test(master_config, log_path):
       for scale in sorted(scale_info.keys()):
         lightning_module = scale_info[scale]['LightningModule']
         print('sigma_max_y: %.4f' % lightning_module.sigma_max_y)
+        print(lightning_module.sde[0].sigma_max_y)
         hf, _ = lightning_module.sample(dc) #inpaint the high frequencies of the next resolution level
         haar_image = torch.cat([dc,hf], dim=1)
         dc = lightning_module.haar_backward(haar_image) #inverse the haar transform to get the dc coefficients of the new scale
@@ -127,10 +128,11 @@ def multi_scale_test(master_config, log_path):
   autoregressive_sampler = get_autoregressive_sampler(scale_info)
 
   smallest_scale = min(list(scale_info.keys()))
+  smallest_scale_lightning_module = scale_info[smallest_scale]['LightningModule']
   smallest_scale_datamodule = scale_info[smallest_scale]['DataModule']
   smallest_scale_datamodule.setup()
   test_dataloader = smallest_scale_datamodule.test_dataloader()
-  smallest_scale_lightning_module = scale_info[smallest_scale]['LightningModule']
+  
 
   def rescale_and_concatenate(intermediate_images):
     #rescale all images to the highest detected resolution with NN interpolation and normalise them
