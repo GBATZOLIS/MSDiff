@@ -118,6 +118,12 @@ class HaarDecreasingVarianceConditionalSdeGenerativeModel(DecreasingVarianceCond
         x = permute_channels(x, forward=False)
         x = self.haar_transform.inverse(x)
         return x
+    
+    def get_dc_coefficients(self, x):
+        return self.haar_forward(x)[:,:3,::]
+    
+    def get_hf_coefficients(self, x):
+        return self.haar_forward(x)[:,3:,::]
 
 def permute_channels(haar_image, forward=True):
         permuted_image = torch.zeros_like(haar_image)

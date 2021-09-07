@@ -99,6 +99,7 @@ def multi_scale_test(master_config, log_path):
     
     trainer.fit(LightningModule, datamodule=DataModule) #proper resuming of training state
     scale_info[scale]['LightningModule'] = LightningModule.to('cuda:0')
+    scale_info[scale]['LightningModule'].eval()
     
   def get_autoregressive_sampler(scale_info):
     def autoregressive_sampler(dc, return_intermediate_images = False):
@@ -107,10 +108,11 @@ def multi_scale_test(master_config, log_path):
         scales_dc.append(dc)
 
       for scale in sorted(scale_info.keys()):
-        print(scale_info[scale]['LightningModule'].sigma_max_y)
-        hf, _ = scale_info[scale]['LightningModule'].sample(dc) #inpaint the high frequencies of the next resolution level
+        lightning_module = scale_info[scale]['LightningModule']
+        print('sigma_max_y: %.4f' % lightning_module.sigma_max_y)
+        hf, _ = lightning_module.sample(dc) #inpaint the high frequencies of the next resolution level
         haar_image = torch.cat([dc,hf], dim=1)
-        dc = scale_info[scale]['LightningModule'].haar_backward(haar_image) #inverse the haar transform to get the dc coefficients of the new scale
+        dc = lightning_module.haar_backward(haar_image) #inverse the haar transform to get the dc coefficients of the new scale
 
         if return_intermediate_images:
           scales_dc.append(dc)
@@ -148,7 +150,7 @@ def multi_scale_test(master_config, log_path):
     return concat_upsampled_images
 
   for i, batch in enumerate(test_dataloader):
-    batch = smallest_scale_lightning_module.haar_forward(batch.to('cuda:0'))[:,:3,:,:]
+    batch = smallest_scale_lightning_module.get_dc_coefficients(batch.to('cuda:0'))
     intermediate_images = autoregressive_sampler(batch, return_intermediate_images=True)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
     concat_grid = make_grid(concat_upsampled_images, nrow=1)
