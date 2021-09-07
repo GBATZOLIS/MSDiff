@@ -12,6 +12,7 @@ from lightning_modules.utils import create_lightning_module
 
 import create_dataset
 from torch.nn import Upsample
+import torch 
 
 def train(config, log_path, checkpoint_path):
     if config.data.create_dataset:
