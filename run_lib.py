@@ -86,8 +86,10 @@ def multi_scale_test(master_config, log_path):
 
     callbacks = get_callbacks(config, phase='test')
 
-    LightningModule = create_lightning_module(config)
+    LightningModule = create_lightning_module(config).load_from_checkpoint(config.model.checkpoint_path)
+    LightningModule.configure_sde(config, sigma_max_y = config.model.sigma_max_y) 
 
+    '''
     assert config.model.checkpoint_path is not None, 'Checkpoint path is not provided'
     trainer = pl.Trainer(gpus=config.training.gpus,
                         accumulate_grad_batches = config.training.accumulate_grad_batches,
@@ -97,8 +99,8 @@ def multi_scale_test(master_config, log_path):
                         logger = logger,
                         limit_val_batches=1,
                         resume_from_checkpoint=config.model.checkpoint_path)
-    
     trainer.fit(LightningModule, datamodule=DataModule) #proper resuming of training state
+    '''
     scale_info[scale]['LightningModule'] = LightningModule.to('cuda:0')
     scale_info[scale]['LightningModule'].eval()
     
