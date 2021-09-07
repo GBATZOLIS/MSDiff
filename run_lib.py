@@ -1,7 +1,10 @@
 from models import ddpm, ncsnv2, fcn #needed for model registration
 import pytorch_lightning as pl
 
+from torchvision.utils import make_grid
+
 from lightning_callbacks import callbacks, HaarMultiScaleCallback, PairedCallback #needed for callback registration
+from lightning_callbacks.HaarMultiScaleCallback import normalise_per_image
 from lightning_callbacks.utils import get_callbacks
 
 from lightning_data_modules import HaarDecomposedDataset, ImageDatasets, PairedDataset, SyntheticDataset #needed for datamodule registration
@@ -127,17 +130,17 @@ def multi_scale_test(master_config, log_path):
   smallest_scale_lightning_module = scale_info[smallest_scale]['LightningModule']
 
   def rescale_and_concatenate(intermediate_images):
-    #rescale all images to the highest detected resolution with NN interpolation
+    #rescale all images to the highest detected resolution with NN interpolation and normalise them
     max_sr_factor = 2**(len(intermediate_images)-1)
 
     upsampled_images = []
     for i, image in enumerate(intermediate_images):
       if i == len(intermediate_images)-1:
-        continue
-
-      upsample_fn = Upsample(scale_factor=max_sr_factor/2**i, mode='nearest')
-      upsampled_image = upsample_fn(image)
-      upsampled_images.append(upsampled_image)
+        upsampled_images.append(normalise_per_image(image)) #normalise and append
+      else:
+        upsample_fn = Upsample(scale_factor=max_sr_factor/2**i, mode='nearest') #upscale to the largest resolution
+        upsampled_image = upsample_fn(image)
+        upsampled_images.append(normalise_per_image(upsampled_image)) #normalise and append
     
     concat_upsampled_images = torch.cat(upsampled_images, dim=-1)
     
@@ -147,6 +150,8 @@ def multi_scale_test(master_config, log_path):
     batch = smallest_scale_lightning_module.haar_forward(batch.to('cuda:0'))[:,:3,:,:]
     intermediate_images = autoregressive_sampler(batch, return_intermediate_images=True)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
-    logger.experiment.add_image('Autoregressive_Sampling_batch_%d' % i, concat_upsampled_images)
+    concat_grid = make_grid(concat_upsampled_images, nrow=concat_upsampled_images.size(0))
+    print(concat_grid.size())
+    logger.experiment.add_image('Autoregressive_Sampling_batch_%d' % i, concat_grid)
 
     

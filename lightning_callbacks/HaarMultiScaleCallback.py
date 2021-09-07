@@ -93,7 +93,7 @@ class HaarMultiScaleVisualizationCallback(Callback):
 
 #make LR-> NNinterpolated, SR, GT appear in this order.
 @utils.register_callback(name='conditional_haar_multiscale')
-class HaarMultiScaleVisualizationCallback(Callback):
+class ConditionalHaarMultiScaleVisualizationCallback(Callback):
     def __init__(self, show_evolution=False):
         super().__init__()
         self.show_evolution = show_evolution
