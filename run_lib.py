@@ -94,7 +94,8 @@ def multi_scale_test(master_config, log_path):
 
     #needed to correct wrong self.sigma_max_y value
     LightningModule.configure_sde(config, sigma_max_y = config.model.sigma_max_y)
-
+    print(LightningModule.sigma_max_y)
+    
     '''
     assert config.model.checkpoint_path is not None, 'Checkpoint path is not provided'
     trainer = pl.Trainer(gpus=config.training.gpus,
