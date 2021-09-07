@@ -104,7 +104,7 @@ def multi_scale_test(master_config, log_path):
         scales_dc.append(dc)
 
       for scale in sorted(scale_info.keys()):
-        hf = scale_info[scale]['LightningModule'].sample(dc) #inpaint the high frequencies of the next resolution level
+        hf, _ = scale_info[scale]['LightningModule'].sample(dc) #inpaint the high frequencies of the next resolution level
         haar_image = torch.cat([dc,hf], dim=1)
         dc = scale_info[scale]['LightningModule'].haar_backward(haar_image) #inverse the haar transform to get the dc coefficients of the new scale
 
