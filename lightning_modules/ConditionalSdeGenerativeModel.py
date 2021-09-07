@@ -54,11 +54,10 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
     
     def configure_default_sampling_shape(self, config):
         self.data_shape = config.data.shape_x
-        print(self.data_shape)
         self.default_sampling_shape = [config.training.batch_size] +  self.data_shape
 
     def sample(self, y, show_evolution=False):
-        sampling_shape = [y.size(0)]+self.data_shape
+        sampling_shape = [y.size(0)]+self.config.data.shape_x
         conditional_sampling_fn = get_conditional_sampling_fn(self.config, self.sde, sampling_shape, self.sampling_eps)
         return conditional_sampling_fn(self.score_model, y, show_evolution)
 

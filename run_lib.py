@@ -90,9 +90,6 @@ def multi_scale_test(master_config, log_path):
     LightningModule.configure_sde(config, sigma_max_y = config.model.sigma_max_y)
     print('1.) set sigma_max_y: ', LightningModule.sigma_max_y)
 
-    # Configure default sampling shape
-    LightningModule.configure_default_sampling_shape(config)
-
     LightningModule = LightningModule.load_from_checkpoint(config.model.checkpoint_path)
     print('2.) sigma_max_y after loading checkpoint: ', LightningModule.sigma_max_y)
 
