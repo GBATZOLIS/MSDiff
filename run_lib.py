@@ -88,14 +88,18 @@ def multi_scale_test(master_config, log_path):
 
     LightningModule = create_lightning_module(config)
     LightningModule.configure_sde(config, sigma_max_y = config.model.sigma_max_y)
-    print(LightningModule.sigma_max_y)
+    print('1.) set sigma_max_y: ', LightningModule.sigma_max_y)
+
+    # Configure default sampling shape
+    LightningModule.configure_default_sampling_shape(config)
+
     LightningModule = LightningModule.load_from_checkpoint(config.model.checkpoint_path)
-    print(LightningModule.sigma_max_y)
+    print('2.) sigma_max_y after loading checkpoint: ', LightningModule.sigma_max_y)
 
     #needed to correct wrong self.sigma_max_y value
     LightningModule.configure_sde(config, sigma_max_y = config.model.sigma_max_y)
-    print(LightningModule.sigma_max_y)
-    
+    print('3.) Re-set sigma_max_y: ', LightningModule.sigma_max_y)
+
     '''
     assert config.model.checkpoint_path is not None, 'Checkpoint path is not provided'
     trainer = pl.Trainer(gpus=config.training.gpus,
