@@ -54,24 +54,16 @@ def test(config, log_path, checkpoint_path):
   DataModule = create_lightning_datamodule(config)
   DataModule.setup() #instantiate the datasets
 
-  callbacks = get_callbacks(config, phase='test')
+  callbacks = get_callbacks(config)
   LightningModule = create_lightning_module(config)
   logger = pl.loggers.TensorBoardLogger(log_path, name='test_lightning_logs')
 
-  if checkpoint_path is not None:
-      trainer = pl.Trainer(gpus=config.training.gpus,
-                          accumulate_grad_batches = config.training.accumulate_grad_batches,
-                          gradient_clip_val = config.optim.grad_clip,
-                          max_steps=config.training.n_iters, 
-                          callbacks=callbacks, 
-                          logger = logger,
-                          limit_val_batches=1,
-                          resume_from_checkpoint=checkpoint_path)
-  
-  trainer.fit(LightningModule, datamodule=DataModule)
+  trainer = pl.Trainer(gpus=config.training.gpus,
+                      callbacks=callbacks, 
+                      logger = logger,
+                      resume_from_checkpoint=checkpoint_path)
 
-  print(LightningModule.sigma_max_y)
-  #trainer.test(LightningModule, DataModule.test_dataloader())
+  trainer.test(LightningModule, DataModule.test_dataloader())
 
 def multi_scale_test(master_config, log_path):
   logger = pl.loggers.TensorBoardLogger(log_path, name='autoregressive_samples')
@@ -84,31 +76,10 @@ def multi_scale_test(master_config, log_path):
     DataModule = create_lightning_datamodule(config)
     scale_info[scale]['DataModule'] = DataModule
 
-    callbacks = get_callbacks(config, phase='test')
-
     LightningModule = create_lightning_module(config)
-    LightningModule.configure_sde(config, sigma_max_y = config.model.sigma_max_y)
-    print('1.) set sigma_max_y: ', LightningModule.sigma_max_y)
-
     LightningModule = LightningModule.load_from_checkpoint(config.model.checkpoint_path)
-    print('2.) sigma_max_y after loading checkpoint: ', LightningModule.sigma_max_y)
+    LightningModule.configure_sde(config, sigma_max_y = LightningModule.sigma_max_y)
 
-    #needed to correct wrong self.sigma_max_y value
-    LightningModule.configure_sde(config, sigma_max_y = config.model.sigma_max_y)
-    print('3.) Re-set sigma_max_y: ', LightningModule.sigma_max_y)
-
-    '''
-    assert config.model.checkpoint_path is not None, 'Checkpoint path is not provided'
-    trainer = pl.Trainer(gpus=config.training.gpus,
-                        accumulate_grad_batches = config.training.accumulate_grad_batches,
-                        gradient_clip_val = config.optim.grad_clip,
-                        max_steps=config.training.n_iters, 
-                        callbacks=callbacks, 
-                        logger = logger,
-                        limit_val_batches=1,
-                        resume_from_checkpoint=config.model.checkpoint_path)
-    trainer.fit(LightningModule, datamodule=DataModule) #proper resuming of training state
-    '''
     scale_info[scale]['LightningModule'] = LightningModule.to('cuda:0')
     scale_info[scale]['LightningModule'].eval()
     

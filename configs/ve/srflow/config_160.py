@@ -31,13 +31,6 @@ def get_config():
   training.gpus = 1
   training.accumulate_grad_batches = 1
   training.workers = 4
-  #----- to be removed -----
-  training.num_epochs = 10000
-  training.n_iters = 2400001
-  training.snapshot_freq = 5000
-  training.log_freq = 250
-  training.eval_freq = 2500
-  #------              --------
   training.visualization_callback = 'conditional_haar_multiscale'
   training.show_evolution = False
   ## store additional checkpoints for preemption in cloud computing environments
@@ -93,14 +86,14 @@ def get_config():
   config.model = model = ml_collections.ConfigDict()
   model.checkpoint_path = 'beatSRFLOW/160/lightning_logs/version_0/checkpoints/epoch=25-step=148537.ckpt'
   model.num_scales = 1000
-  model.sigma_max_x = 300 #600 #input range is [0,1] and resolution is 64^2
+  model.sigma_max_x = 300 
   #we do not want to perturb y a lot. 
   #A slight perturbation will result in better approximation of the conditional time-dependent score.
-  model.sigma_max_y = 4.273
+  model.sigma_max_y = 1
   #-------The three subsequent settings configure the reduction schedule of sigma_max_y
   model.reduction = 'inverse_exponentional' #choices=['linear', 'inverse_exponentional']
-  model.reach_target_in_epochs = 64
-  model.starting_transition_iterations = 2000
+  model.reach_target_in_epochs = 64 #matters only if reduction = linear
+  model.starting_transition_iterations = 8000 #matters only if reduction = inverse exponential
 
   model.sigma_min = 0.01
   model.beta_min = 0.1

@@ -18,11 +18,9 @@ class ConfigurationSetterCallback(Callback):
 
         # Configure default sampling shape
         pl_module.configure_default_sampling_shape(pl_module.config)
-
-@utils.register_callback(name='test')
-class TesterCallback(Callback):
-    def on_sanity_check_end(self, trainer, pl_module):
-        trainer.should_stop=True
+    
+    def on_test_epoch_start(self, trainer, pl_module):
+        pl_module.configure_sde(pl_module.config)
 
 
 @utils.register_callback(name='decreasing_variance_configuration')
@@ -32,7 +30,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         self.reduction = reduction
         self.reach_target_in_epochs = reach_target_in_epochs
         self.starting_transition_iterations = starting_transition_iterations
-        self.sigma_max_y_fn = get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_transition_iterations)
+        self.sigma_max_y_fn = get_sigma_max_y_fn(reduction, reach_target_in_epochs, starting_transition_iterations)
 
     def on_fit_start(self, trainer, pl_module):
         # Configure SDE
@@ -42,12 +40,8 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
         pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
 
-        # Configure default sampling shape
-        pl_module.configure_default_sampling_shape(pl_module.config)
-
     def reconfigure_sigma_max_y(self, trainer, pl_module):
-        current_epoch = pl_module.current_epoch
-        global_step = pl_module.global_step
+        current_epoch, global_step = pl_module.current_epoch, pl_module
         sigma_max_y_start = pl_module.config.model.sigma_max_x
         sigma_max_y_target = pl_module.config.model.sigma_max_y
 
@@ -75,12 +69,10 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         pl_module.logger.experiment.add_scalar('sigma_max_y', current_sigma_max_y, pl_module.global_step)
 
     def on_test_epoch_start(self, trainer, pl_module):
-        _ = self.reconfigure_sigma_max_y(trainer, pl_module)
-        # Configure default sampling shape
-        pl_module.configure_default_sampling_shape(pl_module.config)
+        pl_module.configure_sde(pl_module.config, sigma_max_y = pl_module.sigma_max_y)
 
 
-def get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_transition_iterations):
+def get_sigma_max_y_fn(reduction, reach_target_in_epochs, starting_transition_iterations):
     if reduction == 'linear':
         def sigma_max_y(global_step, current_epoch, start_value, target_value):
             if current_epoch >= reach_target_in_epochs:
@@ -110,16 +102,6 @@ def get_sigma_max_y_calculator(reduction, reach_target_in_epochs, starting_trans
 
     return sigma_max_y
                 
-                
-
-
-
-
-                
-
-
-    
-
 
 @utils.register_callback(name='ema')
 class EMACallback(Callback):

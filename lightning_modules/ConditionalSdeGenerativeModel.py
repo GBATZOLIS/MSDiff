@@ -6,6 +6,7 @@ import sde_lib
 from . import utils
 import torch
 from iunets.layers import InvertibleDownsampling2D
+import torch.nn as nn
 
 @utils.register_lightning_module(name='conditional')
 class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeModel):
@@ -52,10 +53,6 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
         
         return loss_fn
     
-    def configure_default_sampling_shape(self, config):
-        self.data_shape = config.data.shape_x
-        self.default_sampling_shape = [config.training.batch_size] +  self.data_shape
-
     def sample(self, y, show_evolution=False):
         sampling_shape = [y.size(0)]+self.config.data.shape_x
         conditional_sampling_fn = get_conditional_sampling_fn(self.config, self.sde, sampling_shape, self.sampling_eps)
@@ -65,7 +62,7 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
 class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeModel):
     def __init__(self, config, *args, **kwargs):
         super().__init__(config)
-        self.register_buffer('sigma_max_y', torch.tensor(config.model.sigma_max_x))
+        self.register_parameter('sigma_max_y', nn.Parameter(torch.tensor(config.model.sigma_max_x), requires_grad=False))
 
     def configure_sde(self, config, sigma_max_y = None):
         if config.training.sde.lower() == 'vpsde':
