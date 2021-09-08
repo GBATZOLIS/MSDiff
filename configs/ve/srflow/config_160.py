@@ -31,6 +31,7 @@ def get_config():
   training.gpus = 1
   training.accumulate_grad_batches = 1
   training.workers = 4
+  training.n_iters = 2400001
   training.visualization_callback = 'conditional_haar_multiscale'
   training.show_evolution = False
   ## store additional checkpoints for preemption in cloud computing environments
