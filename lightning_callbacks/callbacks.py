@@ -41,7 +41,7 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
 
     def reconfigure_sigma_max_y(self, trainer, pl_module):
-        current_epoch, global_step = pl_module.current_epoch, pl_module
+        current_epoch, global_step = pl_module.current_epoch, pl_module.global_step
         sigma_max_y_start = pl_module.config.model.sigma_max_x
         sigma_max_y_target = pl_module.config.model.sigma_max_y
 
