@@ -29,7 +29,7 @@ def get_config():
   config.training.lightning_module = 'haar_conditional_decreasing_variance'
   config.training.batch_size = 64
   training.gpus = 1
-  training.accumulate_grad_batches = 1
+  training.accumulate_grad_batches = 2
   training.workers = 4
   #----- to be removed -----
   training.n_iters = 2400001
@@ -60,7 +60,7 @@ def get_config():
   evaluate.workers = 4
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 36
+  evaluate.batch_size = 64
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
