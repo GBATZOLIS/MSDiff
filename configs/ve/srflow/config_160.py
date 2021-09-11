@@ -28,8 +28,8 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'haar_conditional_decreasing_variance'
   config.training.batch_size = 32
-  training.gpus = 2
-  training.accumulate_grad_batches = 1
+  training.gpus = 1
+  training.accumulate_grad_batches = 2
   training.workers = 4
   training.n_iters = 2400001
   training.visualization_callback = 'conditional_haar_multiscale'
@@ -58,7 +58,7 @@ def get_config():
   evaluate.workers = 4
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 36
+  evaluate.batch_size = 25
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
