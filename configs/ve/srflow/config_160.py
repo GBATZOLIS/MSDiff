@@ -29,7 +29,7 @@ def get_config():
   config.training.lightning_module = 'haar_conditional_decreasing_variance'
   config.training.batch_size = 32
   training.gpus = 1
-  training.accumulate_grad_batches = 1
+  training.accumulate_grad_batches = 4
   training.workers = 4
   training.n_iters = 2400001
   training.visualization_callback = 'conditional_haar_multiscale'
