@@ -5,7 +5,7 @@ import numpy as np
 from torchvision.utils import make_grid
 
 from lightning_callbacks import callbacks, HaarMultiScaleCallback, PairedCallback #needed for callback registration
-from lightning_callbacks.HaarMultiScaleCallback import normalise_per_image, permute_channels
+from lightning_callbacks.HaarMultiScaleCallback import normalise_per_image, permute_channels, normalise, normalise_per_band, create_supergrid
 from lightning_callbacks.utils import get_callbacks
 
 from lightning_data_modules import HaarDecomposedDataset, ImageDatasets, PairedDataset, SyntheticDataset #needed for datamodule registration
@@ -84,16 +84,37 @@ def multi_scale_test(master_config, log_path):
     scale_info[scale]['LightningModule'].eval()
     
   def get_autoregressive_sampler(scale_info):
-    def autoregressive_sampler(dc, return_intermediate_images = False):
+    def autoregressive_sampler(dc, return_intermediate_images = False, show_evolution = False):
       if return_intermediate_images:
         scales_dc = []
         scales_dc.append(dc)
+      
+      if show_evolution:
+        scale_evolutions = {'haar':[], 'image':[]}
 
       for scale in sorted(scale_info.keys()):
         lightning_module = scale_info[scale]['LightningModule']
         print('sigma_max_y: %.4f' % lightning_module.sigma_max_y)
         print(lightning_module.sde[0].sigma_max)
-        hf, _ = lightning_module.sample(dc) #inpaint the high frequencies of the next resolution level
+        hf, info = lightning_module.sample(dc, show_evolution) #inpaint the high frequencies of the next resolution level
+
+        if show_evolution:
+          evolution = info['evolution']
+          cat_evolution = torch.cat((evolution['y'], evolution['x']), dim=1)
+
+          haar_grid_evolution = []
+          image_evolution = []
+          for frame in cat_evolution.size(0):
+            haar_grid_evolution.append(create_supergrid(normalise_per_band(cat_evolution[frame])))
+            image = lightning_module.haar_backward(cat_evolution[frame])
+            image_grid = make_grid(normalise_per_image(image), nrow=int(np.sqrt(image.size(0))))
+            image_evolution.append(image_grid)
+
+          haar_grid_evolution = torch.stack(haar_grid_evolution)
+          image_evolution = torch.stack(image_evolution)
+          scale_evolutions['haar'].append(haar_grid_evolution)
+          scale_evolutions['image'].append(image_evolution)
+
         haar_image = torch.cat([dc,hf], dim=1)
         dc = lightning_module.haar_backward(haar_image) #inverse the haar transform to get the dc coefficients of the new scale
 

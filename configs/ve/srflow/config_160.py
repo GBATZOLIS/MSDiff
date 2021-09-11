@@ -28,8 +28,8 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'haar_conditional_decreasing_variance'
   config.training.batch_size = 32
-  training.gpus = 1
-  training.accumulate_grad_batches = 4
+  training.gpus = 2
+  training.accumulate_grad_batches = 1
   training.workers = 4
   training.n_iters = 2400001
   training.visualization_callback = 'conditional_haar_multiscale'
@@ -87,7 +87,7 @@ def get_config():
   config.model = model = ml_collections.ConfigDict()
   model.checkpoint_path = None #'beatSRFLOW/160/lightning_logs/version_0/checkpoints/epoch=25-step=148537.ckpt'
   model.num_scales = 1000
-  model.sigma_max_x = 300 
+  model.sigma_max_x = 450 
   #we do not want to perturb y a lot. 
   #A slight perturbation will result in better approximation of the conditional time-dependent score.
   model.sigma_max_y = 1
@@ -112,7 +112,7 @@ def get_config():
   model.nonlinearity = 'swish'
   model.nf = 128
   model.ch_mult = (1, 1, 2, 2)
-  model.num_res_blocks = 2
+  model.num_res_blocks = 3
   model.attn_resolutions = (20, 10)
   model.resamp_with_conv = True
   model.conditional = True
