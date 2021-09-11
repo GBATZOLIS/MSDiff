@@ -27,7 +27,7 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'haar_conditional_decreasing_variance'
-  config.training.batch_size = 32
+  config.training.batch_size = 25
   training.gpus = 1
   training.accumulate_grad_batches = 2
   training.workers = 4
