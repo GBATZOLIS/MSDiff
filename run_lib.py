@@ -92,7 +92,7 @@ def multi_scale_test(master_config, log_path):
       if show_evolution:
         scale_evolutions = {'haar':[], 'image':[]}
 
-      for scale in sorted(scale_info.keys()):
+      for count, scale in enumerate(sorted(scale_info.keys())):
         lightning_module = scale_info[scale]['LightningModule']
         print('sigma_max_y: %.4f' % lightning_module.sigma_max_y)
         print(lightning_module.sde[0].sigma_max)
@@ -103,17 +103,23 @@ def multi_scale_test(master_config, log_path):
           cat_evolution = torch.cat((evolution['y'], evolution['x']), dim=1)
 
           haar_grid_evolution = []
-          image_evolution = []
+          #image_evolution = []
           for frame in cat_evolution.size(0):
             haar_grid_evolution.append(create_supergrid(normalise_per_band(cat_evolution[frame])))
-            image = lightning_module.haar_backward(cat_evolution[frame])
-            image_grid = make_grid(normalise_per_image(image), nrow=int(np.sqrt(image.size(0))))
-            image_evolution.append(image_grid)
+            #image = lightning_module.haar_backward(cat_evolution[frame])
+            #image_grid = make_grid(normalise_per_image(image), nrow=int(np.sqrt(image.size(0))))
+            #image_evolution.append(image_grid)
 
+          if count == len(scale_info.keys()) - 1:
+            image = lightning_module.haar_backward(cat_evolution[-1])
+            image_grid = make_grid(normalise_per_image(image), nrow=int(np.sqrt(image.size(0))))
+            haar_grid_evolution.append(image_grid)
+          
           haar_grid_evolution = torch.stack(haar_grid_evolution)
-          image_evolution = torch.stack(image_evolution)
+          #image_evolution = torch.stack(image_evolution)
+
           scale_evolutions['haar'].append(haar_grid_evolution)
-          scale_evolutions['image'].append(image_evolution)
+          #scale_evolutions['image'].append(image_evolution)
 
         haar_image = torch.cat([dc,hf], dim=1)
         dc = lightning_module.haar_backward(haar_image) #inverse the haar transform to get the dc coefficients of the new scale
@@ -121,8 +127,13 @@ def multi_scale_test(master_config, log_path):
         if return_intermediate_images:
           scales_dc.append(dc)
 
-      if return_intermediate_images:
-        return scales_dc
+      #return output logic here
+      if return_intermediate_images and show_evolution:
+        return scales_dc, scale_evolutions
+      elif return_intermediate_images and not show_evolution:
+         return scales_dc
+      elif not return_intermediate_images and show_evolution:
+          return scale_evolutions
       else:
         return dc
 
@@ -154,12 +165,31 @@ def multi_scale_test(master_config, log_path):
     
     return concat_upsampled_images
 
+  def create_scale_evolution_video(scale_evolutions):
+    total_frames = sum([evolution.size(0) for evolution in scale_evolutions])
+    
+    #initialise the concatenated tensor video and then fill it
+    concat_video = torch.zeros(size=tuple([total_frames,]+list(scale_evolutions[-1].shape[1:])))
+    print(concat_video.size())
+
+    previous_last_frame = 0
+    new_last_frame = 0
+    for evolution in enumerate(scale_evolutions):
+      new_last_frame = evolution.size(0)
+      concat_video[previous_last_frame:new_last_frame, :evolution.size(1), :evolution.size(2), :evolution.size(3)]
+      previous_last_frame = new_last_frame
+
+    return concat_video
+
   for i, batch in enumerate(test_dataloader):
     batch = smallest_scale_lightning_module.get_dc_coefficients(batch.to('cuda:0'))
-    intermediate_images = autoregressive_sampler(batch, return_intermediate_images=True)
+    intermediate_images, scale_evolutions = autoregressive_sampler(batch, return_intermediate_images=True, show_evolution=True)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
+    
     concat_grid = make_grid(concat_upsampled_images, nrow=int(np.sqrt(concat_upsampled_images.size(0))))
-    print(concat_grid.size())
     logger.experiment.add_image('Autoregressive_Sampling_batch_%d' % i, concat_grid)
 
-    
+    concat_video = create_scale_evolution_video(scale_evolutions['haar']).unsqueeze(0)
+    logger.experiment.add_video('Autoregressive_Sampling_evolution_batch_%d' % i, concat_video, fps=100)
+
+
