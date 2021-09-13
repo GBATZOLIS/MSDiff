@@ -28,8 +28,7 @@ def get_sampling_fn(config, sde, shape, eps):
     sampling_fn = get_ode_sampler(sde=sde,
                                   shape=shape,
                                   denoise=config.sampling.noise_removal,
-                                  eps=eps,
-                                  device=config.device)
+                                  eps=eps)
   # Predictor-Corrector sampling. Predictor-only and Corrector-only samplers are special cases.
   elif sampler_name.lower() == 'pc':
     predictor = get_predictor(config.sampling.predictor.lower())
@@ -43,8 +42,7 @@ def get_sampling_fn(config, sde, shape, eps):
                                  probability_flow=config.sampling.probability_flow,
                                  continuous=config.training.continuous,
                                  denoise=config.sampling.noise_removal,
-                                 eps=eps,
-                                 device=config.device)
+                                 eps=eps)
   else:
     raise ValueError(f"Sampler name {sampler_name} unknown.")
 
@@ -67,7 +65,7 @@ def get_inpainting_fn(config, sde, eps, n_steps_each=1):
 
 def get_ode_sampler(sde, shape,
                     denoise=False, rtol=1e-5, atol=1e-5,
-                    method='RK45', eps=1e-3, device='cuda'):
+                    method='RK45', eps=1e-3):
   """Probability flow ODE sampler with the black-box ODE solver.
   Args:
     sde: An `sde_lib.SDE` object that represents the forward SDE.
@@ -78,7 +76,6 @@ def get_ode_sampler(sde, shape,
     method: A `str`. The algorithm used for the black-box ODE solver.
       See the documentation of `scipy.integrate.solve_ivp`.
     eps: A `float` number. The reverse-time SDE/ODE will be integrated to `eps` for numerical stability.
-    device: PyTorch device.
   Returns:
     A sampling function that returns samples and the number of function evaluations during sampling.
   """
@@ -109,12 +106,12 @@ def get_ode_sampler(sde, shape,
       # Initial sample
       if z is None:
         # If not represent, sample the latent code from the prior distibution of the SDE.
-        x = sde.prior_sampling(shape).to(device)
+        x = sde.prior_sampling(shape).to(model.device)
       else:
         x = z
 
       def ode_func(t, x):
-        x = from_flattened_numpy(x, shape).to(device).type(torch.float32)
+        x = from_flattened_numpy(x, shape).to(model.device).type(torch.float32)
         vec_t = torch.ones(shape[0], device=x.device) * t
         drift = drift_fn(model, x, vec_t)
         return to_flattened_numpy(drift)
@@ -123,7 +120,7 @@ def get_ode_sampler(sde, shape,
       solution = integrate.solve_ivp(ode_func, (sde.T, eps), to_flattened_numpy(x),
                                      rtol=rtol, atol=atol, method=method)
       nfe = solution.nfev
-      x = torch.tensor(solution.y[:, -1]).reshape(shape).to(device).type(torch.float32)
+      x = torch.tensor(solution.y[:, -1]).reshape(shape).to(model.device).type(torch.float32)
 
       # Denoising is equivalent to running one predictor step without adding noise
       if denoise:
@@ -135,7 +132,7 @@ def get_ode_sampler(sde, shape,
 
 def get_pc_sampler(sde, shape, predictor, corrector, snr,
                    n_steps=1, probability_flow=False, continuous=False,
-                   denoise=True, eps=1e-3, device='cuda'):
+                   denoise=True, eps=1e-3):
   """Create a Predictor-Corrector (PC) sampler.
   Args:
     sde: An `sde_lib.SDE` object representing the forward SDE.
@@ -149,7 +146,6 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
     continuous: `True` indicates that the score model was continuously trained.
     denoise: If `True`, add one-step denoising to the final samples.
     eps: A `float` number. The reverse-time SDE and ODE are integrated to `epsilon` to avoid numerical issues.
-    device: PyTorch device.
   Returns:
     A sampling function that returns samples and the number of function evaluations during sampling.
   """
@@ -179,7 +175,7 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
     with torch.no_grad():
       # Initial sample
       x = sde.prior_sampling(shape).to(model.device).type(torch.float32)
-      timesteps = torch.linspace(sde.T, eps, sde.N, device=device)
+      timesteps = torch.linspace(sde.T, eps, sde.N, device=model.device)
 
       for i in range(sde.N):
         t = timesteps[i]
