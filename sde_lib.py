@@ -262,6 +262,8 @@ class VESDE(SDE):
     return drift, diffusion
 
   def marginal_prob(self, x, t): #perturbation kernel P(X(t)|X(0)) parameters 
+    print(t.device)
+    print(self.sigma_min.device)
     std = self.sigma_min * (self.sigma_max / self.sigma_min) ** t
     mean = x
     return mean, std
