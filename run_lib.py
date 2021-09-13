@@ -95,7 +95,9 @@ def multi_scale_test(master_config, log_path):
       for count, scale in enumerate(sorted(scale_info.keys())):
         lightning_module = scale_info[scale]['LightningModule']
         print('sigma_max_y: %.4f' % lightning_module.sigma_max_y)
-        print(lightning_module.sde[0].sigma_max)
+        print('lightning_module.sde[0].sigma_max: ', lightning_module.sde[0].sigma_max)
+        print('lightning_module.device: ', lightning_module.device)
+        print('dc.device: ', dc.device)
         hf, info = lightning_module.sample(dc, show_evolution) #inpaint the high frequencies of the next resolution level
 
         if show_evolution:
@@ -111,7 +113,7 @@ def multi_scale_test(master_config, log_path):
             #image_evolution.append(image_grid)
 
           if count == len(scale_info.keys()) - 1:
-            image = lightning_module.haar_backward(cat_evolution[-1])
+            image = lightning_module.haar_backward(cat_evolution[-1].to('cuda:0')).to('cpu')
             image_grid = make_grid(normalise_per_image(image), nrow=int(np.sqrt(image.size(0))))
             haar_grid_evolution.append(image_grid)
           
