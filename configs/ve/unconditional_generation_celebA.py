@@ -9,7 +9,7 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'base'
-  training.batch_size = 64
+  training.batch_size = 50
   training.gpus = 1
   training.accumulate_grad_batches = 1
   training.workers = 4
@@ -49,7 +49,7 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4
-  evaluate.batch_size = 64
+  evaluate.batch_size = 50
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
