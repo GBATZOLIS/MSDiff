@@ -7,8 +7,7 @@ import os
 import glob
 
 def load_file_paths(dataset_base_dir):
-    listOfFiles = [os.path.join(dataset_base_dir,f) for f in os.listdir(dataset_base_dir) if os.path.isfile(f)]
-    print(listOfFiles)
+    listOfFiles = [os.path.join(dataset_base_dir, f) for f in os.listdir(dataset_base_dir) if os.path.isfile(f)]
     return listOfFiles
 
 #the code should become more general for the ImageDataset class.
@@ -35,6 +34,7 @@ class ImageDataset(Dataset):
                 transforms.Resize(size=(res_x, res_y))])
             
         self.image_paths = load_file_paths(path)
+        print(self.image_paths)
 
     def __getitem__(self, index):
         image = Image.open(self.image_paths[index]).convert('RGB')
