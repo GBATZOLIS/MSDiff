@@ -7,6 +7,7 @@ import os
 import glob
 
 def load_file_paths(directory):
+    print(os.listdir(directory))
     listOfFiles = [f for f in os.listdir(directory) if os.path.isfile(f)]
     return listOfFiles
 
