@@ -177,7 +177,7 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
       x = sde.prior_sampling(shape).to(model.device).type(torch.float32)
       timesteps = torch.linspace(sde.T, eps, sde.N, device=model.device)
 
-      for i in range(sde.N):
+      for i in tqdm(range(sde.N)):
         t = timesteps[i]
         vec_t = torch.ones(shape[0], device=t.device) * t
         x, x_mean = corrector_update_fn(x, vec_t, model=model)
