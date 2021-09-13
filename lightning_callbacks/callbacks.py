@@ -126,14 +126,15 @@ class ImageVisualizationCallback(Callback):
         self.show_evolution = show_evolution
 
     def on_validation_epoch_end(self, trainer, pl_module):
-        if self.show_evolution:
-            samples, sampling_info = pl_module.sample(show_evolution=True)
-            evolution = sampling_info['evolution']
-            self.visualise_evolution(evolution, pl_module)
-        else:
-            samples, _ = pl_module.sample(show_evolution=False)
+        if pl_module.epoch > 0:
+            if self.show_evolution:
+                samples, sampling_info = pl_module.sample(show_evolution=True)
+                evolution = sampling_info['evolution']
+                self.visualise_evolution(evolution, pl_module)
+            else:
+                samples, _ = pl_module.sample(show_evolution=False)
 
-        self.visualise_samples(samples, pl_module)
+            self.visualise_samples(samples, pl_module)
 
     def visualise_samples(self, samples, pl_module):
         # log sampled images
@@ -142,7 +143,7 @@ class ImageVisualizationCallback(Callback):
         pl_module.logger.experiment.add_image('generated_images', grid_images, pl_module.current_epoch)
     
     def visualise_evolution(self, evolution, pl_module):
-        #to be implemented
+        #to be implemented - has already been implemented for the conditional case
         return
 
 
