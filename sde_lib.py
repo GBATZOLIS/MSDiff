@@ -261,10 +261,10 @@ class VESDE(SDE):
                                                 device=t.device))
     return drift, diffusion
 
-  def marginal_prob(self, x, t): #perturbation kernel P(X(t)|X(0)) parameters 
-    print(t.device)
-    print(self.sigma_min.device)
-    std = self.sigma_min * (self.sigma_max / self.sigma_min) ** t
+  def marginal_prob(self, x, t): #perturbation kernel P(X(t)|X(0)) parameters
+    sigma_min = torch.tensor(self.sigma_min).type_as(t)
+    sigma_max = torch.tensor(self.sigma_max).type_as(t)
+    std = sigma_min * (sigma_max / sigma_min) ** t
     mean = x
     return mean, std
 
@@ -312,7 +312,9 @@ class cVESDE(cSDE):
     return drift, diffusion
 
   def marginal_prob(self, x, t): #perturbation kernel P(X(t)|X(0)) parameters 
-    std = self.sigma_min * (self.sigma_max / self.sigma_min) ** t
+    sigma_min = torch.tensor(self.sigma_min).type_as(t)
+    sigma_max = torch.tensor(self.sigma_max).type_as(t)
+    std = sigma_min * (sigma_max / sigma_min) ** t
     mean = x
     return mean, std
 
