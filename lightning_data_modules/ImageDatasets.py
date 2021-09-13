@@ -63,6 +63,7 @@ class ImageDataModule(pl.LightningDataModule):
 
     def setup(self, stage=None): 
         data = ImageDataset(self.config)
+        print(len(data))
         l=len(data)
         self.train_data, self.valid_data, self.test_data = random_split(data, [int(self.split[0]*l), int(self.split[1]*l), l - int(self.split[0]*l) - int(self.split[1]*l)]) 
     
