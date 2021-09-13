@@ -178,7 +178,7 @@ def multi_scale_test(master_config, log_path):
     new_last_frame = 0
     for evolution in scale_evolutions:
       new_last_frame = evolution.size(0)
-      concat_video[previous_last_frame:new_last_frame, :evolution.size(1), :evolution.size(2), :evolution.size(3)]
+      concat_video[previous_last_frame:new_last_frame, :evolution.size(1), :evolution.size(2), :evolution.size(3)] = evolution
       previous_last_frame = new_last_frame
 
     return concat_video
