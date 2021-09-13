@@ -7,8 +7,7 @@ import os
 import glob
 
 def load_file_paths(dataset_base_dir):
-    print(os.listdir(dataset_base_dir))
-    listOfFiles = [f for f in os.listdir(dataset_base_dir) if os.path.isfile(f)]
+    listOfFiles = [os.path.join(dataset_base_dir, f) for f in os.listdir(dataset_base_dir)]
     return listOfFiles
 
 #the code should become more general for the ImageDataset class.
