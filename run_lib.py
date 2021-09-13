@@ -115,7 +115,7 @@ def multi_scale_test(master_config, log_path):
 
         if show_evolution:
           if count == len(scale_info.keys()) - 1:
-            image_grid = make_grid(normalise_per_image(dc), nrow=int(np.sqrt(dc.size(0))))
+            image_grid = make_grid(normalise_per_image(dc.to('cpu')), nrow=int(np.sqrt(dc.size(0))))
             haar_grid_evolution.append(image_grid)
           
           haar_grid_evolution = torch.stack(haar_grid_evolution)
