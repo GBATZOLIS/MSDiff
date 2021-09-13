@@ -62,6 +62,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
+  model.checkpoint_path = None
   model.conditional = True
   model.num_scales = 1000
   model.sigma_max_x = 64 #input range is [0,1] and resolution is 64^2
