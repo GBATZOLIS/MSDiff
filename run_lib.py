@@ -102,29 +102,24 @@ def multi_scale_test(master_config, log_path):
 
         if show_evolution:
           evolution = info['evolution']
-          cat_evolution = torch.cat((evolution['y'], evolution['x']), dim=2)
+          dc = dc.to('cpu')
 
           haar_grid_evolution = []
-          #image_evolution = []
-          for frame in range(cat_evolution.size(0)):
-            haar_grid_evolution.append(create_supergrid(normalise_per_band(cat_evolution[frame])))
-            #image = lightning_module.haar_backward(cat_evolution[frame])
-            #image_grid = make_grid(normalise_per_image(image), nrow=int(np.sqrt(image.size(0))))
-            #image_evolution.append(image_grid)
+          for frame in range(evolution['x'].size(0)):
+            haar_grid_evolution.append(create_supergrid(normalise_per_band(torch.cat((dc, evolution['x'][frame]), dim=1))))
 
-          if count == len(scale_info.keys()) - 1:
-            image = lightning_module.haar_backward(cat_evolution[-1].to('cuda:0')).cpu()
-            image_grid = make_grid(normalise_per_image(image), nrow=int(np.sqrt(image.size(0))))
-            haar_grid_evolution.append(image_grid)
-          
-          haar_grid_evolution = torch.stack(haar_grid_evolution)
-          #image_evolution = torch.stack(image_evolution)
-
-          scale_evolutions['haar'].append(haar_grid_evolution)
-          #scale_evolutions['image'].append(image_evolution)
+          dc = dc.to('cuda')
 
         haar_image = torch.cat([dc,hf], dim=1)
         dc = lightning_module.haar_backward(haar_image) #inverse the haar transform to get the dc coefficients of the new scale
+
+        if show_evolution:
+          if count == len(scale_info.keys()) - 1:
+            image_grid = make_grid(normalise_per_image(dc), nrow=int(np.sqrt(dc.size(0))))
+            haar_grid_evolution.append(image_grid)
+          
+          haar_grid_evolution = torch.stack(haar_grid_evolution)
+          scale_evolutions['haar'].append(haar_grid_evolution)
 
         if return_intermediate_images:
           scales_dc.append(dc)
@@ -186,13 +181,13 @@ def multi_scale_test(master_config, log_path):
 
   for i, batch in enumerate(test_dataloader):
     batch = smallest_scale_lightning_module.get_dc_coefficients(batch.to('cuda:0'))
-    intermediate_images = autoregressive_sampler(batch, return_intermediate_images=True, show_evolution=False)
+    intermediate_images, scale_evolutions = autoregressive_sampler(batch, return_intermediate_images=True, show_evolution=True)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
     
     concat_grid = make_grid(concat_upsampled_images, nrow=int(np.sqrt(concat_upsampled_images.size(0))))
     logger.experiment.add_image('Autoregressive_Sampling_batch_%d' % i, concat_grid)
 
-    #concat_video = create_scale_evolution_video(scale_evolutions['haar']).unsqueeze(0)
-    #logger.experiment.add_video('Autoregressive_Sampling_evolution_batch_%d' % i, concat_video, fps=125)
+    concat_video = create_scale_evolution_video(scale_evolutions['haar']).unsqueeze(0)
+    logger.experiment.add_video('Autoregressive_Sampling_evolution_batch_%d' % i, concat_video, fps=50)
 
 
