@@ -34,7 +34,6 @@ class ImageDataset(Dataset):
                 transforms.Resize(size=(res_x, res_y))])
             
         self.image_paths = load_file_paths(path)
-        print(self.image_paths)
 
     def __getitem__(self, index):
         image = Image.open(self.image_paths[index]).convert('RGB')
