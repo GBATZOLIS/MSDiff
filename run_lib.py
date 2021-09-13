@@ -102,7 +102,7 @@ def multi_scale_test(master_config, log_path):
 
         if show_evolution:
           evolution = info['evolution']
-          cat_evolution = torch.cat((evolution['y'], evolution['x']), dim=1)
+          cat_evolution = torch.cat((evolution['y'], evolution['x']), dim=2)
 
           haar_grid_evolution = []
           #image_evolution = []
@@ -113,7 +113,7 @@ def multi_scale_test(master_config, log_path):
             #image_evolution.append(image_grid)
 
           if count == len(scale_info.keys()) - 1:
-            image = lightning_module.haar_backward(cat_evolution[-1].to('cuda:0')).to('cpu')
+            image = lightning_module.haar_backward(cat_evolution[-1].to('cuda:0')).cpu()
             image_grid = make_grid(normalise_per_image(image), nrow=int(np.sqrt(image.size(0))))
             haar_grid_evolution.append(image_grid)
           
