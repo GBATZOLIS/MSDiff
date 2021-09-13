@@ -61,7 +61,7 @@ def get_config():
   # data
   config.data = data = ml_collections.ConfigDict()
   data.base_dir = 'datasets'
-  data.dataset = 'celeba'
+  data.dataset = 'celebA'
   data.datamodule = 'image'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
