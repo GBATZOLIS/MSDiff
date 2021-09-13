@@ -108,7 +108,7 @@ def get_smld_loss_fn(vesde, train, reduce_mean=False):
   def loss_fn(model, batch):
     score_fn = mutils.get_score_fn(vesde, model, train=train)
     labels = torch.randint(0, vesde.N, (batch.shape[0],), device=batch.device)
-    score_fn_labels = labels/(sde.N - 1)
+    score_fn_labels = labels/(vesde.N - 1)
     sigmas = smld_sigma_array.to(batch.device)[labels]
     noise = torch.randn_like(batch) * sigmas[:, None, None, None]
     perturbed_data = noise + batch
