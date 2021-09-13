@@ -3,10 +3,14 @@ from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision  import transforms, datasets
 import PIL.Image as Image
 from . import utils
+import os
 
+#the code should become more general for the ImageDataset class.
 class ImageDataset(Dataset):
-    def __init__(self, path, resolution, crop=False):
-        if crop:
+    def __init__(self, config):
+        path = os.path.join(config.data.base_dir, config.data.dataset)
+        res_x, res_y = config.data.shape[1], config.data.shape[2]
+        if config.data.crop:
             crop_size = 108
             offset_height = (218 - crop_size) // 2
             offset_width = (178 - crop_size) // 2
@@ -16,14 +20,13 @@ class ImageDataset(Dataset):
                 [transforms.ToTensor(),
                 transforms.Lambda(croper),
                 transforms.ToPILImage(),
-                transforms.Resize(size=(resolution, resolution),  interpolation=Image.BICUBIC),
+                transforms.Resize(size=(res_x, res_y),  interpolation=Image.BICUBIC),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3)])
         else:
             transform = transforms.Compose(
                 [transforms.ToTensor(),
-                transforms.Resize(size=(resolution, resolution)),
-                transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3)])
+                transforms.Resize(size=(res_x, res_y))])
             
         self.dataset = datasets.ImageFolder(path, transform=transform)
 
@@ -32,11 +35,6 @@ class ImageDataset(Dataset):
 
     def __len__(self):
         return self.dataset.__len__()
-
-
-class CelebA(ImageDataset):
-    def __init__(self, path='/store/CIA/js2164/data/celeba', resolution=64):
-        ImageDataset.__init__(self, path=path, resolution=resolution)
 
 
 @utils.register_lightning_datamodule(name='image')
