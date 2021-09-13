@@ -103,8 +103,8 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr,
 
       if show_evolution:
         #check the effect of denoising
-        evolution['x'].append(x_mean.cpu())
-        evolution['y'].append(y_mean.cpu())
+        #evolution['x'].append(x_mean.cpu())
+        #evolution['y'].append(y_mean.cpu())
 
         evolution['x'], evolution['y'] = torch.stack(evolution['x']), torch.stack(evolution['y'])
         sampling_info = {'evolution': evolution}
