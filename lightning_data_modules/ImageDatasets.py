@@ -41,21 +41,20 @@ class ImageDataset(Dataset):
 class ImageDataModule(pl.LightningDataModule):
     def __init__(self, config):
         super().__init__()
-        self.path = config.data.base_dir
-        self.resolution = config.data.image_size
+        self.config = config
         self.split = config.data.split
 
         #DataLoader arguments
         self.train_workers = config.training.workers
-        self.val_workers = config.validation.workers
+        self.val_workers = config.eval.workers
         self.test_workers = config.eval.workers
 
         self.train_batch = config.training.batch_size
-        self.val_batch = config.validation.batch_size
+        self.val_batch = config.eval.batch_size
         self.test_batch = config.eval.batch_size
 
     def setup(self, stage=None): 
-        data = ImageDataset(self.path, self.resolution)
+        data = ImageDataset(self.config)
         l=len(data)
         self.train_data, self.valid_data, self.test_data = random_split(data, [int(self.split[0]*l), int(self.split[1]*l), l - int(self.split[0]*l) - int(self.split[1]*l)]) 
     
