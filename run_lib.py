@@ -186,13 +186,13 @@ def multi_scale_test(master_config, log_path):
 
   for i, batch in enumerate(test_dataloader):
     batch = smallest_scale_lightning_module.get_dc_coefficients(batch.to('cuda:0'))
-    intermediate_images, scale_evolutions = autoregressive_sampler(batch, return_intermediate_images=True, show_evolution=True)
+    intermediate_images = autoregressive_sampler(batch, return_intermediate_images=True, show_evolution=False)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
     
     concat_grid = make_grid(concat_upsampled_images, nrow=int(np.sqrt(concat_upsampled_images.size(0))))
     logger.experiment.add_image('Autoregressive_Sampling_batch_%d' % i, concat_grid)
 
-    concat_video = create_scale_evolution_video(scale_evolutions['haar']).unsqueeze(0)
-    logger.experiment.add_video('Autoregressive_Sampling_evolution_batch_%d' % i, concat_video, fps=125)
+    #concat_video = create_scale_evolution_video(scale_evolutions['haar']).unsqueeze(0)
+    #logger.experiment.add_video('Autoregressive_Sampling_evolution_batch_%d' % i, concat_video, fps=125)
 
 
