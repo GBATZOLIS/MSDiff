@@ -106,7 +106,7 @@ def multi_scale_test(master_config, log_path):
 
           haar_grid_evolution = []
           #image_evolution = []
-          for frame in cat_evolution.size(0):
+          for frame in range(cat_evolution.size(0)):
             haar_grid_evolution.append(create_supergrid(normalise_per_band(cat_evolution[frame])))
             #image = lightning_module.haar_backward(cat_evolution[frame])
             #image_grid = make_grid(normalise_per_image(image), nrow=int(np.sqrt(image.size(0))))
