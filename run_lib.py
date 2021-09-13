@@ -193,6 +193,6 @@ def multi_scale_test(master_config, log_path):
     logger.experiment.add_image('Autoregressive_Sampling_batch_%d' % i, concat_grid)
 
     concat_video = create_scale_evolution_video(scale_evolutions['haar']).unsqueeze(0)
-    logger.experiment.add_video('Autoregressive_Sampling_evolution_batch_%d' % i, concat_video, fps=100)
+    logger.experiment.add_video('Autoregressive_Sampling_evolution_batch_%d' % i, concat_video, fps=125)
 
 
