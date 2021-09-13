@@ -87,7 +87,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = None #'beatSRFLOW/40/version_7/checkpoints/epoch=70-step=101458.ckpt'
+  model.checkpoint_path = 'experiments/beatSRFLOW/40/version_1/checkpoints/epoch=369-step=528729.ckpt'
   model.num_scales = 1000
   model.sigma_max_x = 300 #600 #input range is [0,1] and resolution is 64^2
   #we do not want to perturb y a lot. 
