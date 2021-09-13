@@ -55,7 +55,7 @@ def create_supergrid(normalised_permuted_haar_images):
     haar_super_grid = []
     for i in range(normalised_permuted_haar_images.size(0)):
         shape = normalised_permuted_haar_images[i].shape
-        haar_grid = make_grid(normalised_permuted_haar_images[i].reshape((-1, 3, shape[1], shape[2])), nrow=2)
+        haar_grid = make_grid(normalised_permuted_haar_images[i].reshape((-1, 3, shape[1], shape[2])), nrow=2, padding=0)
         haar_super_grid.append(haar_grid)
     
     super_grid = make_grid(haar_super_grid, nrow=int(np.sqrt(normalised_permuted_haar_images.size(0))))
