@@ -4,6 +4,11 @@ from torchvision  import transforms, datasets
 import PIL.Image as Image
 from . import utils
 import os
+import glob
+
+def load_file_paths(directory):
+    listOfFiles = [f for f in os.listdir(directory) if os.path.isfile(f)]
+    return listOfFiles
 
 #the code should become more general for the ImageDataset class.
 class ImageDataset(Dataset):
@@ -16,7 +21,7 @@ class ImageDataset(Dataset):
             offset_width = (178 - crop_size) // 2
             croper = lambda x: x[:, offset_height:offset_height + crop_size, offset_width:offset_width + crop_size]
 
-            transform = transforms.Compose(
+            self.transform = transforms.Compose(
                 [transforms.ToTensor(),
                 transforms.Lambda(croper),
                 transforms.ToPILImage(),
@@ -24,17 +29,19 @@ class ImageDataset(Dataset):
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3)])
         else:
-            transform = transforms.Compose(
+            self.transform = transforms.Compose(
                 [transforms.ToTensor(),
                 transforms.Resize(size=(res_x, res_y))])
             
-        self.dataset = datasets.ImageFolder(path, transform=transform)
+        self.image_paths = load_file_paths(path)
 
     def __getitem__(self, index):
-        return self.dataset.__getitem__(index)[0]
+        image = Image.open(self.image_paths[index]).convert('RGB')
+        image = self.transform(image)
+        return image
 
     def __len__(self):
-        return self.dataset.__len__()
+        return len(self.image_paths)
 
 
 @utils.register_lightning_datamodule(name='image')
