@@ -31,7 +31,7 @@ class HaarDecomposedDataset(data.Dataset):
       image /= 255
       return image
     else:
-      image = np.load(self.image_files[index], allow_pickle=True)
+      image = np.load(self.image_files[index])
       image = torch.from_numpy(image).float()
       return image
         
