@@ -100,7 +100,7 @@ class ConditionalHaarMultiScaleVisualizationCallback(Callback):
         self.upsample_fn = Upsample(scale_factor=2, mode='nearest').to('cpu')
     
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        if batch_idx==5:
+        if batch_idx==5 and pl_module.current_epoch % 5 ==0:
             orig_batch = batch.clone().cpu()
             
             batch = pl_module.haar_transform(batch.to(pl_module.device)) 
