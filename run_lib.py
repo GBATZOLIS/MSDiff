@@ -128,11 +128,11 @@ def multi_scale_test(master_config, log_path):
       if return_intermediate_images and show_evolution:
         return scales_dc, scale_evolutions
       elif return_intermediate_images and not show_evolution:
-         return scales_dc
+         return scales_dc, []
       elif not return_intermediate_images and show_evolution:
-          return scale_evolutions
+          return [], scale_evolutions
       else:
-        return dc
+        return dc, []
 
     return autoregressive_sampler
   
@@ -181,13 +181,13 @@ def multi_scale_test(master_config, log_path):
 
   for i, batch in enumerate(test_dataloader):
     batch = smallest_scale_lightning_module.get_dc_coefficients(batch.to('cuda:0'))
-    intermediate_images, scale_evolutions = autoregressive_sampler(batch, return_intermediate_images=True, show_evolution=True)
+    intermediate_images, scale_evolutions = autoregressive_sampler(batch, return_intermediate_images=True, show_evolution=False)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
     
     concat_grid = make_grid(concat_upsampled_images, nrow=int(np.sqrt(concat_upsampled_images.size(0))))
     logger.experiment.add_image('Autoregressive_Sampling_batch_%d' % i, concat_grid)
 
-    concat_video = create_scale_evolution_video(scale_evolutions['haar']).unsqueeze(0)
-    logger.experiment.add_video('Autoregressive_Sampling_evolution_batch_%d' % i, concat_video, fps=50)
+    #concat_video = create_scale_evolution_video(scale_evolutions['haar']).unsqueeze(0)
+    #logger.experiment.add_video('Autoregressive_Sampling_evolution_batch_%d' % i, concat_video, fps=50)
 
 
