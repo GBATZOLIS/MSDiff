@@ -89,7 +89,7 @@ def get_config():
   config.model = model = ml_collections.ConfigDict()
   model.checkpoint_path = None
   model.num_scales = 1000
-  model.sigma_max_x = 300 #600 #input range is [0,1] and resolution is 64^2
+  model.sigma_max_x = 450 #600 #input range is [0,1] and resolution is 64^2
   #we do not want to perturb y a lot. 
   #A slight perturbation will result in better approximation of the conditional time-dependent score.
   model.sigma_max_y = 6.387
@@ -115,7 +115,7 @@ def get_config():
   model.nf = 128
   model.ch_mult = (1, 1, 2)
   model.num_res_blocks = 2
-  model.attn_resolutions = (20, 10)
+  model.attn_resolutions = (20, 10, 5)
   model.resamp_with_conv = True
   model.conditional = True
   model.conv_size = 3
