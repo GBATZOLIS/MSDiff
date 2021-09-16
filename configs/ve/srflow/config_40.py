@@ -28,7 +28,9 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'haar_conditional_decreasing_variance'
   config.training.batch_size = 128
+  training.num_nodes = 1
   training.gpus = 2
+  training.accelerator = 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4
   #----- to be removed -----
