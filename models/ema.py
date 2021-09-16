@@ -32,7 +32,7 @@ class ExponentialMovingAverage:
         self.decay = decay
         self.num_updates = 0 if use_num_updates else None
         parameters = list(parameters)
-        self.shadow_params = [p.clone().detach().cpu()
+        self.shadow_params = [p.clone().detach()
                               for p in parameters if p.requires_grad]
         self.collected_params = []
         # By maintaining only a weakref to each parameter,
@@ -87,7 +87,7 @@ class ExponentialMovingAverage:
         with torch.no_grad():
             parameters = [p for p in parameters if p.requires_grad]
             for s_param, param in zip(self.shadow_params, parameters):
-                tmp = (s_param - param)
+                tmp = (s_param - param.to(s_param.device))
                 # tmp will be a new tensor so we can do in-place
                 tmp.mul_(one_minus_decay)
                 s_param.sub_(tmp)
