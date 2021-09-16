@@ -1,5 +1,3 @@
-# Modified from https://raw.githubusercontent.com/fadel/pytorch_ema/master/torch_ema/ema.py
-
 from __future__ import division
 from __future__ import unicode_literals
 
@@ -34,7 +32,7 @@ class ExponentialMovingAverage:
         self.decay = decay
         self.num_updates = 0 if use_num_updates else None
         parameters = list(parameters)
-        self.shadow_params = [p.clone().detach()
+        self.shadow_params = [p.clone().detach().cpu()
                               for p in parameters if p.requires_grad]
         self.collected_params = []
         # By maintaining only a weakref to each parameter,
