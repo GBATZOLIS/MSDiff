@@ -106,7 +106,7 @@ def compute_dataset_statistics(config):
   
   torch.save(mean, f=os.path.join(mean_save_dir, 'mean.pt'))
 
-  mean = mean.numpy()
+  mean = mean.numpy().flatten()
 
   plt.figure()
   plt.title('Mean values histogram')
