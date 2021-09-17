@@ -99,13 +99,20 @@ def compute_dataset_statistics(config):
 
   LightningModule = create_lightning_module(config).to('cuda:0')
 
+
   with torch.no_grad():
     total_sum = None
     total_num_images = 0
     max_val = float('-inf')
     min_val = float('inf')
+    max_distance = float('-inf')
     for i, batch in tqdm(enumerate(train_dataloader)):
         hf = LightningModule.get_hf_coefficients(batch.to('cuda:0'))
+        
+        #calculate max pairwise distance
+        max_batch_pairwise_distance = max_pairwise_L2_distance(hf)
+        if max_batch_pairwise_distance > max_distance:
+          max_distance = max_batch_pairwise_distance
 
         if hf.min() < min_val:
           min_val = hf.min()
@@ -120,7 +127,9 @@ def compute_dataset_statistics(config):
           total_sum = batch_sum
         else:
           total_sum += batch_sum
-    
+  
+  print('Max pairwise distance: %.4f' % max_distance)
+  
   print('range: [%.5f, %.5f]' % (min_val, max_val))
   print('total_num_images: %d' % total_num_images)
   mean = total_sum / total_num_images
