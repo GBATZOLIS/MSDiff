@@ -22,6 +22,8 @@ from pathlib import Path
 import os
 import matplotlib.pyplot as plt
 
+from tqdm import tqdm
+
 def train(config, log_path, checkpoint_path):
     if config.data.create_dataset:
       create_dataset.create_dataset(config)
@@ -85,7 +87,7 @@ def compute_dataset_statistics(config):
 
   with torch.no_grad():
     total_sum = None
-    for i, batch in enumerate(train_dataloader):
+    for i, batch in tqdm(enumerate(train_dataloader)):
       hf = LightningModule.get_hf_coefficients(batch.to('cuda:0'))
       
       if total_sum is None:
