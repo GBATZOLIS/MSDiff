@@ -18,6 +18,10 @@ import create_dataset
 from torch.nn import Upsample
 import torch 
 
+from pathlib import Path
+import os
+import matplotlib.pyplot as plt
+
 def train(config, log_path, checkpoint_path):
     if config.data.create_dataset:
       create_dataset.create_dataset(config)
@@ -68,6 +72,38 @@ def test(config, log_path, checkpoint_path):
                       resume_from_checkpoint=checkpoint_path)
 
   trainer.test(LightningModule, DataModule.test_dataloader())
+
+def compute_dataset_statistics(config):
+  mean_save_dir = os.path.join(config.data.base_dir, 'datasets_mean', config.data.dataset+'_'+str(config.data.image_size))
+  Path(mean_save_dir).mkdir(parents=True, exist_ok=True)
+
+  DataModule = create_lightning_datamodule(config)
+  DataModule.setup()
+  train_dataloader = DataModule.train_dataloader()
+
+  LightningModule = create_lightning_module(config).to('cuda:0')
+
+  with torch.no_grad():
+    total_sum = None
+    for i, batch in enumerate(train_dataloader):
+      hf = LightningModule.get_hf_coefficients(batch.to('cuda:0'))
+      
+      if total_sum is None:
+        total_sum = hf
+      else:
+        total_sum += hf
+    
+    mean = torch.mean(total_sum/(i+1), dim=0).cpu()
+  
+  torch.save(mean, f= os.path.join(mean_save_dir, 'mean.pt'))
+
+  mean = mean.numpy()
+
+  plt.figure()
+  plt.title('Mean values histogram')
+  _ = plt.hist(mean, bins='auto')
+  plt.savefig(os.path.join(mean_save_dir, 'mean_histogram.png'))
+
 
 def multi_scale_test(master_config, log_path):
   logger = pl.loggers.TensorBoardLogger(log_path, name='autoregressive_samples')
