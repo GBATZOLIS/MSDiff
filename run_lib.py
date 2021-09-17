@@ -79,6 +79,7 @@ def compute_dataset_statistics(config):
   mean_save_dir = os.path.join(config.data.base_dir, 'datasets_mean', config.data.dataset+'_'+str(config.data.image_size))
   Path(mean_save_dir).mkdir(parents=True, exist_ok=True)
 
+  config.training.batch = 1 #make batchsize = 1
   DataModule = create_lightning_datamodule(config)
   DataModule.setup()
   train_dataloader = DataModule.train_dataloader()
@@ -88,14 +89,17 @@ def compute_dataset_statistics(config):
   with torch.no_grad():
     total_sum = None
     for i, batch in tqdm(enumerate(train_dataloader)):
-      hf = LightningModule.get_hf_coefficients(batch.to('cuda:0'))
-      print(hf.size())
-      if total_sum is None:
-        total_sum = hf
-      else:
-        total_sum += hf
+        hf = LightningModule.get_hf_coefficients(batch.to('cuda:0'))
+        print(hf.size())
+
+        if total_sum is None:
+          total_sum = hf
+        else:
+          total_sum += hf
     
+    print('Num batches: %d', i+1)
     mean = torch.mean(total_sum/(i+1), dim=0).cpu()
+    print(mean.size())
   
   torch.save(mean, f= os.path.join(mean_save_dir, 'mean.pt'))
 
