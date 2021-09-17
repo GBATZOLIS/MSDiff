@@ -92,7 +92,7 @@ def compute_dataset_statistics(config):
   mean_save_dir = os.path.join(config.data.base_dir, 'datasets_mean', config.data.dataset+'_'+str(config.data.image_size))
   Path(mean_save_dir).mkdir(parents=True, exist_ok=True)
 
-  config.training.batch_size = 1024
+  config.training.batch_size = 128
   DataModule = create_lightning_datamodule(config)
   DataModule.setup()
   train_dataloader = DataModule.train_dataloader()
@@ -129,7 +129,7 @@ def compute_dataset_statistics(config):
           total_sum += batch_sum
   
   print('Max pairwise distance: %.4f' % max_distance)
-  
+
   print('range: [%.5f, %.5f]' % (min_val, max_val))
   print('total_num_images: %d' % total_num_images)
   mean = total_sum / total_num_images
