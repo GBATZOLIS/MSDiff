@@ -6,7 +6,7 @@ import run_lib
 FLAGS = flags.FLAGS
 
 config_flags.DEFINE_config_file(
-  "config", None, "Training configuration.", lock_config=True)
+  "config", None, "Training configuration.", lock_config=False)
 flags.DEFINE_string("checkpoint_path", None, "Checkpoint directory.")
 flags.DEFINE_string("data_path", None, "Checkpoint directory.")
 flags.DEFINE_string("log_path", "./", "Checkpoint directory.")
