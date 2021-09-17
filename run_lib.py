@@ -90,6 +90,8 @@ def compute_dataset_statistics(config):
     total_num_images = 0
     for i, batch in tqdm(enumerate(train_dataloader)):
         hf = LightningModule.get_hf_coefficients(batch.to('cuda:0'))
+        print('hf.min(): ', hf.min())
+        print('hf.max(): ', hf.max())
         num_images = hf.size(0)
         total_num_images += num_images
         batch_sum = torch.sum(hf, dim=0)
