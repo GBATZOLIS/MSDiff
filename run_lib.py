@@ -88,20 +88,24 @@ def compute_dataset_statistics(config):
 
   with torch.no_grad():
     total_sum = None
+    total_num_images = 0
     for i, batch in tqdm(enumerate(train_dataloader)):
         hf = LightningModule.get_hf_coefficients(batch.to('cuda:0'))
-        print(hf.size())
+        num_images = hf.size(0)
+        total_num_images += num_images
+        batch_sum = torch.sum(hf, dim=0)
 
         if total_sum is None:
-          total_sum = hf
+          total_sum = batch_sum
         else:
-          total_sum += hf
+          total_sum += batch_sum
     
-    print('Num batches: %d', i+1)
-    mean = torch.mean(total_sum/(i+1), dim=0).cpu()
+    print('total_num_images: %d' % total_num_images)
+    mean = total_sum / total_num_images
+    mean = mean.cpu()
     print(mean.size())
   
-  torch.save(mean, f= os.path.join(mean_save_dir, 'mean.pt'))
+  torch.save(mean, f=os.path.join(mean_save_dir, 'mean.pt'))
 
   mean = mean.numpy()
 
