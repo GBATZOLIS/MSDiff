@@ -89,7 +89,7 @@ def compute_dataset_statistics(config):
     total_sum = None
     for i, batch in tqdm(enumerate(train_dataloader)):
       hf = LightningModule.get_hf_coefficients(batch.to('cuda:0'))
-      
+      print(hf.size())
       if total_sum is None:
         total_sum = hf
       else:
