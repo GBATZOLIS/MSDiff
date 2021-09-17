@@ -105,14 +105,14 @@ def compute_dataset_statistics(config):
     total_num_images = 0
     max_val = float('-inf')
     min_val = float('inf')
-    max_distance = float('-inf')
+    #max_distance = float('-inf')
     for i, batch in tqdm(enumerate(train_dataloader)):
         hf = LightningModule.get_hf_coefficients(batch.to('cuda:0'))
         
         #calculate max pairwise distance
-        max_batch_pairwise_distance = max_pairwise_L2_distance(hf)
-        if max_batch_pairwise_distance > max_distance:
-          max_distance = max_batch_pairwise_distance
+        #max_batch_pairwise_distance = max_pairwise_L2_distance(hf)
+        #if max_batch_pairwise_distance > max_distance:
+        #  max_distance = max_batch_pairwise_distance
 
         if hf.min() < min_val:
           min_val = hf.min()
@@ -128,7 +128,7 @@ def compute_dataset_statistics(config):
         else:
           total_sum += batch_sum
   
-  print('Max pairwise distance: %.4f' % max_distance)
+  #print('Max pairwise distance: %.4f' % max_distance)
 
   print('range: [%.5f, %.5f]' % (min_val, max_val))
   print('total_num_images: %d' % total_num_images)
