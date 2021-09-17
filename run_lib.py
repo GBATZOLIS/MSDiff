@@ -76,9 +76,23 @@ def test(config, log_path, checkpoint_path):
   trainer.test(LightningModule, DataModule.test_dataloader())
 
 def compute_dataset_statistics(config):
+  def max_pairwise_L2_distance(batch):
+    num_images = batch.size(0)
+    max_distance = float("-inf")
+    for i in range(num_images):
+      for j in range(i+1, num_images):
+        distance = torch.norm(batch[i]-batch[j], p=2)
+        if distance > max_distance:
+          max_distance = distance
+    return max_distance
+
+
+
+
   mean_save_dir = os.path.join(config.data.base_dir, 'datasets_mean', config.data.dataset+'_'+str(config.data.image_size))
   Path(mean_save_dir).mkdir(parents=True, exist_ok=True)
 
+  config.training.batch_size = 1024
   DataModule = create_lightning_datamodule(config)
   DataModule.setup()
   train_dataloader = DataModule.train_dataloader()
