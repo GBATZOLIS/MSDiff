@@ -88,10 +88,16 @@ def compute_dataset_statistics(config):
   with torch.no_grad():
     total_sum = None
     total_num_images = 0
+    max_val = float('-inf')
+    min_val = float('inf')
     for i, batch in tqdm(enumerate(train_dataloader)):
         hf = LightningModule.get_hf_coefficients(batch.to('cuda:0'))
-        print('hf.min(): ', hf.min())
-        print('hf.max(): ', hf.max())
+
+        if hf.min() < min_val:
+          min_val = hf.min()
+        if hf.max() > max_val:
+          max_val = hf.max()
+
         num_images = hf.size(0)
         total_num_images += num_images
         batch_sum = torch.sum(hf, dim=0)
@@ -101,14 +107,18 @@ def compute_dataset_statistics(config):
         else:
           total_sum += batch_sum
     
-    print('total_num_images: %d' % total_num_images)
-    mean = total_sum / total_num_images
-    mean = mean.cpu()
-    print(mean.size())
+  print('range: [%.5f, %.5f]' % (min_val, max_val))
+  print('total_num_images: %d' % total_num_images)
+  mean = total_sum / total_num_images
+  mean = mean.cpu()
+  print(mean.size())
   
   torch.save(mean, f=os.path.join(mean_save_dir, 'mean.pt'))
 
   mean = mean.numpy().flatten()
+
+  print('Maximum mean value: ', np.amax(mean))
+  print('Minimum mean value: ', np.amin(mean))
 
   plt.figure()
   plt.title('Mean values histogram')
