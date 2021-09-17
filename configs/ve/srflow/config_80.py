@@ -91,7 +91,7 @@ def get_config():
   config.model = model = ml_collections.ConfigDict()
   model.checkpoint_path = 'experiments/beatSRFLOW/80/lightning_logs/version_2/checkpoints/epoch=73-step=105745.ckpt'
   model.num_scales = 1000
-  model.sigma_max_x = 450 #600 #input range is [0,1] and resolution is 64^2
+  model.sigma_max_x = 450 #change it to 480 for future experiments (not a big difference)
   #we do not want to perturb y a lot. 
   #A slight perturbation will result in better approximation of the conditional time-dependent score.
   model.sigma_max_y = 6.107
