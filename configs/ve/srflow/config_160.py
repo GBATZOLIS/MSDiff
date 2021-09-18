@@ -29,7 +29,7 @@ def get_config():
   config.training.lightning_module = 'haar_conditional_decreasing_variance'
   config.training.batch_size = 25
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4
@@ -88,7 +88,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = 'experiments/beatSRFLOW/160/37M_450sigma_max_50_batch/lightning_logs/version_1/checkpoints/epoch=45-step=168175.ckpt'
+  model.checkpoint_path = 'experiments/beatSRFLOW/160/37M_450sigma_max_50_batch/lightning_logs/version_1/checkpoints/epoch=46-step=171831.ckpt'
   model.num_scales = 1000
   model.sigma_max_x = 450 #change it to 480 for future experiments (not a big difference)
   #we do not want to perturb y a lot. 
