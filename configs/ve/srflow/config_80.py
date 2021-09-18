@@ -73,7 +73,7 @@ def get_config():
   config.data = data = ml_collections.ConfigDict()
   data.base_dir = 'datasets'
   data.dataset = 'celebA'
-  data.use_data_mean = True
+  data.use_data_mean = False
   data.datamodule = 'haar_multiscale'
   data.create_dataset = False
   data.split = [0.925, 0.05, 0.025]
