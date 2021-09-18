@@ -62,7 +62,7 @@ def get_config():
   evaluate.workers = 4
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 128
+  evaluate.batch_size = 36
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -90,7 +90,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = None
+  model.checkpoint_path = 'experiments/beatSRFLOW/40/lightning_logs/version_2/checkpoint/epoch=295-step=422983.ckpt'
   model.num_scales = 1000
   model.sigma_max_x = 450 #change it to 480 for future experiments (not a big difference)
   #we do not want to perturb y a lot. 
