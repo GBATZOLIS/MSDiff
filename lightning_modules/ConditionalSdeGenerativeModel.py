@@ -79,8 +79,11 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
             self.sampling_eps = 1e-3
         elif config.training.sde.lower() == 'vesde':
             if sigma_max_y is None:
-                sigma_max_y = torch.tensor(config.model.sigma_max_x)
-            self.sigma_max_y = torch.tensor(sigma_max_y).float()
+                sigma_max_y = torch.tensor(config.model.sigma_max_x).float()
+            else:
+                sigma_max_y = torch.tensor(sigma_max_y).float()
+            
+            self.sigma_max_y = sigma_max_y
             sde_y = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=sigma_max_y.cpu(), N=config.model.num_scales)
             
             if config.data.use_data_mean:
@@ -98,8 +101,11 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
     def reconfigure_conditioning_sde(self, config, sigma_max_y = None):
         if config.training.sde.lower() == 'vesde':
             if sigma_max_y is None:
-                sigma_max_y = torch.tensor(config.model.sigma_max_x)
-            self.sigma_max_y = torch.tensor(sigma_max_y).float()
+                sigma_max_y = torch.tensor(config.model.sigma_max_x).float()
+            else:
+                sigma_max_y = torch.tensor(sigma_max_y).float()
+            
+            self.sigma_max_y = sigma_max_y
             self.sde[0] = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=sigma_max_y.cpu(), N=config.model.num_scales)
         else:
             raise NotImplementedError(f"Conditioning SDE {config.training.sde} not supported yet.")
