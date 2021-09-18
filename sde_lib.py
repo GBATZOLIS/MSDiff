@@ -237,7 +237,7 @@ class subVPSDE(SDE):
 
 
 class VESDE(SDE):
-  def __init__(self, sigma_min=0.01, sigma_max=50, N=1000):
+  def __init__(self, sigma_min=0.01, sigma_max=50, N=1000, data_mean=None):
     """Construct a Variance Exploding SDE.
     Args:
       sigma_min: smallest sigma.
@@ -249,6 +249,8 @@ class VESDE(SDE):
     self.sigma_max = sigma_max
     self.discrete_sigmas = torch.exp(torch.linspace(np.log(self.sigma_min), np.log(self.sigma_max), N))
     self.N = N
+
+    self.diffused_mean = data_mean #new
 
   @property
   def T(self):
@@ -269,7 +271,12 @@ class VESDE(SDE):
     return mean, std
 
   def prior_sampling(self, shape):
-    return torch.randn(*shape) * self.sigma_max
+    if self.diffused_mean is not None:
+      repeat_tuple = tuple([shape[0]]+[1 for _ in shape[1:]])
+      diffused_mean = self.diffused_mean.unsqueeze(0).repeat(repeat_tuple)
+      return torch.randn(*shape) * self.sigma_max + diffused_mean
+    else:
+      return torch.randn(*shape) * self.sigma_max
 
   def prior_logp(self, z):
     shape = z.shape
@@ -287,7 +294,7 @@ class VESDE(SDE):
     return f, G
 
 class cVESDE(cSDE):
-  def __init__(self, sigma_min=0.01, sigma_max=50, N=1000):
+  def __init__(self, sigma_min=0.01, sigma_max=50, N=1000, data_mean=None):
     """Construct a Variance Exploding SDE.
     Args:
       sigma_min: smallest sigma.
@@ -299,6 +306,7 @@ class cVESDE(cSDE):
     self.sigma_max = sigma_max
     self.discrete_sigmas = torch.exp(torch.linspace(np.log(self.sigma_min), np.log(self.sigma_max), N))
     self.N = N
+    self.diffused_mean = data_mean #new
 
   @property
   def T(self):
@@ -319,7 +327,12 @@ class cVESDE(cSDE):
     return mean, std
 
   def prior_sampling(self, shape):
-    return torch.randn(*shape) * self.sigma_max
+    if self.diffused_mean is not None:
+      repeat_tuple = tuple([shape[0]]+[1 for _ in shape[1:]])
+      diffused_mean = self.diffused_mean.unsqueeze(0).repeat(repeat_tuple)
+      return torch.randn(*shape) * self.sigma_max + diffused_mean
+    else:
+      return torch.randn(*shape) * self.sigma_max
 
   def prior_logp(self, z):
     shape = z.shape

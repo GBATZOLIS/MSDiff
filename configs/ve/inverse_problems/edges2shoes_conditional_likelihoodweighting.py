@@ -62,6 +62,7 @@ def get_config():
   config.data = data = ml_collections.ConfigDict()
   data.base_dir = 'datasets'
   data.dataset = 'edges2shoes'
+  data.use_data_mean = True
   data.datamodule = 'paired'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]

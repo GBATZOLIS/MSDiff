@@ -62,6 +62,7 @@ def get_config():
   config.data = data = ml_collections.ConfigDict()
   data.base_dir = 'datasets'
   data.dataset = 'celebA'
+  data.use_data_mean = True
   data.datamodule = 'image'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]

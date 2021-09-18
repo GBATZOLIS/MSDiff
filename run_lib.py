@@ -86,9 +86,6 @@ def compute_dataset_statistics(config):
           max_distance = distance
     return max_distance
 
-
-
-
   mean_save_dir = os.path.join(config.data.base_dir, 'datasets_mean', config.data.dataset+'_'+str(config.data.image_size))
   Path(mean_save_dir).mkdir(parents=True, exist_ok=True)
 

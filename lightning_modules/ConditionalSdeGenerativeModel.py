@@ -7,6 +7,7 @@ from . import utils
 import torch
 from iunets.layers import InvertibleDownsampling2D
 import torch.nn as nn
+import os
 
 @utils.register_lightning_module(name='conditional')
 class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeModel):
@@ -22,7 +23,12 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
             self.sampling_eps = 1e-3
         elif config.training.sde.lower() == 'vesde':
             sde_y = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max_y, N=config.model.num_scales)
-            sde_x = sde_lib.cVESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max_x, N=config.model.num_scales)
+            if config.data.use_data_mean:
+                data_mean_path = os.path.join(config.data.base_dir, 'datasets_mean', '%s_%d' % (config.data.dataset, config.data.image_size), 'mean.pt')
+                data_mean = torch.load(data_mean_path)
+            else:
+                data_mean = None
+            sde_x = sde_lib.cVESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max_x, N=config.model.num_scales, data_mean=data_mean)
             self.sde = [sde_y, sde_x]
             self.sampling_eps = 1e-5
         else:
@@ -74,15 +80,29 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
         elif config.training.sde.lower() == 'vesde':
             if sigma_max_y is None:
                 sigma_max_y = config.model.sigma_max_x 
-                
             self.sigma_max_y = torch.tensor(sigma_max_y).float()
-
             sde_y = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=sigma_max_y, N=config.model.num_scales)
-            sde_x = sde_lib.cVESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max_x, N=config.model.num_scales)
+            
+            if config.data.use_data_mean:
+                data_mean_path = os.path.join(config.data.base_dir, 'datasets_mean', '%s_%d' % (config.data.dataset, config.data.image_size), 'mean.pt')
+                data_mean = torch.load(data_mean_path)
+            else:
+                data_mean = None
+            sde_x = sde_lib.cVESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max_x, N=config.model.num_scales, data_mean=data_mean)
+            
             self.sde = [sde_y, sde_x]
             self.sampling_eps = 1e-5
         else:
             raise NotImplementedError(f"SDE {config.training.sde} unknown.")
+    
+    def reconfigure_conditioning_sde(self, config, sigma_max_y = None):
+        if config.training.sde.lower() == 'vesde':
+            if sigma_max_y is None:
+                sigma_max_y = config.model.sigma_max_x 
+            self.sigma_max_y = torch.tensor(sigma_max_y).float()
+            self.sde[0] = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=sigma_max_y, N=config.model.num_scales)
+        else:
+            raise NotImplementedError(f"Conditioning SDE {config.training.sde} not supported yet.")
     
     def test_step(self, batch, batch_idx):
         print('Test batch %d' % batch_idx)

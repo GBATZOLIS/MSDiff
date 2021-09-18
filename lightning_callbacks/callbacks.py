@@ -49,7 +49,8 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         current_sigma_max_y = self.sigma_max_y_fn(global_step, current_epoch, sigma_max_y_start, sigma_max_y_target)
 
         # Reconfigure SDE
-        pl_module.configure_sde(pl_module.config, current_sigma_max_y)
+        pl_module.reconfigure_conditioning_sde(pl_module.config, current_sigma_max_y)
+        
         # Reconfigure trainining and validation loss functions. -  we might not need to reconfigure the losses.
         pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
         pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)

@@ -7,6 +7,7 @@ from models import utils as mutils
 from sde_lib import VESDE, VPSDE
 from . import utils
 import torch.optim as optim
+import os
 
 @utils.register_lightning_module(name='base')
 class BaseSdeGenerativeModel(pl.LightningModule):
@@ -30,7 +31,12 @@ class BaseSdeGenerativeModel(pl.LightningModule):
             self.sde = sde_lib.subVPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
             self.sampling_eps = 1e-3
         elif config.training.sde.lower() == 'vesde':
-            self.sde = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max, N=config.model.num_scales)
+            if config.data.use_data_mean:
+                data_mean_path = os.path.join(config.data.base_dir, 'datasets_mean', '%s_%d' % (config.data.dataset, config.data.image_size), 'mean.pt')
+                data_mean = torch.load(data_mean_path)
+            else:
+                data_mean = None
+            self.sde = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max, N=config.model.num_scales, data_mean=data_mean)
             self.sampling_eps = 1e-5
         else:
             raise NotImplementedError(f"SDE {config.training.sde} unknown.")
