@@ -247,7 +247,7 @@ class VESDE(SDE):
     super().__init__(N)
     self.sigma_min = sigma_min
     self.sigma_max = sigma_max
-    self.discrete_sigmas = torch.exp(torch.linspace(torch.log(self.sigma_min), torch.log(self.sigma_max), N))
+    self.discrete_sigmas = torch.exp(torch.linspace(np.log(self.sigma_min), np.log(self.sigma_max), N))
     self.N = N
 
     self.diffused_mean = data_mean #new
@@ -304,7 +304,7 @@ class cVESDE(cSDE):
     super().__init__(N)
     self.sigma_min = sigma_min
     self.sigma_max = sigma_max
-    self.discrete_sigmas = torch.exp(torch.linspace(torch.log(self.sigma_min), torch.log(self.sigma_max), N))
+    self.discrete_sigmas = torch.exp(torch.linspace(np.log(self.sigma_min), np.log(self.sigma_max), N))
     self.N = N
     self.diffused_mean = data_mean #new
 

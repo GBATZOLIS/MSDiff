@@ -81,7 +81,7 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
             if sigma_max_y is None:
                 sigma_max_y = config.model.sigma_max_x 
             self.sigma_max_y = torch.tensor(sigma_max_y).float()
-            sde_y = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=sigma_max_y, N=config.model.num_scales)
+            sde_y = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=sigma_max_y.cpu(), N=config.model.num_scales)
             
             if config.data.use_data_mean:
                 data_mean_path = os.path.join(config.data.base_dir, 'datasets_mean', '%s_%d' % (config.data.dataset, config.data.image_size), 'mean.pt')
@@ -100,7 +100,7 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
             if sigma_max_y is None:
                 sigma_max_y = config.model.sigma_max_x 
             self.sigma_max_y = torch.tensor(sigma_max_y).float()
-            self.sde[0] = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=sigma_max_y, N=config.model.num_scales)
+            self.sde[0] = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=sigma_max_y.cpu(), N=config.model.num_scales)
         else:
             raise NotImplementedError(f"Conditioning SDE {config.training.sde} not supported yet.")
     
