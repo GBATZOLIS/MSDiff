@@ -294,9 +294,9 @@ def multi_scale_test(master_config, log_path):
     intermediate_images, scale_evolutions = autoregressive_sampler(batch, return_intermediate_images=True, show_evolution=False)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
 
-    vis_concat = torch.cat((concat_upsampled_images, hr_batch), dim=-1) #concatenated intermediate images and the GT hr batch
+    vis_concat = torch.cat((concat_upsampled_images, normalise_per_image(hr_batch)), dim=-1) #concatenated intermediate images and the GT hr batch
     
-    concat_grid = make_grid(vis_concat, nrow=1)
+    concat_grid = make_grid(vis_concat, nrow=1, normalize=False)
     logger.experiment.add_image('Autoregressive_Sampling_batch_%d' % i, concat_grid)
 
     #concat_video = create_scale_evolution_video(scale_evolutions['haar']).unsqueeze(0)
