@@ -88,7 +88,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = 'experiments/beatSRFLOW/160/37M_450sigma_max_50_batch/lightning_logs/version_1/checkpoints/epoch=46-step=171831.ckpt'
+  model.checkpoint_path = 'experiments/beatSRFLOW/160/37M_450sigma_max_50_batch/lightning_logs/version_1/checkpoints/epoch=59-step=219359.ckpt'
   model.num_scales = 1000
   model.sigma_max_x = 450 #change it to 480 for future experiments (not a big difference)
   #we do not want to perturb y a lot. 
