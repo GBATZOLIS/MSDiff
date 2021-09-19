@@ -157,7 +157,7 @@ def get_score_fn(sde, model, train=False, continuous=False):
   """
   model_fn = get_model_fn(model, train=train)
 
-  if isinstance(sde, list):
+  if isinstance(sde, dict):
     if isinstance(sde['y'], sde_lib.VPSDE) or isinstance(sde['y'], sde_lib.subVPSDE):
       raise NotImplementedError('This combination of sdes is not supported for conditional SDEs yet.')
     elif isinstance(sde['y'], sde_lib.VESDE) and isinstance(sde['x'], sde_lib.cVESDE) and len(sde)==2:
