@@ -40,12 +40,12 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
                                     continuous=True, likelihood_weighting=config.training.likelihood_weighting)
         else:
             #assert not likelihood_weighting, "Likelihood weighting is not supported for original SMLD/DDPM training."
-            if isinstance(self.sde, list):
+            if isinstance(self.sde, dict):
                 #this part of the code needs to be improved. We should check all elements of the sde list. We might have a mixture.
-                if isinstance(self.sde[0], VESDE) and isinstance(self.sde[1], cVESDE) and len(self.sde)==2:
+                if isinstance(self.sde['y'], VESDE) and isinstance(self.sde['x'], cVESDE) and len(self.sde.keys())==2:
                     loss_fn = get_inverse_problem_smld_loss_fn(self.sde, train, reduce_mean=config.training.reduce_mean, \
-                        likelihood_weighting=config.training.likelihood_weighting, x_channels=config.data.shape_x[0])
-                elif isinstance(self.sde[0], VPSDE) and isinstance(self.sde[1], VPSDE) and len(self.sde)==2:
+                        likelihood_weighting=config.training.likelihood_weighting)
+                elif isinstance(self.sde['y'], VPSDE) and isinstance(self.sde['x'], VPSDE) and len(self.sde.keys())==2:
                     loss_fn = get_inverse_problem_ddpm_loss_fn(self.sde, train, reduce_mean=config.training.reduce_mean)
                 else:
                     raise NotImplementedError('This combination of sdes is not supported for discrete training yet.')
@@ -106,7 +106,7 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
                 sigma_max_y = torch.tensor(sigma_max_y).float()
             
             self.sigma_max_y = sigma_max_y
-            self.sde[0] = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=sigma_max_y.cpu(), N=config.model.num_scales)
+            self.sde['y'] = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=sigma_max_y.cpu(), N=config.model.num_scales)
         else:
             raise NotImplementedError(f"Conditioning SDE {config.training.sde} not supported yet.")
     
