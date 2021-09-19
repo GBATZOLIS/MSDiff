@@ -160,9 +160,11 @@ def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_w
       losses = torch.cat((losses_x, losses_y), dim=-1)
       losses = reduce_op(losses, dim=-1)
     else:
-      losses = torch.cat((losses_x, losses_y), dim=1)
+      losses_x = losses_x.reshape(losses_x.shape[0], -1)
+      losses_y = losses_y.reshape(losses_y.shape[0], -1)
+      losses = torch.cat((losses_x, losses_y), dim=-1)
       smld_weighting = (sigmas_x**2*sigmas_y**2)/(sigmas_x**2+sigmas_y**2) #smld weighting
-      losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1) * smld_weighting
+      losses = reduce_op(losses, dim=-1) * smld_weighting
     
     loss = torch.mean(losses)
     
