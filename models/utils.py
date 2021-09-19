@@ -47,7 +47,7 @@ def get_model(name):
   return _MODELS[name]
 
 
-def divide_by_sigmas(h, labels, sde, x_channels=3):
+def divide_by_sigmas(h, labels, sde):
   #inputs:
   #h:the output of model_fn
   #labels -> point to the right sigmas
@@ -55,13 +55,10 @@ def divide_by_sigmas(h, labels, sde, x_channels=3):
   #outputs: the scaled activation
 
   #calculate sigmas using sde and divide by sigmas
-  if isinstance(sde, list):
-    sigmas_x = sde[1].discrete_sigmas.type_as(h)
-    sigmas_y = sde[0].discrete_sigmas.type_as(h)
-    h_x, h_y = h[:,:x_channels,::], h[:,x_channels:,::]
-    h_x = h_x / sigmas_x[labels, None, None, None]
-    h_y = h_y / sigmas_y[labels, None, None, None]
-    h = torch.cat((h_x, h_y), dim=1)
+  if isinstance(sde, dict) and isinstance(h, dict):
+    for domain in h.keys():
+      domain_sigmas = sde[domain].discrete_sigmas.type_as(h[domain])
+      h[domain] = h[domain] / domain_sigmas[labels, None, None, None]
   else:
     sigmas = sde.discrete_sigmas.type_as(h)
     h = h / sigmas[labels, None, None, None]
@@ -148,7 +145,7 @@ def get_model_fn(model, train=False):
 
 
 
-def get_score_fn(sde, model, train=False, continuous=False, x_channels=3):
+def get_score_fn(sde, model, train=False, continuous=False):
   """Wraps `score_fn` so that the model output corresponds to a real time-dependent score function.
   Args:
     sde: An `sde_lib.SDE` object that represents the forward SDE.
@@ -161,9 +158,9 @@ def get_score_fn(sde, model, train=False, continuous=False, x_channels=3):
   model_fn = get_model_fn(model, train=train)
 
   if isinstance(sde, list):
-    if isinstance(sde[0], sde_lib.VPSDE) or isinstance(sde[0], sde_lib.subVPSDE):
+    if isinstance(sde['y'], sde_lib.VPSDE) or isinstance(sde['y'], sde_lib.subVPSDE):
       raise NotImplementedError('This combination of sdes is not supported for conditional SDEs yet.')
-    elif isinstance(sde[0], sde_lib.VESDE) and isinstance(sde[1], sde_lib.cVESDE) and len(sde)==2:
+    elif isinstance(sde['y'], sde_lib.VESDE) and isinstance(sde['x'], sde_lib.cVESDE) and len(sde)==2:
       def score_fn(x, t):
         if continuous:
           raise NotImplementedError('Continuous training is not supported yet for conditional SDE.')
@@ -171,10 +168,10 @@ def get_score_fn(sde, model, train=False, continuous=False, x_channels=3):
           #score = model_fn(x, labels)
         else:
           # For VE-trained models, t=0 corresponds to the highest noise level
-          labels = t*(sde[1].N - 1)
+          labels = t*(sde['x'].N - 1)
           labels = torch.round(labels.float()).long()
           score = model_fn(x, labels)
-          score = divide_by_sigmas(score, labels, sde, x_channels)
+          score = divide_by_sigmas(score, labels, sde)
 
         return score
     else:
@@ -220,16 +217,10 @@ def get_score_fn(sde, model, train=False, continuous=False, x_channels=3):
   return score_fn
 
 #needs shape generalisation
-def get_conditional_score_fn(score_fn, target_domain, x_channels=3): #for standard inverse problems. It should be modified for general inverse problems (different resolutions etc.).
+def get_conditional_score_fn(score_fn, target_domain): #for standard inverse problems. It should be modified for general inverse problems (different resolutions etc.).
   def conditional_score_fn(x, y, t):
-    score = score_fn(torch.cat((x,y),dim=1), t)
-    if target_domain == 'x':
-      return score[:, :x_channels, ::]
-    elif target_domain == 'y':
-      return score[:, x_channels:, ::]
-    else:
-      raise Exception('target_domain is not valid. Available options [x,y].')
-  
+    return score_fn({'x':x, 'y':y}, t)[target_domain]
+
   return conditional_score_fn
 
 def to_flattened_numpy(x):

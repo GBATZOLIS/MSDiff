@@ -29,7 +29,7 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
             else:
                 data_mean = None
             sde_x = sde_lib.cVESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max_x, N=config.model.num_scales, data_mean=data_mean)
-            self.sde = [sde_y, sde_x]
+            self.sde = {'x':sde_x, 'y':sde_y}
             self.sampling_eps = 1e-5
         else:
             raise NotImplementedError(f"SDE {config.training.sde} unknown.")
@@ -93,7 +93,7 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
                 data_mean = None
             sde_x = sde_lib.cVESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max_x, N=config.model.num_scales, data_mean=data_mean)
             
-            self.sde = [sde_y, sde_x]
+            self.sde = {'x':sde_x, 'y':sde_y}
             self.sampling_eps = 1e-5
         else:
             raise NotImplementedError(f"SDE {config.training.sde} unknown.")

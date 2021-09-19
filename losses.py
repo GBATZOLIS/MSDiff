@@ -121,19 +121,19 @@ def get_smld_loss_fn(vesde, train, reduce_mean=False):
 
   return loss_fn
 
-def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_weighting=True, x_channels=3):
+def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_weighting=True):
   reduce_op = torch.mean if reduce_mean else lambda *args, **kwargs: 0.5 * torch.sum(*args, **kwargs)
 
   # Previous SMLD models assume descending sigmas
-  smld_sigma_array_y = sde[0].discrete_sigmas #observed
-  smld_sigma_array_x = sde[1].discrete_sigmas #unobserved
+  smld_sigma_array_y = sde['y'].discrete_sigmas #observed
+  smld_sigma_array_x = sde['x'].discrete_sigmas #unobserved
   
 
   def loss_fn(model, batch):
     y, x = batch
-    score_fn = mutils.get_score_fn(sde, model, train=train, x_channels=x_channels)
-    labels = torch.randint(0, sde[1].N, (x.shape[0],), device=x.device)
-    score_fn_labels = labels/(sde[1].N - 1)
+    score_fn = mutils.get_score_fn(sde, model, train=train)
+    labels = torch.randint(0, sde['x'].N, (x.shape[0],), device=x.device)
+    score_fn_labels = labels/(sde['x'].N - 1)
 
     sigmas_y = smld_sigma_array_y.type_as(y)[labels]
     sigmas_x = smld_sigma_array_x.type_as(x)[labels]
@@ -143,21 +143,22 @@ def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_w
     noise_x = torch.randn_like(x) * sigmas_x[:, None, None, None]
     perturbed_data_x = noise_x + x
 
-    perturbed_data = torch.cat((perturbed_data_x, perturbed_data_y), dim=1)
+    perturbed_data = {'x':perturbed_data_x, 'y':perturbed_data_y}
     score = score_fn(perturbed_data, score_fn_labels)
 
     target_x = -noise_x / (sigmas_x ** 2)[:, None, None, None]
     target_y = -noise_y / (sigmas_y ** 2)[:, None, None, None]
     
-    target = torch.cat((target_x, target_y), dim=1)
-
-    losses = torch.square(score - target)
+    losses_x = torch.square(score['x']-target_x)
+    losses_y = torch.square(score['y']-target_y)
 
     if likelihood_weighting:
-      losses[:,:x_channels,::]=losses[:,:x_channels,::]*sigmas_x[:, None, None, None]**2
-      losses[:,x_channels:,::]=losses[:,x_channels:,::]*sigmas_y[:, None, None, None]**2
+      losses_x=losses_x*sigmas_x[:, None, None, None]**2
+      losses_x=losses_x*sigmas_y[:, None, None, None]**2
+      losses = torch.cat((losses_x, losses_y), dim=1)
       losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1)
     else:
+      losses = torch.cat((losses_x, losses_y), dim=1)
       smld_weighting = (sigmas_x**2*sigmas_y**2)/(sigmas_x**2+sigmas_y**2) #smld weighting
       losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1) * smld_weighting
     
@@ -213,9 +214,9 @@ def get_step_fn(sde, train, optimize_fn=None, reduce_mean=False, continuous=True
     #assert not likelihood_weighting, "Likelihood weighting is not supported for original SMLD/DDPM training."
     if isinstance(sde, list):
       #this part of the code needs to be improved. We should check all elements of the sde list. We might have a mixture.
-      if isinstance(sde[0], VESDE) and isinstance(sde[1], cVESDE) and len(sde)==2:
+      if isinstance(sde['y'], VESDE) and isinstance(sde['x'], cVESDE) and len(sde.keys())==2:
         loss_fn = get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=reduce_mean, likelihood_weighting=likelihood_weighting)
-      elif isinstance(sde[0], VPSDE) and isinstance(sde[1], VPSDE) and len(sde)==2:
+      elif isinstance(sde['y'], VPSDE) and isinstance(sde['x'], VPSDE) and len(sde.keys())==2:
         loss_fn = get_inverse_problem_ddpm_loss_fn(sde, train, reduce_mean=reduce_mean)
       else:
         raise NotImplementedError('This combination of sdes is not supported for discrete training yet.')

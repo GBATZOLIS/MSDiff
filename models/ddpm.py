@@ -34,6 +34,20 @@ get_act = layers.get_act
 get_normalization = normalization.get_normalization
 default_initializer = layers.default_init
 
+class SqueezeBlock(nn.Module):
+  def forward(self, z, reverse=False):
+      B, C, H, W = z.shape
+      if not reverse:
+          # Forward direction: H x W x C => H/2 x W/2 x 4C
+          z = z.reshape(B, C, H//2, 2, W//2, 2)
+          z = z.permute(0, 1, 3, 5, 2, 4)
+          z = z.reshape(B, 4*C, H//2, W//2)
+      else:
+          # Reverse direction: H/2 x W/2 x 4C => H x W x C
+          z = z.reshape(B, C//4, 2, 2, H, W)
+          z = z.permute(0, 1, 4, 2, 5, 3)
+          z = z.reshape(B, C//4, H*2, W*2)
+      return z
 
 @utils.register_model(name='ddpm')
 class DDPM(pl.LightningModule):
@@ -168,3 +182,33 @@ class DDPM(pl.LightningModule):
     assert m_idx == len(modules)
 
     return h
+
+@utils.register_model(name='ddpm_paired')
+class DDPM_paired(DDPM):
+  def __init__(self, config, *args, **kwargs):
+        super().__init__(config)
+  
+  def forward(self, input_dict, labels):
+    x, y = input_dict['x'], input_dict['y']
+    x_channels = x.size(1)
+    concat = torch.cat((x, y), dim=1)
+    output = super().forward(concat)
+    return {'x': output[:,:x_channels,::], \
+            'y':output[:,x_channels:,::]}
+
+@utils.register_model(name='ddpm_SR')
+class DDPM_paired(DDPM):
+  def __init__(self, config, *args, **kwargs):
+      super().__init__(config)
+      self.squeeze_block = SqueezeBlock()
+
+  def forward(self, input_dict, labels):
+    x, y = input_dict['x'], input_dict['y']
+    x = self.squeeze_block(x)
+    x_channels = x.size(1)
+    concat = torch.cat((x,y), dim=1)
+    output = super().forward(concat)
+    
+    return {'x':self.squeeze_block(output[:,:x_channels,::], reverse=True),\
+            'y':output[:,x_channels:,::]}
+

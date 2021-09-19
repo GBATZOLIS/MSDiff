@@ -97,7 +97,7 @@ def get_config():
   model.embedding_type = 'fourier'
 
 
-  model.name = 'ddpm'
+  model.name = 'ddpm_paired'
   model.scale_by_sigma = True
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'

@@ -60,7 +60,7 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr,
     def conditional_update_fn(x, y, t, model):
       with torch.no_grad():
         vec_t = torch.ones(x.shape[0]).to(model.device) * t
-        y_mean, y_std = sde[0].marginal_prob(y, vec_t)
+        y_mean, y_std = sde['y'].marginal_prob(y, vec_t)
         y_perturbed = y_mean + torch.randn_like(y) * y_std[:, None, None, None]
         x, x_mean = update_fn(x=x, y=y_perturbed, t=vec_t, model=model)
         return x, x_mean, y_perturbed, y_mean
@@ -83,13 +83,13 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr,
 
     with torch.no_grad():
       # Initial sample
-      x = sde[1].prior_sampling(shape).to(model.device)
+      x = sde['x'].prior_sampling(shape).to(model.device)
       if show_evolution:
         evolution = {'x':[], 'y':[]}
 
-      timesteps = torch.linspace(sde[1].T, eps, sde[1].N, device=model.device)
+      timesteps = torch.linspace(sde['x'].T, eps, sde['x'].N, device=model.device)
 
-      for i in tqdm(range(sde[1].N)):
+      for i in tqdm(range(sde['x'].N)):
         t = timesteps[i]
         vec_t = torch.ones(shape[0], device=model.device) * t
         x, x_mean, y_perturbed, y_mean = predictor_conditional_update_fn(x, y, vec_t, model)
@@ -121,9 +121,9 @@ def conditional_shared_predictor_update_fn(x, y, t, sde, model, predictor, proba
 
   if predictor is None:
     # Corrector-only sampler
-    predictor_obj = NonePredictor(sde[1], score_fn, probability_flow)
+    predictor_obj = NonePredictor(sde['x'], score_fn, probability_flow)
   else:
-    predictor_obj = predictor(sde[1], score_fn, probability_flow)
+    predictor_obj = predictor(sde['x'], score_fn, probability_flow)
 
   return predictor_obj.update_fn(x, y, t)
 
@@ -134,7 +134,7 @@ def conditional_shared_corrector_update_fn(x, y, t, sde, model, corrector, conti
 
   if corrector is None:
     # Predictor-only sampler
-    corrector_obj = NoneCorrector(sde[1], score_fn, snr, n_steps)
+    corrector_obj = NoneCorrector(sde['x'], score_fn, snr, n_steps)
   else:
-    corrector_obj = corrector(sde[1], score_fn, snr, n_steps)
+    corrector_obj = corrector(sde['x'], score_fn, snr, n_steps)
   return corrector_obj.update_fn(x, y, t)
