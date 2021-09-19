@@ -136,10 +136,10 @@ def get_model_fn(model, train=False):
     """
     if not train:
       model.eval()
-      return model(x, labels).type(torch.float32)
+      return model(x, labels)
     else:
       model.train()
-      return model(x, labels).type(torch.float32)
+      return model(x, labels)
 
   return model_fn
 
