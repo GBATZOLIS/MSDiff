@@ -24,7 +24,7 @@ def get_config():
   #------              --------
   
   training.visualization_callback = 'paired'
-  training.show_evolution = True
+  training.show_evolution = False
   
   ## store additional checkpoints for preemption in cloud computing environments
   training.snapshot_freq_for_preemption = 5000

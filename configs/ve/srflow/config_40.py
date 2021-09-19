@@ -29,7 +29,7 @@ def get_config():
   config.training.lightning_module = 'haar_conditional_decreasing_variance'
   config.training.batch_size = 128
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4
@@ -110,7 +110,7 @@ def get_config():
   model.embedding_type = 'fourier'
 
 
-  model.name = 'ddpm'
+  model.name = 'ddpm_paired'
   model.scale_by_sigma = True
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
