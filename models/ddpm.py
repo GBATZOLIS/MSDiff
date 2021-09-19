@@ -192,7 +192,7 @@ class DDPM_paired(DDPM):
     x, y = input_dict['x'], input_dict['y']
     x_channels = x.size(1)
     concat = torch.cat((x, y), dim=1)
-    output = super().forward(concat)
+    output = super().forward(concat, labels)
     return {'x': output[:,:x_channels,::], \
             'y':output[:,x_channels:,::]}
 
@@ -207,7 +207,7 @@ class DDPM_paired(DDPM):
     x = self.squeeze_block(x)
     x_channels = x.size(1)
     concat = torch.cat((x,y), dim=1)
-    output = super().forward(concat)
+    output = super().forward(concat, labels)
     
     return {'x':self.squeeze_block(output[:,:x_channels,::], reverse=True),\
             'y':output[:,x_channels:,::]}
