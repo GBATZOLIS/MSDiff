@@ -7,7 +7,6 @@ from . import utils
 import glob
 import os
 from PIL import Image
-import bicubic_pytorch.imresize as imresize
 from torchvision.transforms import RandomCrop, CenterCrop, ToTensor, Resize, InterpolationMode
 import random
 
