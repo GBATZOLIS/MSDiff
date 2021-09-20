@@ -22,7 +22,7 @@ def get_img_paths(paths, phase):
 class SuperResolutionDataset(data.Dataset):
     def __init__(self,  config, phase='train'):
         self.dataset = config.data.dataset
-        self.level = config.data.level
+        self.level = int(config.data.level)
         
         paths = sorted(glob.glob(os.path.join(config.data.base_dir, config.data.dataset,'*.jpg'))) 
         print(paths[:5])
@@ -35,8 +35,8 @@ class SuperResolutionDataset(data.Dataset):
         else:
             self.crop_to_GT_size = CenterCrop(size=config.data.target_resolution)
 
-        self.resize_to_hr = Resize(config.data.image_size//2**config.data.level, interpolation=InterpolationMode.BICUBIC)
-        self.resize_to_lr = Resize(config.data.image_size//2**(config.data.level+1), interpolation=InterpolationMode.BICUBIC)
+        self.resize_to_hr = Resize(config.data.image_size//2**self.level, interpolation=InterpolationMode.BICUBIC)
+        self.resize_to_lr = Resize(config.data.image_size//2**(self.level+1), interpolation=InterpolationMode.BICUBIC)
 
 
     def __get_item(self, index):
