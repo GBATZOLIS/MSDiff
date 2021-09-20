@@ -146,7 +146,7 @@ class ConditionalHaarMultiScaleVisualizationCallback(Callback):
         pl_module.logger.experiment.add_image('samples_batch_%d_epoch_%d' % (batch_idx, pl_module.current_epoch), image_grid, pl_module.current_epoch)
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        if batch_idx==0 and pl_module.current_epoch % 3 == 1:
+        if batch_idx==0 and pl_module.current_epoch % 3 == 0:
             self.visualise_conditional_sample(trainer, pl_module, outputs, batch, batch_idx, dataloader_idx)
 
     def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
