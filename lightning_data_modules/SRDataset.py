@@ -7,7 +7,8 @@ from . import utils
 import glob
 import os
 from PIL import Image
-from torchvision.transforms import RandomCrop, CenterCrop, ToTensor, Resize, InterpolationMode
+from torchvision.transforms import RandomCrop, CenterCrop, ToTensor, Resize
+from torchvision.transforms.functional import InterpolationMode
 import random
 
 def get_img_paths(paths, phase):
