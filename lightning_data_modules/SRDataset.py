@@ -29,9 +29,9 @@ class SuperResolutionDataset(data.Dataset):
         self.dataset = config.data.dataset
         self.level = int(config.data.level)
         
-        paths = sorted(glob.glob(os.path.join(config.data.base_dir, config.data.dataset,'*.jpg'))) 
-        print(paths[:5])
-        self.image_files = get_img_paths(paths, phase)
+        all_paths = sorted(glob.glob(os.path.join(config.data.base_dir, config.data.dataset,'*.jpg'))) 
+        print(all_paths[:5])
+        self.image_files = get_img_paths(all_paths, phase)
         
         self.convert_to_tensor = ToTensor()
 
@@ -58,6 +58,10 @@ class SuperResolutionDataset(data.Dataset):
         print(lr.size())
 
         return lr, hr 
+
+    def __len__(self):
+      """Return the total number of images."""
+      return len(self.image_files)
 
 @utils.register_lightning_datamodule(name='bicubic_multiscale')
 class SuperResolutionDataModule(pl.LightningDataModule):
