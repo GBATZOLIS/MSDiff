@@ -40,8 +40,8 @@ class SuperResolutionDataset(data.Dataset):
         else:
             self.crop_to_GT_size = CenterCrop(size=config.data.target_resolution)
 
-        self.resize_to_hr = Resize(config.data.image_size//2**self.level, interpolation=InterpolationMode.BICUBIC)
-        self.resize_to_lr = Resize(config.data.image_size//2**(self.level+1), interpolation=InterpolationMode.BICUBIC)
+        self.resize_to_hr = Resize(config.data.target_resolution//2**self.level, interpolation=InterpolationMode.BICUBIC)
+        self.resize_to_lr = Resize(config.data.target_resolution//2**(self.level+1), interpolation=InterpolationMode.BICUBIC)
 
 
     def __getitem__(self, index):

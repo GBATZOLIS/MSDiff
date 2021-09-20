@@ -85,8 +85,8 @@ def get_config():
   data.centered = False
   data.random_flip = False
   data.uniform_dequantization = False
-  data.num_channels = 12 #because of the haar tranform we have 12 channels.
-  data.shape_x = [9, data.effective_image_size, data.effective_image_size]
+  data.num_channels = 15
+  data.shape_x = [3, data.image_size, data.image_size]
 
   # model
   config.model = model = ml_collections.ConfigDict()
