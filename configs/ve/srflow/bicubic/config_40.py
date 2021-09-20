@@ -36,7 +36,7 @@ def get_config():
   #----- to be removed -----
   training.n_iters = 2400001
   #------              --------
-  training.visualization_callback = 'conditional_haar_multiscale'
+  training.visualization_callback = 'bicubic_SR'
   training.show_evolution = False
   ## store additional checkpoints for preemption in cloud computing environments
   training.snapshot_freq_for_preemption = 5000
