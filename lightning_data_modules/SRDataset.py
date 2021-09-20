@@ -13,11 +13,16 @@ import random
 
 def get_img_paths(paths, phase):
     if phase == 'train':
-        return paths[:162770]
+        train_paths = paths[:162770]
+        return train_paths
     elif phase == 'val':
-        return random.shuffle(paths[162770:182637])[:5000]
+        val_paths = paths[162770:182637]
+        random.shuffle(val_paths)
+        return val_paths[:5000]
     else:
-        return random.shuffle(paths[182637:])[:5000]
+        test_paths = paths[162770:182637]
+        random.shuffle(test_paths)
+        return test_paths[:5000]
 
 class SuperResolutionDataset(data.Dataset):
     def __init__(self,  config, phase='train'):
