@@ -80,6 +80,7 @@ def center_crop(img, crop_left, crop_right, crop_top, crop_bottom):
     bottom = height - crop_bottom
     return img.crop((left, top, right, bottom))
 
+
 def create_haar_dataset(base_image_dir, dataset, target_resolution, levels, split):
     create_level_folders(base_image_dir, dataset, target_resolution, levels)
 
@@ -99,8 +100,6 @@ def create_haar_dataset(base_image_dir, dataset, target_resolution, levels, spli
             os.remove(os.path.join(base_image_dir, dataset, img_file))
             continue
             
-
-
         if dataset in ['celeba', 'celebA']:
             image = center_crop(image, 9, 9, 39, 19)
 
