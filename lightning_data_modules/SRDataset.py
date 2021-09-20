@@ -18,6 +18,7 @@ def get_img_paths(paths, phase):
     elif phase == 'val':
         val_paths = paths[162770:182637]
         random.shuffle(val_paths)
+        print(val_paths)
         return val_paths[:5000]
     else:
         test_paths = paths[162770:182637]
