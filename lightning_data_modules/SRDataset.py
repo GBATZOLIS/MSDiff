@@ -30,7 +30,7 @@ class SuperResolutionDataset(data.Dataset):
         self.level = int(config.data.level)
         
         all_paths = sorted(glob.glob(os.path.join(config.data.base_dir, config.data.dataset,'*.jpg'))) 
-        print(all_paths[:5])
+        #print(all_paths[:5])
         self.image_files = get_img_paths(all_paths, phase)
         
         self.convert_to_tensor = ToTensor()
@@ -46,16 +46,16 @@ class SuperResolutionDataset(data.Dataset):
 
     def __getitem__(self, index):
         image = self.convert_to_tensor(Image.open(self.image_files[index]).convert('RGB'))
-        print(image.size())
+        #print(image.size())
 
         cropped_image = self.crop_to_GT_size(image)
-        print(cropped_image.size())
+        #print(cropped_image.size())
 
         hr = self.resize_to_hr(cropped_image)
-        print(hr.size())
+        #print(hr.size())
 
         lr = self.resize_to_lr(cropped_image)
-        print(lr.size())
+        #print(lr.size())
 
         return lr, hr 
 
