@@ -27,7 +27,7 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional_decreasing_variance'
-  config.training.batch_size = 128
+  config.training.batch_size = 32
   training.num_nodes = 1
   training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
@@ -62,7 +62,7 @@ def get_config():
   evaluate.workers = 4*training.gpus
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 128
+  evaluate.batch_size = 32
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -78,7 +78,7 @@ def get_config():
   data.create_dataset = False
   data.split = [0.925, 0.05, 0.025]
   data.target_resolution = 160 #this should remain constant for an experiment
-  data.image_size = 40 #we vary this for training on different resolutions
+  data.image_size = 160 #we vary this for training on different resolutions
   data.level = math.log(data.target_resolution // data.image_size, 2)
   data.effective_image_size = data.image_size // 2 #actual image size after preprocessing. Divided by two when using haar tranform.
   data.max_haar_depth = 2 #maximum depth of multi-level haar tranform -> 1+data.max_haar_depth resolution levels.
@@ -116,7 +116,7 @@ def get_config():
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 128
-  model.ch_mult = (1, 1, 2)
+  model.ch_mult = (1, 1, 2, 2, 3)
   model.num_res_blocks = 2
   model.attn_resolutions = (20, 10, 5)
   model.resamp_with_conv = True
