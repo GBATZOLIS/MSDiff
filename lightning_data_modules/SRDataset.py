@@ -18,7 +18,6 @@ def get_img_paths(paths, phase):
     elif phase == 'val':
         val_paths = paths[162770:182637]
         random.shuffle(val_paths)
-        print(val_paths)
         return val_paths[:5000]
     else:
         test_paths = paths[162770:182637]
@@ -45,7 +44,7 @@ class SuperResolutionDataset(data.Dataset):
         self.resize_to_lr = Resize(config.data.image_size//2**(self.level+1), interpolation=InterpolationMode.BICUBIC)
 
 
-    def __get_item(self, index):
+    def __getitem__(self, index):
         image = self.convert_to_tensor(Image.open(self.image_files[index]).convert('RGB'))
         print(image.size())
 
