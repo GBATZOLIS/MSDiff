@@ -29,7 +29,7 @@ def get_config():
   config.training.lightning_module = 'conditional_decreasing_variance'
   config.training.batch_size = 128
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4
@@ -85,14 +85,14 @@ def get_config():
   data.centered = False
   data.random_flip = False
   data.uniform_dequantization = False
-  data.num_channels = 15
+  data.num_channels = 15 #squeezed 12 + 3
   data.shape_x = [3, data.image_size, data.image_size]
 
   # model
   config.model = model = ml_collections.ConfigDict()
   model.checkpoint_path = None
   model.num_scales = 1000
-  model.sigma_max_x = 450 #change it to 480 for future experiments (not a big difference)
+  model.sigma_max_x = data.image_size*np.sqrt(3) #change it to 480 for future experiments (not a big difference)
   #we do not want to perturb y a lot. 
   #A slight perturbation will result in better approximation of the conditional time-dependent score.
   model.sigma_max_y = 6.387
