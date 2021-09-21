@@ -612,9 +612,9 @@ class Downsample(nn.Module):
     self.with_conv = with_conv
 
     if dim == 2:
-      self.avg_pool = AvgPool2d(kernel_size=2, stride=2, padding=0)
+      self.avg_pool = nn.AvgPool2d(kernel_size=2, stride=2, padding=0)
     elif dim == 3:
-      self.avg_pool = AvgPool3d(kernel_size=2, stride=2, padding=0)
+      self.avg_pool = nn.AvgPool3d(kernel_size=2, stride=2, padding=0)
 
   def forward(self, x):
     shape = x.shape
