@@ -79,7 +79,7 @@ class DDPM3D(pl.LightningModule):
         #  modules.append(AttnBlock(channels=in_ch))
         hs_c.append(in_ch)
       if i_level != num_resolutions - 1:
-        modules.append(Downsample(channels=in_ch, with_conv=resamp_with_conv))
+        modules.append(Downsample(channels=in_ch, with_conv=resamp_with_conv, dim=3))
         hs_c.append(in_ch)
 
     in_ch = hs_c[-1]

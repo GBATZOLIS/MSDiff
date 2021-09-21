@@ -605,11 +605,16 @@ class Upsample(nn.Module):
 
 
 class Downsample(nn.Module):
-  def __init__(self, channels, with_conv=False):
+  def __init__(self, channels, with_conv=False, dim=2):
     super().__init__()
     if with_conv:
       self.Conv_0 = ddpm_conv3x3(channels, channels, stride=2, padding=0)
     self.with_conv = with_conv
+
+    if dim == 2:
+      self.avg_pool = AvgPool2d(kernel_size=2, stride=2, padding=0)
+    elif dim == 3:
+      self.avg_pool = AvgPool3d(kernel_size=2, stride=2, padding=0)
 
   def forward(self, x):
     shape = x.shape
@@ -618,7 +623,7 @@ class Downsample(nn.Module):
       x = F.pad(x, (0, 1, 0, 1))
       x = self.Conv_0(x)
     else:
-      x = F.avg_pool2d(x, kernel_size=2, stride=2, padding=0)
+      x = self.avg_pool(x)
 
     assert x.shape == tuple([shape[0], shape[1]] + [r//2 for r in shape])
     return x
