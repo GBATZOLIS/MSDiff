@@ -598,8 +598,7 @@ class Upsample(nn.Module):
     self.with_conv = with_conv
 
   def forward(self, x):
-    B, C, H, W = x.shape
-    h = F.interpolate(x, (H * 2, W * 2), mode='nearest')
+    h = F.interpolate(x, tuple([2*r for r in x.shape[2:]]), mode='nearest')
     if self.with_conv:
       h = self.Conv_0(h)
     return h
@@ -613,7 +612,7 @@ class Downsample(nn.Module):
     self.with_conv = with_conv
 
   def forward(self, x):
-    B, C, H, W = x.shape
+    shape = x.shape
     # Emulate 'SAME' padding
     if self.with_conv:
       x = F.pad(x, (0, 1, 0, 1))
@@ -621,7 +620,7 @@ class Downsample(nn.Module):
     else:
       x = F.avg_pool2d(x, kernel_size=2, stride=2, padding=0)
 
-    assert x.shape == (B, C, H // 2, W // 2)
+    assert x.shape == tuple([shape[0], shape[1]] + [r//2 for r in shape])
     return x
 
 
