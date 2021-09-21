@@ -625,7 +625,7 @@ class Downsample(nn.Module):
     else:
       x = self.avg_pool(x)
 
-    assert x.shape == tuple([shape[0], shape[1]] + [r//2 for r in shape])
+    assert x.shape == tuple([shape[0], shape[1]] + [r//2 for r in shape[2:]])
     return x
 
 
