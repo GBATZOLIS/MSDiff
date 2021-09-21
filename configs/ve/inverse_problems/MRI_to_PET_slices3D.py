@@ -9,11 +9,11 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional_decreasing_variance'
-  training.batch_size = 4
+  training.batch_size = 5
   training.num_nodes = 1
   training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
-  training.accumulate_grad_batches = 1
+  training.accumulate_grad_batches = 2
   training.workers = 4*training.gpus
   #----- to be removed -----
   training.num_epochs = 10000
@@ -51,7 +51,7 @@ def get_config():
   evaluate.workers = 4*training.gpus
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 4
+  evaluate.batch_size = 5
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -88,7 +88,7 @@ def get_config():
   model.reach_target_in_epochs = 64
   model.starting_transition_iterations = 2000
   #-------
-  model.sigma_min = 10**(-3) #should depend on the maximum range of the conditioned image x (assuming we are scaling eveyrthing in [0,1] range)
+  model.sigma_min = 10**(-2) #should depend on the maximum range of the conditioned image x (assuming we are scaling eveyrthing in [0,1] range)
   model.beta_min = 0.1
   # We use an adjusted beta max 
   # because the range is doubled in each level starting from the first level
