@@ -156,4 +156,4 @@ class PairedVisualizationCallback(Callback):
         cond_samples = self.convert_to_3D(cond_samples).unsqueeze(0).cpu()
 
         for dim in [1, 2, 3]:
-            self.generate_paired_video(pl_module, y, x, cond_samples, dim, batch)
+            self.generate_paired_video(pl_module, y, x, cond_samples, dim, batch_idx)
