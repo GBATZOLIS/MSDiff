@@ -145,7 +145,6 @@ def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_w
 
     perturbed_data = {'x':perturbed_data_x, 'y':perturbed_data_y}
     score = score_fn(perturbed_data, score_fn_labels)
-    score = perturbed_data
 
     target_x = -noise_x / (sigmas_x ** 2)[(..., ) + (None, ) * len(x.shape[1:])]
     target_y = -noise_y / (sigmas_y ** 2)[(..., ) + (None, ) * len(y.shape[1:])]
