@@ -102,8 +102,12 @@ class PairedVisualizationCallback(Callback):
     def generate_paired_video(self, pl_module, Y, I, cond_samples, dim, batch_idx):
         #dim: the sliced dimension (choices: 1,2,3)
         B = Y.size(0)
+        
         if cond_samples:
             raw_length = 1+cond_samples.size(0)+1
+        else:
+            raw_length = 2
+
         frames = Y.size(dim+1)
         video_grid = []
 
