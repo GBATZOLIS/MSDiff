@@ -61,7 +61,7 @@ def get_config():
   # data
   config.data = data = ml_collections.ConfigDict()
   data.base_dir = 'datasets'
-  data.dataset = 'edges2shoes'
+  data.dataset = 'mri_to_pet'
   data.use_data_mean = False
   data.datamodule = 'paired'
   data.create_dataset = False
