@@ -88,7 +88,7 @@ def get_config():
   model.reach_target_in_epochs = 64
   model.starting_transition_iterations = 2000
   #-------
-  model.sigma_min = 0.000001 #should depend on the maximum range of the conditioned image x (assuming we are scaling eveyrthing in [0,1] range)
+  model.sigma_min = 10**(-3) #should depend on the maximum range of the conditioned image x (assuming we are scaling eveyrthing in [0,1] range)
   model.beta_min = 0.1
   # We use an adjusted beta max 
   # because the range is doubled in each level starting from the first level
