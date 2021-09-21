@@ -98,8 +98,8 @@ class PairedVisualizationCallback(Callback):
             return x
         else:
             raise NotImplementedError('x dimensionality is not supported.')
-        
-    def generate_paired_video(self, pl_module, Y, I, cond_samples, dim, batch):
+
+    def generate_paired_video(self, pl_module, Y, I, cond_samples, dim, batch_idx):
         #dim: the sliced dimension (choices: 1,2,3)
         B = Y.size(0)
         raw_length = 1+cond_samples.size(0)+1
@@ -139,7 +139,7 @@ class PairedVisualizationCallback(Callback):
         video_grid = torch.stack(video_grid, dim=0).unsqueeze(0)
         print(video_grid.size())
 
-        str_title = 'paired_video_epoch_%d_batch_%d_dim_%d' % (pl_module.current_epoch, batch, dim)
+        str_title = 'paired_video_epoch_%d_batch_%d_dim_%d' % (pl_module.current_epoch, batch_idx, dim)
         pl_module.logger.experiment.add_video(str_title, video_grid, pl_module.current_epoch)
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
