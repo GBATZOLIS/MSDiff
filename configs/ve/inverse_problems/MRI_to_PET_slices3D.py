@@ -9,7 +9,7 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional_decreasing_variance'
-  training.batch_size = 8
+  training.batch_size = 6
   training.num_nodes = 1
   training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
