@@ -39,7 +39,7 @@ class PairedVisualizationCallback(Callback):
 
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
-        if current_epoch == 0 or current_epoch % 50 != 0:
+        if current_epoch == 0 or current_epoch % 200 != 0:
             return 
         
         dataloader_iterator = iter(trainer.datamodule.val_dataloader())
