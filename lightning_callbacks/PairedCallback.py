@@ -102,7 +102,8 @@ class PairedVisualizationCallback(Callback):
     def generate_paired_video(self, pl_module, Y, I, cond_samples, dim, batch_idx):
         #dim: the sliced dimension (choices: 1,2,3)
         B = Y.size(0)
-        raw_length = 1+cond_samples.size(0)+1
+        if cond_samples:
+            raw_length = 1+cond_samples.size(0)+1
         frames = Y.size(dim+1)
         video_grid = []
 
@@ -120,18 +121,21 @@ class PairedVisualizationCallback(Callback):
                 if dim==1:
                     dim_cut[i*raw_length] = normalise(Y[i, 0, frame, :, :]).unsqueeze(0)
                     dim_cut[(i+1)*raw_length-1] = normalise(I[i, 0, frame, :, :]).unsqueeze(0)
-                    for j in range(cond_samples.size(0)):
-                        dim_cut[i*raw_length+j+1] = normalise(cond_samples[j, i, 0, frame, :, :]).unsqueeze(0)
+                    if cond_samples:
+                        for j in range(cond_samples.size(0)):
+                            dim_cut[i*raw_length+j+1] = normalise(cond_samples[j, i, 0, frame, :, :]).unsqueeze(0)
                 elif dim==2:
                     dim_cut[i*raw_length] = normalise(Y[i, 0, :, frame, :]).unsqueeze(0)
                     dim_cut[(i+1)*raw_length-1] = normalise(I[i, 0, :, frame, :]).unsqueeze(0)
-                    for j in range(cond_samples.size(0)):
-                        dim_cut[i*raw_length+j+1] = normalise(cond_samples[j, i, 0, :, frame, :]).unsqueeze(0)
+                    if cond_samples:
+                        for j in range(cond_samples.size(0)):
+                            dim_cut[i*raw_length+j+1] = normalise(cond_samples[j, i, 0, :, frame, :]).unsqueeze(0)
                 elif dim==3:
                     dim_cut[i*raw_length] = normalise(Y[i, 0, :, :, frame]).unsqueeze(0)
                     dim_cut[(i+1)*raw_length-1] = normalise(I[i, 0, :, :, frame]).unsqueeze(0)
-                    for j in range(cond_samples.size(0)):
-                        dim_cut[i*raw_length+j+1] = normalise(cond_samples[j, i, 0, :, :, frame]).unsqueeze(0)
+                    if cond_samples:
+                        for j in range(cond_samples.size(0)):
+                            dim_cut[i*raw_length+j+1] = normalise(cond_samples[j, i, 0, :, :, frame]).unsqueeze(0)
 
             grid_cut = make_grid(tensor=dim_cut, nrow=raw_length, normalize=False)
             video_grid.append(grid_cut)
@@ -144,16 +148,16 @@ class PairedVisualizationCallback(Callback):
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         current_epoch = pl_module.current_epoch
-        if current_epoch == 0 or current_epoch % 250 != 0:
+        if batch_idx!=0 or current_epoch == 0 or current_epoch % 250 != 0:
             return
         
         y, x = batch
         x = self.convert_to_3D(x).cpu()
         
-        cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution)
-        
+        #cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution)
+        #cond_samples = self.convert_to_3D(cond_samples).unsqueeze(0).cpu()
         y = self.convert_to_3D(y).cpu()
-        cond_samples = self.convert_to_3D(cond_samples).unsqueeze(0).cpu()
+        
 
         for dim in [1, 2, 3]:
-            self.generate_paired_video(pl_module, y, x, cond_samples, dim, batch_idx)
+            self.generate_paired_video(pl_module, y, x, None, dim, batch_idx)
