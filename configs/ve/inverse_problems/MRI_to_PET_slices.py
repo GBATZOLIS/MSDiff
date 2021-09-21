@@ -23,7 +23,7 @@ def get_config():
   training.eval_freq = 2500
   #------              --------
   
-  training.visualization_callback = 'paired'
+  training.visualization_callback = 'paired3D'
   training.show_evolution = False
   
   ## store additional checkpoints for preemption in cloud computing environments

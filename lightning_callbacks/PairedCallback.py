@@ -96,18 +96,12 @@ class PairedVisualizationCallback(Callback):
         elif len(x.shape[1:]) == 4:
             return x
     
-    def generate_paired_video(self, Y, I, num_samples, dim, epoch, batch):
+    def generate_paired_video(self, pl_module, Y, I, cond_samples, dim, batch):
         #dim: the sliced dimension (choices: 1,2,3)
         B = Y.size(0)
-        raw_length = 1+num_samples+1
+        raw_length = 1+cond_samples.size(0)+1
         frames = Y.size(dim+1)
         video_grid = []
-
-        if num_samples > 0:
-            store_samples = []
-            for _ in range(num_samples):
-                sampled_image = self.sample(Y, shortcut=self.val_shortcut, T=self.sampling_temperatures[0])
-                store_samples.append(sampled_image.cpu())
 
         Y=Y.cpu()
         I=I.cpu()
@@ -123,57 +117,35 @@ class PairedVisualizationCallback(Callback):
                 if dim==1:
                     dim_cut[i*raw_length] = normalise(Y[i, 0, frame, :, :]).unsqueeze(0)
                     dim_cut[(i+1)*raw_length-1] = normalise(I[i, 0, frame, :, :]).unsqueeze(0)
-                    for j in range(num_samples):
-                        dim_cut[i*raw_length+j+1] = normalise(store_samples[j][i, 0, frame, :, :]).unsqueeze(0)
+                    for j in range(cond_samples.size(0)):
+                        dim_cut[i*raw_length+j+1] = normalise(cond_samples[j, i, 0, frame, :, :]).unsqueeze(0)
                 elif dim==2:
                     dim_cut[i*raw_length] = normalise(Y[i, 0, :, frame, :]).unsqueeze(0)
                     dim_cut[(i+1)*raw_length-1] = normalise(I[i, 0, :, frame, :]).unsqueeze(0)
-                    for j in range(num_samples):
-                        dim_cut[i*raw_length+j+1] = normalise(store_samples[j][i, 0, :, frame, :]).unsqueeze(0)
+                    for j in range(cond_samples.size(0)):
+                        dim_cut[i*raw_length+j+1] = normalise(cond_samples[j, i, 0, :, frame, :]).unsqueeze(0)
                 elif dim==3:
                     dim_cut[i*raw_length] = normalise(Y[i, 0, :, :, frame]).unsqueeze(0)
                     dim_cut[(i+1)*raw_length-1] = normalise(I[i, 0, :, :, frame]).unsqueeze(0)
-                    for j in range(num_samples):
-                        dim_cut[i*raw_length+j+1] = normalise(store_samples[j][i, 0, :, :, frame]).unsqueeze(0)
+                    for j in range(cond_samples.size(0)):
+                        dim_cut[i*raw_length+j+1] = normalise(cond_samples[j, i, 0, :, :, frame]).unsqueeze(0)
 
-            grid_cut = torchvision.utils.make_grid(tensor=dim_cut, nrow=raw_length, 
-                                                    padding=self.sample_padding, normalize=False, pad_value=self.sample_pad_value)
-            #print(grid_cut.size())
+            grid_cut = make_grid(tensor=dim_cut, nrow=raw_length, normalize=False)
             video_grid.append(grid_cut)
 
         video_grid = torch.stack(video_grid, dim=0).unsqueeze(0)
         print(video_grid.size())
 
-        str_title = 'paired_video_epoch_%d_batch_%d_dim_%d' % (epoch, batch, dim)
-        self.logger.experiment.add_video(str_title, video_grid, self.current_epoch)
+        str_title = 'paired_video_epoch_%d_batch_%d_dim_%d' % (pl_module.current_epoch, batch, dim)
+        pl_module.logger.experiment.add_video(str_title, video_grid, pl_module.current_epoch)
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         current_epoch = pl_module.current_epoch
-        if current_epoch == 0 or current_epoch % 200 != 0:
+        if current_epoch == 0 or current_epoch % 250 != 0:
             return
         
         y, x = batch
-        conditional_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution)
-
-
-    def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
-        y, x = batch
-        print('sde_y sigma_max: %.5f ' % pl_module.sde['y'].sigma_max)
-        samples, sampling_info = pl_module.sample(y.to(pl_module.device), show_evolution=True) #sample x conditioned on y
-        evolution = sampling_info['evolution']
-        #self.visualise_paired_samples(y, samples, pl_module, batch_idx, phase='test')
-        self.visualise_evolution(evolution, pl_module, tag='test_joint_evolution_batch_%d' % batch_idx)
-
-    def visualise_paired_samples(self, y, x, pl_module, batch_idx, phase='train'):
-        # log sampled images
-        y_norm, x_norm = normalise_per_image(y).cpu(), normalise_per_image(x).cpu()
-        concat_sample = torch.cat([y_norm, x_norm], dim=-1)
-        grid_images = make_grid(concat_sample, nrow=int(np.sqrt(concat_sample.size(0))), normalize=False)
-        pl_module.logger.experiment.add_image('generated_images_%sbatch_%d' % (phase, batch_idx), grid_images, pl_module.current_epoch)
-    
-    def visualise_evolution(self, evolution, pl_module, tag):
-        norm_evolution_x = normalise_evolution(evolution['x'])
-        norm_evolution_y = normalise_evolution(evolution['y'])
-        joint_evolution = torch.cat([norm_evolution_y, norm_evolution_x], dim=-1)
-        video_grid = create_video_grid(joint_evolution)
-        pl_module.logger.experiment.add_video(tag, video_grid.unsqueeze(0), fps=50)
+        cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution)
+        
+        for dim in [0,1,2]:
+            self.generate_paired_video(pl_module, y.cpu(), x.cpu(), cond_samples.unsqueeze(0).cpu(), dim, batch)
