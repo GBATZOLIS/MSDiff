@@ -90,8 +90,7 @@ class PairedDataset(Dataset):
         #transform the images/scans
         A_transformed = self.transform(A)
         B_transformed = self.transform(B)
-        
-        print(B_transformed.min(), B_transformed.max())
+
         return A_transformed, B_transformed
         
     def __len__(self):
