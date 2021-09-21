@@ -77,7 +77,6 @@ class PairedDataset(Dataset):
                 #expand dimensions to acquire a pytorch-like form.
                 A = np.expand_dims(A, axis=0)
                 B = np.expand_dims(B, axis=0)
-                print(A.shape)
 
             elif self.dim == 2:
                 A = np.moveaxis(A, -1, 0)
