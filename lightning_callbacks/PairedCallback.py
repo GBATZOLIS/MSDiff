@@ -148,4 +148,4 @@ class PairedVisualizationCallback(Callback):
         cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution)
         
         for dim in [1, 2, 3]:
-            self.generate_paired_video(pl_module, y.cpu(), x.cpu(), cond_samples.unsqueeze(0).cpu(), dim, batch)
+            self.generate_paired_video(pl_module, self.convert_to_3D(y).cpu(), self.convert_to_3D(x).cpu(), self.convert_to_3D(cond_samples).unsqueeze(0).cpu(), dim, batch)
