@@ -93,9 +93,12 @@ class PairedVisualizationCallback(Callback):
         if len(x.shape[1:]) == 3:
             x = torch.swapaxes(x, 1, -1).unsqueeze(1)
             print(x.size())
+            return x
         elif len(x.shape[1:]) == 4:
             return x
-    
+        else:
+            raise NotImplementedError('x dimensionality is not supported.')
+        
     def generate_paired_video(self, pl_module, Y, I, cond_samples, dim, batch):
         #dim: the sliced dimension (choices: 1,2,3)
         B = Y.size(0)
@@ -151,6 +154,6 @@ class PairedVisualizationCallback(Callback):
         
         y = self.convert_to_3D(y).cpu()
         cond_samples = self.convert_to_3D(cond_samples).unsqueeze(0).cpu()
-        
+
         for dim in [1, 2, 3]:
             self.generate_paired_video(pl_module, y, x, cond_samples, dim, batch)
