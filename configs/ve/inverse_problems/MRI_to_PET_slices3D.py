@@ -9,12 +9,12 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional_decreasing_variance'
-  training.batch_size = 8
+  training.batch_size = 4
   training.num_nodes = 1
   training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
-  training.workers = 4
+  training.workers = 4*training.gpus
   #----- to be removed -----
   training.num_epochs = 10000
   training.n_iters = 2400001
@@ -48,10 +48,10 @@ def get_config():
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
-  evaluate.workers = 4
+  evaluate.workers = 4*training.gpus
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 8
+  evaluate.batch_size = 4
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
