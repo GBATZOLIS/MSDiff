@@ -9,6 +9,15 @@ from tqdm import tqdm
 from . import utils
 import pytorch_lightning as pl
 
+def normalise(x, value_range=None):
+    if value_range is None:
+        x -= x.min()
+        x /= x.max()
+    else:
+        x -= value_range[0]
+        x /= value_range[1]
+    return x
+    
 class PairedDataset(Dataset):
     """A template dataset class for you to implement custom datasets."""
     def __init__(self,  config, phase):
@@ -23,7 +32,7 @@ class PairedDataset(Dataset):
         elif self.file_extension in ['.npy']:
             self.dim = len(config.data.shape_x)-1
             self.resolution = config.data.image_size
-            transform_list = [torch.from_numpy, lambda x: x.type(torch.FloatTensor)]
+            transform_list = [torch.from_numpy, lambda x: x.type(torch.FloatTensor), lambda x: normalise(x)]
         else:
             raise Exception('File extension %s is not supported yet. Please update the code.' % self.file_extension)
 
@@ -81,7 +90,8 @@ class PairedDataset(Dataset):
         #transform the images/scans
         A_transformed = self.transform(A)
         B_transformed = self.transform(B)
-
+        
+        print(B_transformed.min(), B_transformed.max())
         return A_transformed, B_transformed
         
     def __len__(self):

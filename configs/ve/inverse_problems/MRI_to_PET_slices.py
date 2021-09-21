@@ -79,7 +79,7 @@ def get_config():
   config.model = model = ml_collections.ConfigDict()
   model.checkpoint_path = None
   model.num_scales = 1000
-  model.sigma_max_x = 64 #input range is [0,1] and resolution is 64^2
+  model.sigma_max_x = np.sqrt(np.prod(data.shape_x)) #input range is [0,1] and resolution is 64^2
   #we do not want to perturb y a lot. 
   #A slight perturbation will result in better approximation of the conditional time-dependent score.
   model.sigma_max_y = 1
@@ -88,7 +88,7 @@ def get_config():
   model.reach_target_in_epochs = 64
   model.starting_transition_iterations = 2000
   #-------
-  model.sigma_min = 0.01
+  model.sigma_min = 0.000001 #should depend on the maximum range of the conditioned image x (assuming we are scaling eveyrthing in [0,1] range)
   model.beta_min = 0.1
   # We use an adjusted beta max 
   # because the range is doubled in each level starting from the first level
