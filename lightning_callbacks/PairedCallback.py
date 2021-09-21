@@ -5,7 +5,8 @@ from torchvision.utils import make_grid
 import numpy as np
 
 
-def normalise(x, value_range=None):
+def normalise(c, value_range=None):
+    x = c.clone()
     if value_range is None:
         x -= x.min()
         x /= x.max()
@@ -102,7 +103,7 @@ class PairedVisualizationCallback(Callback):
     def generate_paired_video(self, pl_module, Y, I, cond_samples, dim, batch_idx):
         #dim: the sliced dimension (choices: 1,2,3)
         B = Y.size(0)
-        
+
         if cond_samples:
             raw_length = 1+cond_samples.size(0)+1
         else:
@@ -110,9 +111,6 @@ class PairedVisualizationCallback(Callback):
 
         frames = Y.size(dim+1)
         video_grid = []
-
-        Y=Y.cpu()
-        I=I.cpu()
         for frame in range(frames):
             if dim==1:
                 dim_cut = torch.zeros(tuple([B*raw_length, 1, I.shape[3], I.shape[4]])).type_as(Y)
