@@ -116,10 +116,17 @@ def ncsn_conv3x3(in_planes, out_planes, stride=1, bias=True, dilation=1, init_sc
   return conv
 
 
-def ddpm_conv3x3(in_planes, out_planes, stride=1, bias=True, dilation=1, init_scale=1., padding=1):
+def ddpm_conv3x3(in_planes, out_planes, stride=1, bias=True, dilation=1, init_scale=1., padding=1, dim=2):
   """3x3 convolution with DDPM initialization."""
-  conv = nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=padding,
-                   dilation=dilation, bias=bias)
+  if dim==2:
+    conv = nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=padding,
+                    dilation=dilation, bias=bias)
+  elif dim==3:
+    conv = nn.Conv3d(in_planes, out_planes, kernel_size=3, stride=stride, padding=padding,
+                    dilation=dilation, bias=bias)
+  else:
+    raise NotImplementedError('Given dimension %d is not supported.' % dim)
+
   conv.weight.data = default_init(init_scale)(conv.weight.data.shape)
   nn.init.zeros_(conv.bias)
   return conv
@@ -544,7 +551,7 @@ def contract_inner(x, y):
   out_chars = x_chars[:-1] + y_chars[1:]
   return _einsum(x_chars, y_chars, out_chars, x, y)
 
-
+"""needs to be adapted for 3D"""
 class NIN(nn.Module):
   def __init__(self, in_dim, num_units, init_scale=0.1):
     super().__init__()
@@ -620,13 +627,13 @@ class Downsample(nn.Module):
 
 class ResnetBlockDDPM(nn.Module):
   """The ResNet Blocks used in DDPM."""
-  def __init__(self, act, in_ch, out_ch=None, temb_dim=None, conv_shortcut=False, dropout=0.1):
+  def __init__(self, act, in_ch, out_ch=None, temb_dim=None, conv_shortcut=False, dropout=0.1, dim=2):
     super().__init__()
     if out_ch is None:
       out_ch = in_ch
     self.GroupNorm_0 = nn.GroupNorm(num_groups=32, num_channels=in_ch, eps=1e-6)
     self.act = act
-    self.Conv_0 = ddpm_conv3x3(in_ch, out_ch)
+    self.Conv_0 = ddpm_conv3x3(in_ch, out_ch, dim=dim)
     if temb_dim is not None:
       self.Dense_0 = nn.Linear(temb_dim, out_ch)
       self.Dense_0.weight.data = default_init()(self.Dense_0.weight.data.shape)
@@ -634,12 +641,12 @@ class ResnetBlockDDPM(nn.Module):
 
     self.GroupNorm_1 = nn.GroupNorm(num_groups=32, num_channels=out_ch, eps=1e-6)
     self.Dropout_0 = nn.Dropout(dropout)
-    self.Conv_1 = ddpm_conv3x3(out_ch, out_ch, init_scale=0.)
+    self.Conv_1 = ddpm_conv3x3(out_ch, out_ch, init_scale=0., dim=dim)
     if in_ch != out_ch:
       if conv_shortcut:
-        self.Conv_2 = ddpm_conv3x3(in_ch, out_ch)
+        self.Conv_2 = ddpm_conv3x3(in_ch, out_ch, dim=dim)
       else:
-        self.NIN_0 = NIN(in_ch, out_ch)
+        self.NIN_0 = NIN(in_ch, out_ch)#this is not currently supported for 3D. Use conv_shortcut=True for 3D networks for now.
     self.out_ch = out_ch
     self.in_ch = in_ch
     self.conv_shortcut = conv_shortcut
