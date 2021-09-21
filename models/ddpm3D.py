@@ -52,7 +52,7 @@ class DDPM3D(pl.LightningModule):
 
     #AttnBlock = functools.partial(layers.AttnBlock)
     self.conditional = conditional = config.model.conditional
-    ResnetBlock = functools.partial(ResnetBlockDDPM, act=act, temb_dim=4 * nf, conv_shortcut=True, dropout=dropout)
+    ResnetBlock = functools.partial(ResnetBlockDDPM, act=act, temb_dim=4 * nf, conv_shortcut=True, dropout=dropout, dim=3)
     if conditional:
       # Condition on noise levels.
       modules = [nn.Linear(nf, nf * 4)]
