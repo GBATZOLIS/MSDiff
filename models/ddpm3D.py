@@ -178,7 +178,7 @@ class DDPM3D_paired(DDPM3D):
     x, y = input_dict['x'], input_dict['y']
     x_channels = x.size(1)
     concat = torch.cat((x, y), dim=1)
-    print(concat.size())
+    #print(concat.size())
     output = super().forward(concat, labels)
     return {'x': output[:,:x_channels,::], \
             'y':output[:,x_channels:,::]}
