@@ -137,27 +137,26 @@ def get_inverse_problem_smld_loss_fn(sde, train, reduce_mean=False, likelihood_w
 
     sigmas_y = smld_sigma_array_y.type_as(y)[labels]
     sigmas_x = smld_sigma_array_x.type_as(x)[labels]
-
-    noise_y = torch.randn_like(y) * sigmas_y[:, None, None, None]
+    
+    noise_y = torch.randn_like(y) * sigmas_y[(..., ) + (None, ) * len(y.shape[1:])]
     perturbed_data_y = noise_y + y
-    noise_x = torch.randn_like(x) * sigmas_x[:, None, None, None]
+    noise_x = torch.randn_like(x) * sigmas_x[(..., ) + (None, ) * len(x.shape[1:])]
     perturbed_data_x = noise_x + x
 
     perturbed_data = {'x':perturbed_data_x, 'y':perturbed_data_y}
-    print(perturbed_data['x'].size(), perturbed_data['y'].size())
-    #score = score_fn(perturbed_data, score_fn_labels)
+    score = score_fn(perturbed_data, score_fn_labels)
     score = perturbed_data
 
-    target_x = -noise_x / (sigmas_x ** 2)[:, None, None, None]
-    target_y = -noise_y / (sigmas_y ** 2)[:, None, None, None]
+    target_x = -noise_x / (sigmas_x ** 2)[(..., ) + (None, ) * len(x.shape[1:])]
+    target_y = -noise_y / (sigmas_y ** 2)[(..., ) + (None, ) * len(y.shape[1:])]
     
     losses_x = torch.square(score['x']-target_x)
     losses_y = torch.square(score['y']-target_y)
 
     if likelihood_weighting:
-      losses_x = losses_x*sigmas_x[:, None, None, None]**2
+      losses_x = losses_x*sigmas_x[(..., ) + (None, ) * len(x.shape[1:])]**2
       losses_x = losses_x.reshape(losses_x.shape[0], -1)
-      losses_y = losses_y*sigmas_y[:, None, None, None]**2
+      losses_y = losses_y*sigmas_y[(..., ) + (None, ) * len(y.shape[1:])]**2
       losses_y = losses_y.reshape(losses_y.shape[0], -1)
       losses = torch.cat((losses_x, losses_y), dim=-1)
       losses = reduce_op(losses, dim=-1)
