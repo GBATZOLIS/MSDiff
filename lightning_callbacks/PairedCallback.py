@@ -104,7 +104,7 @@ class PairedVisualizationCallback(Callback):
         #dim: the sliced dimension (choices: 1,2,3)
         B = Y.size(0)
 
-        if cond_samples:
+        if cond_samples is not None:
             raw_length = 1+cond_samples.size(0)+1
         else:
             raw_length = 2
@@ -123,19 +123,19 @@ class PairedVisualizationCallback(Callback):
                 if dim==1:
                     dim_cut[i*raw_length] = normalise(Y[i, 0, frame, :, :]).unsqueeze(0)
                     dim_cut[(i+1)*raw_length-1] = normalise(I[i, 0, frame, :, :]).unsqueeze(0)
-                    if cond_samples:
+                    if cond_samples is not None:
                         for j in range(cond_samples.size(0)):
                             dim_cut[i*raw_length+j+1] = normalise(cond_samples[j, i, 0, frame, :, :]).unsqueeze(0)
                 elif dim==2:
                     dim_cut[i*raw_length] = normalise(Y[i, 0, :, frame, :]).unsqueeze(0)
                     dim_cut[(i+1)*raw_length-1] = normalise(I[i, 0, :, frame, :]).unsqueeze(0)
-                    if cond_samples:
+                    if cond_samples is not None:
                         for j in range(cond_samples.size(0)):
                             dim_cut[i*raw_length+j+1] = normalise(cond_samples[j, i, 0, :, frame, :]).unsqueeze(0)
                 elif dim==3:
                     dim_cut[i*raw_length] = normalise(Y[i, 0, :, :, frame]).unsqueeze(0)
                     dim_cut[(i+1)*raw_length-1] = normalise(I[i, 0, :, :, frame]).unsqueeze(0)
-                    if cond_samples:
+                    if cond_samples is not None:
                         for j in range(cond_samples.size(0)):
                             dim_cut[i*raw_length+j+1] = normalise(cond_samples[j, i, 0, :, :, frame]).unsqueeze(0)
 
