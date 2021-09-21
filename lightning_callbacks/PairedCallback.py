@@ -143,7 +143,7 @@ class PairedVisualizationCallback(Callback):
             video_grid.append(grid_cut)
 
         video_grid = torch.stack(video_grid, dim=0).unsqueeze(0)
-        print(video_grid.size())
+        #print(video_grid.size())
 
         str_title = 'paired_video_epoch_%d_batch_%d_dim_%d' % (pl_module.current_epoch, batch_idx, dim)
         pl_module.logger.experiment.add_video(str_title, video_grid, pl_module.current_epoch)
@@ -156,10 +156,10 @@ class PairedVisualizationCallback(Callback):
         y, x = batch
         x = self.convert_to_3D(x).cpu()
         
-        #cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution)
-        #cond_samples = self.convert_to_3D(cond_samples).unsqueeze(0).cpu()
+        cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution)
+        cond_samples = self.convert_to_3D(cond_samples).unsqueeze(0).cpu()
         y = self.convert_to_3D(y).cpu()
         
 
         for dim in [1, 2, 3]:
-            self.generate_paired_video(pl_module, y, x, None, dim, batch_idx)
+            self.generate_paired_video(pl_module, y, x, cond_samples, dim, batch_idx)
