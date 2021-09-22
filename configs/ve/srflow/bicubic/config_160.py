@@ -29,7 +29,7 @@ def get_config():
   config.training.lightning_module = 'conditional_decreasing_variance'
   config.training.batch_size = 32
   training.num_nodes = 1
-  training.gpus = 2
+  training.gpus = 4
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
