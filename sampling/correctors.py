@@ -74,8 +74,8 @@ class LangevinCorrector(Corrector):
       grad_norm = torch.norm(grad.reshape(grad.shape[0], -1), dim=-1).mean()
       noise_norm = torch.norm(noise.reshape(noise.shape[0], -1), dim=-1).mean()
       step_size = (target_snr * noise_norm / grad_norm) ** 2 * 2 * alpha
-      x_mean = x + step_size[:, None, None, None] * grad
-      x = x_mean + torch.sqrt(step_size * 2)[:, None, None, None] * noise
+      x_mean = x + step_size[(...,) + (None,) * len(x.shape[1:])] * grad
+      x = x_mean + torch.sqrt(step_size * 2)[(...,) + (None,) * len(x.shape[1:])] * noise
 
     return x, x_mean
 
@@ -106,8 +106,8 @@ class conditionalLangevinCorrector(Corrector):
       grad_norm = torch.norm(grad.reshape(grad.shape[0], -1), dim=-1).mean()
       noise_norm = torch.norm(noise.reshape(noise.shape[0], -1), dim=-1).mean()
       step_size = (target_snr * noise_norm / grad_norm) ** 2 * 2 * alpha
-      x_mean = x + step_size[:, None, None, None] * grad
-      x = x_mean + torch.sqrt(step_size * 2)[:, None, None, None] * noise
+      x_mean = x + step_size[(...,) + (None,) * len(x.shape[1:])] * grad
+      x = x_mean + torch.sqrt(step_size * 2)[(...,) + (None,) * len(x.shape[1:])] * noise
 
     return x, x_mean
 
@@ -142,8 +142,8 @@ class AnnealedLangevinDynamics(Corrector):
       grad = score_fn(x, t)
       noise = torch.randn_like(x)
       step_size = (target_snr * std) ** 2 * 2 * alpha
-      x_mean = x + step_size[:, None, None, None] * grad
-      x = x_mean + noise * torch.sqrt(step_size * 2)[:, None, None, None]
+      x_mean = x + step_size[(...,) + (None,) * len(x.shape[1:])] * grad
+      x = x_mean + noise * torch.sqrt(step_size * 2)[(...,) + (None,) * len(x.shape[1:])]
 
     return x, x_mean
 

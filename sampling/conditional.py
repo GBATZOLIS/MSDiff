@@ -59,7 +59,7 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr,
       with torch.no_grad():
         vec_t = torch.ones(x.shape[0]).to(model.device) * t
         y_mean, y_std = sde['y'].marginal_prob(y, vec_t)
-        y_perturbed = y_mean + torch.randn_like(y) * y_std[:, None, None, None]
+        y_perturbed = y_mean + torch.randn_like(y) * y_std[(...,) + (None,) * len(y.shape[1:])]
         x, x_mean = update_fn(x=x, y=y_perturbed, t=vec_t, model=model)
         return x, x_mean, y_perturbed, y_mean
 

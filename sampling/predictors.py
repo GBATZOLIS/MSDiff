@@ -58,7 +58,7 @@ class EulerMaruyamaPredictor(Predictor):
     z = torch.randn_like(x)
     drift, diffusion = self.rsde.sde(x, t)
     x_mean = x + drift * dt
-    x = x_mean + diffusion[:, None, None, None] * np.sqrt(-dt) * z
+    x = x_mean + diffusion[(...,) + (None,) * len(x.shape[1:])] * np.sqrt(-dt) * z
     return x, x_mean
 
 @register_predictor(name='conditional_euler_maruyama')
@@ -71,7 +71,7 @@ class conditionalEulerMaruyamaPredictor(Predictor):
     z = torch.randn_like(x)
     drift, diffusion = self.rsde.sde(x, y, t)
     x_mean = x + drift * dt
-    x = x_mean + diffusion[:, None, None, None] * np.sqrt(-dt) * z
+    x = x_mean + diffusion[(...,) + (None,) * len(x.shape[1:])] * np.sqrt(-dt) * z
     return x, x_mean
 
 
@@ -84,7 +84,7 @@ class ReverseDiffusionPredictor(Predictor):
     f, G = self.rsde.discretize(x, t)
     z = torch.randn_like(x)
     x_mean = x - f
-    x = x_mean + G[:, None, None, None] * z
+    x = x_mean + G[(...,) + (None,) * len(x.shape[1:])] * z
     return x, x_mean
   
 
@@ -97,7 +97,7 @@ class conditionalReverseDiffusionPredictor(Predictor):
     f, G = self.rsde.discretize(x, y, t)
     z = torch.randn_like(x)
     x_mean = x - f
-    x = x_mean + G[:, None, None, None] * z
+    x = x_mean + G[(...,) + (None,) * len(x.shape[1:])] * z
     return x, x_mean
 
 
@@ -117,10 +117,10 @@ class AncestralSamplingPredictor(Predictor):
     sigma = sde.discrete_sigmas[timestep]
     adjacent_sigma = torch.where(timestep == 0, torch.zeros_like(t), sde.discrete_sigmas.to(t.device)[timestep - 1])
     score = self.score_fn(x, t)
-    x_mean = x + score * (sigma ** 2 - adjacent_sigma ** 2)[:, None, None, None]
+    x_mean = x + score * (sigma ** 2 - adjacent_sigma ** 2)[(...,) + (None,) * len(x.shape[1:])]
     std = torch.sqrt((adjacent_sigma ** 2 * (sigma ** 2 - adjacent_sigma ** 2)) / (sigma ** 2))
     noise = torch.randn_like(x)
-    x = x_mean + std[:, None, None, None] * noise
+    x = x_mean + std[(...,) + (None,) * len(x.shape[1:])] * noise
     return x, x_mean
 
   def vpsde_update_fn(self, x, t):
@@ -128,9 +128,9 @@ class AncestralSamplingPredictor(Predictor):
     timestep = (t * (sde.N - 1) / sde.T).long()
     beta = sde.discrete_betas.to(t.device)[timestep]
     score = self.score_fn(x, t)
-    x_mean = (x + beta[:, None, None, None] * score) / torch.sqrt(1. - beta)[:, None, None, None]
+    x_mean = (x + beta[(...,) + (None,) * len(x.shape[1:])] * score) / torch.sqrt(1. - beta)[(...,) + (None,) * len(x.shape[1:])]
     noise = torch.randn_like(x)
-    x = x_mean + torch.sqrt(beta)[:, None, None, None] * noise
+    x = x_mean + torch.sqrt(beta)[(...,) + (None,) * len(x.shape[1:])] * noise
     return x, x_mean
 
   def update_fn(self, x, t):
@@ -156,10 +156,10 @@ class conditionalAncestralSamplingPredictor(Predictor):
     sigma = sde.discrete_sigmas[timestep]
     adjacent_sigma = torch.where(timestep == 0, torch.zeros_like(t), sde.discrete_sigmas.to(t.device)[timestep - 1])
     score = self.score_fn(x, y, t)
-    x_mean = x + score * (sigma ** 2 - adjacent_sigma ** 2)[:, None, None, None]
+    x_mean = x + score * (sigma ** 2 - adjacent_sigma ** 2)[(...,) + (None,) * len(x.shape[1:])]
     std = torch.sqrt((adjacent_sigma ** 2 * (sigma ** 2 - adjacent_sigma ** 2)) / (sigma ** 2))
     noise = torch.randn_like(x)
-    x = x_mean + std[:, None, None, None] * noise
+    x = x_mean + std[(...,) + (None,) * len(x.shape[1:])] * noise
     return x, x_mean
 
   def vpsde_update_fn(self, x, y, t):
@@ -167,9 +167,9 @@ class conditionalAncestralSamplingPredictor(Predictor):
     timestep = (t * (sde.N - 1) / sde.T).long()
     beta = sde.discrete_betas.to(t.device)[timestep]
     score = self.score_fn(x, y, t)
-    x_mean = (x + beta[:, None, None, None] * score) / torch.sqrt(1. - beta)[:, None, None, None]
+    x_mean = (x + beta[(...,) + (None,) * len(x.shape[1:])] * score) / torch.sqrt(1. - beta)[(...,) + (None,) * len(x.shape[1:])]
     noise = torch.randn_like(x)
-    x = x_mean + torch.sqrt(beta)[:, None, None, None] * noise
+    x = x_mean + torch.sqrt(beta)[(...,) + (None,) * len(x.shape[1:])] * noise
     return x, x_mean
 
   def update_fn(self, x, t):

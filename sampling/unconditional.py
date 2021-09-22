@@ -237,7 +237,7 @@ def get_pc_inpainter(sde, predictor, corrector, snr,
         x, x_mean = update_fn(x, vec_t, model=model)
         
         masked_data_mean, std = sde.marginal_prob(data, vec_t)
-        masked_data = masked_data_mean + torch.randn_like(x) * std[:, None, None, None]
+        masked_data = masked_data_mean + torch.randn_like(x) * std[(...,) + (None,) * len(x.shape[1:])]
         x = x * (1. - mask) + masked_data * mask
         x_mean = x * (1. - mask) + masked_data_mean * mask
 
