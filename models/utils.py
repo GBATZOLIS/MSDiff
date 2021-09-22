@@ -58,10 +58,10 @@ def divide_by_sigmas(h, labels, sde):
   if isinstance(sde, dict) and isinstance(h, dict):
     for domain in h.keys():
       domain_sigmas = sde[domain].discrete_sigmas.type_as(h[domain])
-      h[domain] = h[domain] / domain_sigmas[labels, None, None, None]
+      h[domain] = h[domain] / domain_sigmas[(labels,) + (None,) * len(h[domain].shape[1:])] 
   else:
     sigmas = sde.discrete_sigmas.type_as(h)
-    h = h / sigmas[labels, None, None, None]
+    h = h / sigmas[(labels,) + (None,) * len(h.shape[1:])]
   
   return h
 
