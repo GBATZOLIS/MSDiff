@@ -11,9 +11,9 @@ def get_config():
   config.training.lightning_module = 'conditional_decreasing_variance'
   training.batch_size = 4
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
-  training.accumulate_grad_batches = 2
+  training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
   #----- to be removed -----
   training.num_epochs = 10000
@@ -86,9 +86,9 @@ def get_config():
   #-------The three subsequent settings configure the reduction schedule of sigma_max_y
   model.reduction = 'inverse_exponentional' #choices=['linear', 'inverse_exponentional']
   model.reach_target_in_epochs = 64
-  model.starting_transition_iterations = 2000
+  model.starting_transition_iterations = 4000
   #-------
-  model.sigma_min = 10**(-6) #should depend on the maximum range of the conditioned image x (assuming we are scaling eveyrthing in [0,1] range)
+  model.sigma_min = 10**(-4) #should depend on the maximum range of the conditioned image x (assuming we are scaling eveyrthing in [0,1] range)
   model.beta_min = 0.1
   # We use an adjusted beta max 
   # because the range is doubled in each level starting from the first level
