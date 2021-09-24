@@ -26,10 +26,7 @@ def get_callbacks(config):
     get_callback_by_name(config.training.visualization_callback)(show_evolution=config.training.show_evolution)]
 
     if config.training.lightning_module in ['conditional_decreasing_variance','haar_conditional_decreasing_variance'] :
-      callbacks.append(get_callback_by_name('decreasing_variance_configuration')(
-        reduction=config.model.reduction, reach_target_in_epochs=config.model.reach_target_in_epochs,
-        starting_transition_iterations = config.model.starting_transition_iterations,
-      ))
+      callbacks.append(get_callback_by_name('decreasing_variance_configuration')(config))
     else:
       callbacks.append(get_callback_by_name('configuration')())
 

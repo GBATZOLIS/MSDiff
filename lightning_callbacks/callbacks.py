@@ -25,12 +25,16 @@ class ConfigurationSetterCallback(Callback):
 
 @utils.register_callback(name='decreasing_variance_configuration')
 class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback):
-    def __init__(self, reduction, reach_target_in_epochs, starting_transition_iterations):
+    def __init__(self, config):
         super().__init__()
-        self.reduction = reduction
-        self.reach_target_in_epochs = reach_target_in_epochs
-        self.starting_transition_iterations = starting_transition_iterations
-        self.sigma_max_y_fn = get_sigma_max_y_fn(reduction, reach_target_in_epochs, starting_transition_iterations)
+        self.sigma_max_y_fn = get_reduction_fn(y0=config.model.sigma_max_y, 
+                                               xk=config.model.reach_target_steps, 
+                                               yk=config.model.sigma_max_y_target)
+        
+        self.sigma_min_y_fn = get_reduction_fn(y0=config.model.sigma_min_y, 
+                                               xk=config.model.reach_target_steps, 
+                                               yk=config.model.sigma_min_y_target)
+
 
     def on_fit_start(self, trainer, pl_module):
         # Configure SDE
@@ -40,40 +44,51 @@ class DecreasingVarianceConfigurationSetterCallback(ConfigurationSetterCallback)
         pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
         pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
 
-    def reconfigure_sigma_max_y(self, trainer, pl_module):
-        current_epoch, global_step = pl_module.current_epoch, pl_module.global_step
-        sigma_max_y_start = pl_module.config.model.sigma_max_x
-        sigma_max_y_target = pl_module.config.model.sigma_max_y
-
-        #calculate current sigma_max_y
-        current_sigma_max_y = self.sigma_max_y_fn(global_step, current_epoch, sigma_max_y_start, sigma_max_y_target)
+    def reconfigure_conditioning_sde(self, trainer, pl_module):
+        #calculate current sigma_max_y and sigma_min_y
+        current_sigma_max_y = self.sigma_max_y_fn(pl_module.global_step)
+        current_sigma_min_y = self.sigma_min_y_fn(pl_module.global_step)
 
         # Reconfigure SDE
-        pl_module.reconfigure_conditioning_sde(pl_module.config, current_sigma_max_y)
+        pl_module.reconfigure_conditioning_sde(pl_module.config, current_sigma_min_y, current_sigma_max_y)
         
         # Reconfigure trainining and validation loss functions. -  we might not need to reconfigure the losses.
         pl_module.train_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=True)
         pl_module.eval_loss_fn = pl_module.configure_loss_fn(pl_module.config, train=False)
         
-        return current_sigma_max_y
+        return current_sigma_min_y, current_sigma_max_y
 
     def on_sanity_check_start(self, trainer, pl_module):
-        _ = self.reconfigure_sigma_max_y(trainer, pl_module)
+        self.reconfigure_conditioning_sde(trainer, pl_module)
 
     def on_train_epoch_start(self, trainer, pl_module):
-        current_sigma_max_y = self.reconfigure_sigma_max_y(trainer, pl_module)
+        current_sigma_min_y, current_sigma_max_y = self.reconfigure_conditioning_sde(trainer, pl_module)
         pl_module.sigma_max_y = torch.tensor(current_sigma_max_y).float()
+        pl_module.sigma_min_y = torch.tensor(current_sigma_min_y).float()
 
     def on_train_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
-        current_sigma_max_y = self.reconfigure_sigma_max_y(trainer, pl_module)
+        current_sigma_min_y, current_sigma_max_y = self.reconfigure_conditioning_sde(trainer, pl_module)
+        
         pl_module.sigma_max_y = torch.tensor(current_sigma_max_y).float()
         pl_module.logger.experiment.add_scalar('sigma_max_y', current_sigma_max_y, pl_module.global_step)
+        
+        pl_module.sigma_min_y = torch.tensor(current_sigma_min_y).float()
+        pl_module.logger.experiment.add_scalar('sigma_min_y', current_sigma_min_y, pl_module.global_step)
 
     def on_test_epoch_start(self, trainer, pl_module):
-        pl_module.configure_sde(pl_module.config, sigma_max_y = pl_module.sigma_max_y)
+        pl_module.configure_sde(config = pl_module.config, 
+                                sigma_min_y = pl_module.sigma_min_y,
+                                sigma_max_y = pl_module.sigma_max_y)
 
 
-def get_sigma_max_y_fn(reduction, reach_target_in_epochs, starting_transition_iterations):
+def get_reduction_fn(y0, xk, yk):
+    #get the reduction function that starts at y0 and reaches point yk at xk steps.
+    #the function follows an inverse multiplicative rate.
+    def f(x):
+        return xk*yk*y0/(x*(y0-yk)+xk*yk)
+    return f
+
+def get_deprecated_sigma_max_y_fn(reduction, reach_target_in_epochs, starting_transition_iterations):
     if reduction == 'linear':
         def sigma_max_y(global_step, current_epoch, start_value, target_value):
             if current_epoch >= reach_target_in_epochs:

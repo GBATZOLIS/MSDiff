@@ -92,18 +92,18 @@ def get_config():
   config.model = model = ml_collections.ConfigDict()
   model.checkpoint_path = None
   model.num_scales = 1000
-  model.sigma_max_x = data.image_size*np.sqrt(3) #change it to 480 for future experiments (not a big difference)
-  #we do not want to perturb y a lot. 
-  #A slight perturbation will result in better approximation of the conditional time-dependent score.
-  model.sigma_max_y = model.sigma_max_x
-  #-------The three subsequent settings configure the reduction schedule of sigma_max_y
-  model.reduction = 'inverse_exponentional' #choices=['linear', 'inverse_exponentional']
-  model.reach_target_in_epochs = 64
-  model.starting_transition_iterations = 8000
 
-  model.sigma_min_x = 0.01
-  model.sigma_min_y = 0.01
-  
+  #SIGMA INFORMATION FOR THE VE SDE
+  model.reach_target_steps = 2e5
+
+  model.sigma_max_x = data.image_size*np.sqrt(3)
+  model.sigma_max_y = model.sigma_max_x
+  model.sigma_max_y_target = 6
+
+  model.sigma_min_x = 1e-2
+  model.sigma_min_y = 1e-2
+  model.sigma_min_y_target = 1e-3
+
   model.beta_min = 0.1
   # We use an adjusted beta max 
   # because the range is doubled in each level starting from the first level
