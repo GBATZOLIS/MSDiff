@@ -150,7 +150,7 @@ class PairedVisualizationCallback(Callback):
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         current_epoch = pl_module.current_epoch
-        if batch_idx!=2 or current_epoch == 0 or current_epoch % 60 != 0:
+        if batch_idx!=2 or current_epoch == 0 or current_epoch % 40 != 0:
             return
         
         y, x = batch        
