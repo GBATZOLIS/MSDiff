@@ -92,7 +92,7 @@ def get_config():
   model.starting_transition_iterations = 20000
   #-------
   model.sigma_min_x = 1 #should depend on the maximum range of the conditioned image x (assuming we are scaling eveyrthing in [0,1] range)
-  model.sigma_min_y = 1e-1
+  model.sigma_min_y = 0.1
 
   model.beta_min = 0.1
   # We use an adjusted beta max 

@@ -101,7 +101,7 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
     def reconfigure_conditioning_sde(self, config, sigma_max_y = None):
         if config.training.sde.lower() == 'vesde':
             if sigma_max_y is None:
-                sigma_max_y = torch.tensor(config.model.sigma_max_x).float()
+                sigma_max_y = torch.tensor(config.model.sigma_max_y).float()
             else:
                 sigma_max_y = torch.tensor(sigma_max_y).float()
             
