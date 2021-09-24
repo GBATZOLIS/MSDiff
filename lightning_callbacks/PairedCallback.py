@@ -153,10 +153,12 @@ class PairedVisualizationCallback(Callback):
         if batch_idx!=2 or current_epoch == 0 or current_epoch % 60 != 0:
             return
         
-        y, x = batch
-        x = self.convert_to_3D(x).cpu()
-        
+        y, x = batch        
         cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution)
+        val_rec_loss = torch.mean(torch.abs(x.to(pl_module.device)-cond_samples))
+        pl_module.logger.experiment.add_scalar('val_rec_loss_epoch_%d_batch_%d' % (current_epoch, batch_idx), val_rec_loss)
+
+        x = self.convert_to_3D(x).cpu()
         cond_samples = self.convert_to_3D(cond_samples).unsqueeze(0).cpu()
         y = self.convert_to_3D(y).cpu()
         
