@@ -123,7 +123,6 @@ class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeMo
             self.sigma_min_y = sigma_min_y
             
             self.sde['y'] = sde_lib.VESDE(sigma_min=sigma_min_y.cpu(), sigma_max=sigma_max_y.cpu(), N=config.model.num_scales)
-            self.sde['x'] = sde_lib.cVESDE(sigma_min=sigma_min_y.cpu(), sigma_max=config.model.sigma_max_x, N=config.model.num_scales) #addition
         else:
             raise NotImplementedError(f"Conditioning SDE {config.training.sde} not supported yet.")
     
