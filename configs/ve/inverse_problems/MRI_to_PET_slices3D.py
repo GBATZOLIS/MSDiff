@@ -70,8 +70,8 @@ def get_config():
   data.effective_image_size = data.image_size
   data.shape_x = [1, data.image_size, data.image_size, 16]
   data.shape_y = [1, data.image_size, data.image_size, 16]
-  data.range_x = [0, 1226428]
-  data.range_y = [0, 7190]
+  data.range_x = [0,1] #[0, 1226428]
+  data.range_y = [0,1] #[0, 7190]
   
   data.centered = False
   data.random_flip = False
@@ -84,15 +84,15 @@ def get_config():
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
-  model.reach_target_steps = 25e4
+  model.reach_target_steps = 6e4
 
   model.sigma_max_x = np.sqrt(np.prod(data.shape_x))*(data.range_x[1]-data.range_x[0])
   model.sigma_max_y = np.sqrt(np.prod(data.shape_y))*(data.range_y[1]-data.range_y[0])
-  model.sigma_max_y_target = model.sigma_max_y/10**2
+  model.sigma_max_y_target = model.sigma_max_y/2**4
   
-  model.sigma_min_x = 1
-  model.sigma_min_y = 1
-  model.sigma_min_y_target = 0.1
+  model.sigma_min_x = 10**(-5)
+  model.sigma_min_y = 10**(-5)
+  model.sigma_min_y_target = 0.9*model.sigma_min_y
 
   model.beta_min = 0.1
   # We use an adjusted beta max 

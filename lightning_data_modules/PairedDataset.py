@@ -32,8 +32,8 @@ class PairedDataset(Dataset):
         elif self.file_extension in ['.npy']:
             self.dim = len(config.data.shape_x)-1
             self.resolution = config.data.image_size
-            transform_list = [torch.from_numpy, lambda x: x.type(torch.FloatTensor)]
-            #[torch.from_numpy, lambda x: x.type(torch.FloatTensor), lambda x: normalise(x)]
+            #[torch.from_numpy, lambda x: x.type(torch.FloatTensor)]
+            transform_list = [torch.from_numpy, lambda x: x.type(torch.FloatTensor), lambda x: normalise(x)]
         else:
             raise Exception('File extension %s is not supported yet. Please update the code.' % self.file_extension)
 
