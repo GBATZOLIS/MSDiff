@@ -29,16 +29,17 @@ class PairedDataset(Dataset):
         # define the default transform function. You can use <base_dataset.get_transform>; You can also define your custom transform function
         if self.file_extension in ['.jpg', '.png']:
             transform_list = [transforms.ToTensor()]
+            self.transform = transforms.Compose(transform_list)
         elif self.file_extension in ['.npy']:
             self.dim = len(config.data.shape_x)-1
             self.resolution = config.data.image_size
             #[torch.from_numpy, lambda x: x.type(torch.FloatTensor)]
-            transform_list = [torch.from_numpy, lambda x: x.type(torch.FloatTensor), lambda x: normalise(x)]
+            transform_list_A = [torch.from_numpy, lambda x: x.type(torch.FloatTensor), lambda x: normalise(x, value_range=config.data.range_y)]
+            transform_list_B = [torch.from_numpy, lambda x: x.type(torch.FloatTensor), lambda x: normalise(x, value_range=config.data.range_x)]
+            self.transform_A = transforms.Compose(transform_list_A)
+            self.transform_B = transforms.Compose(transform_list_B)
         else:
             raise Exception('File extension %s is not supported yet. Please update the code.' % self.file_extension)
-
-        self.transform = transforms.Compose(transform_list)
-
 
     def __getitem__(self, index):
         A_path = self.image_paths['A'][index]
@@ -89,8 +90,13 @@ class PairedDataset(Dataset):
             raise Exception('File extension %s is not supported yet. Please update the code.' % self.file_extension)
             
         #transform the images/scans
-        A_transformed = self.transform(A)
-        B_transformed = self.transform(B)
+        A_transformed = self.transform_A(A)
+        B_transformed = self.transform_B(B)
+
+        print('______A______')
+        print(A_transformed.min(), A_transformed.max())
+        print('______B______')
+        print(B_transformed.min(), B_transformed.max())
 
         return A_transformed, B_transformed
         
