@@ -104,7 +104,7 @@ def compute_dataset_statistics(config):
       info['ranges']['pet'].append(pet_max-pet_min)
     
     for quantity in info.keys():
-      for modality in quantity.keys():
+      for modality in info[quantity].keys():
         plt.figure()
         plt.title('%s %s histogram' % (modality, quantity))
         _ = plt.hist(info[quantity][modality], bins='auto')
