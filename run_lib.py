@@ -15,6 +15,7 @@ from lightning_modules import BaseSdeGenerativeModel, HaarMultiScaleSdeGenerativ
 from lightning_modules.utils import create_lightning_module
 
 import create_dataset
+import compute_dataset_statistics
 from torch.nn import Upsample
 import torch 
 
@@ -232,3 +233,5 @@ def multi_scale_test(master_config, log_path):
     #logger.experiment.add_video('Autoregressive_Sampling_evolution_batch_%d' % i, concat_video, fps=50)
 
 
+def compute_data_stats(config):
+  compute_dataset_statistics.compute_dataset_statistics(config)
