@@ -108,7 +108,7 @@ def compute_dataset_statistics(config):
         plt.figure()
         plt.title('%s %s histogram' % (modality, quantity))
         _ = plt.hist(info[quantity][modality], bins='auto')
-        plt.savefig(os.path.join(dataset_info_dir, 'mean_histogram.png'))
+        plt.savefig(os.path.join(dataset_info_dir, '%s-%s-histogram.png' % (modality, quantity)))
 
 
 
