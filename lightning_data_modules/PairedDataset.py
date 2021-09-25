@@ -93,8 +93,8 @@ class PairedDataset(Dataset):
         A_transformed = self.transform_A(A)
         B_transformed = self.transform_B(B)
 
-        print('A ranges: (%.6f, %.6f)' % (A_transformed.min(), A_transformed.max()))
-        print('B ranges: (%.6f, %.6f)' % (B_transformed.min(), B_transformed.max()))
+        #print('A ranges: (%.6f, %.6f)' % (A_transformed.min(), A_transformed.max()))
+        #print('B ranges: (%.6f, %.6f)' % (B_transformed.min(), B_transformed.max()))
 
         return A_transformed, B_transformed
         
