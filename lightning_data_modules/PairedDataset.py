@@ -34,8 +34,8 @@ class PairedDataset(Dataset):
             self.dim = len(config.data.shape_x)-1
             self.resolution = config.data.image_size
             #[torch.from_numpy, lambda x: x.type(torch.FloatTensor)]
-            transform_list_A = [torch.from_numpy, lambda x: x.type(torch.FloatTensor), lambda x: normalise(x, value_range=config.data.range_y)]
-            transform_list_B = [torch.from_numpy, lambda x: x.type(torch.FloatTensor), lambda x: normalise(x, value_range=config.data.range_x)]
+            transform_list_A = [torch.from_numpy, lambda x: x.type(torch.FloatTensor), lambda x: normalise(x)]
+            transform_list_B = [torch.from_numpy, lambda x: x.type(torch.FloatTensor), lambda x: normalise(x)]
             self.transform_A = transforms.Compose(transform_list_A)
             self.transform_B = transforms.Compose(transform_list_B)
         else:
@@ -93,10 +93,8 @@ class PairedDataset(Dataset):
         A_transformed = self.transform_A(A)
         B_transformed = self.transform_B(B)
 
-        print('______A______')
-        print(A_transformed.min(), A_transformed.max())
-        print('______B______')
-        print(B_transformed.min(), B_transformed.max())
+        print('A ranges: (%.6f, %.6f)' % (A_transformed.min(), A_transformed.max()))
+        print('B ranges: (%.6f, %.6f)' % (B_transformed.min(), B_transformed.max()))
 
         return A_transformed, B_transformed
         
