@@ -140,7 +140,10 @@ def compute_dataset_statistics(config):
     _ = plt.hist(below_threshold_vals, bins='auto')
     plt.savefig(os.path.join(dataset_info_dir, '%s-%s-histogram-%d.png' % ('pet', 'max_vals', threshold)))
     '''
-
+    plt.figure()
+    plt.title('Number of scans with max value below threshold')
+    plt.plot(np.linspace(0, 1e5, num=100), [get_max_value_until_threshold(info['max_vals']['pet'], threshold)[0] for threshold in np.linspace(0, 1e5, num=100)])
+    plt.savefig(os.path.join(dataset_info_dir, 'Number of scans with max value below threshold.png'))
 
 
 
