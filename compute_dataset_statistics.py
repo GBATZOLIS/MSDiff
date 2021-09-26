@@ -83,6 +83,7 @@ def compute_dataset_statistics(config):
   elif config.data.dataset == 'mri_to_pet':
     dataset_info_dir = os.path.join(config.data.base_dir, 'datasets_info', config.data.dataset)
     Path(dataset_info_dir).mkdir(parents=True, exist_ok=True)
+    config.training.batch_size = 1
     DataModule = create_lightning_datamodule(config)
     DataModule.setup()
     train_dataloader = DataModule.train_dataloader()
@@ -115,7 +116,7 @@ def compute_dataset_statistics(config):
       above_threshold_vals = []
       for val in vals:
         if val<=threshold:
-          below_threshold_vals.append(threshold)
+          below_threshold_vals.append(val)
         elif val>threshold:
           above_threshold_vals.append(val)
       return below_threshold_vals, above_threshold_vals
