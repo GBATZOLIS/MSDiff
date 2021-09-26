@@ -122,7 +122,7 @@ def compute_dataset_statistics(config):
       return below_threshold_vals, above_threshold_vals
     
 
-    threshold = 2e5
+    threshold = 1e5
     below_threshold_vals, above_threshold_vals = get_max_value_until_threshold(info['max_vals']['pet'], threshold)
 
     print('Dataset Info related to the threshold: %d' % threshold)
@@ -134,6 +134,10 @@ def compute_dataset_statistics(config):
     print('Maximum above threshold maximum value: %.3f' % max(above_threshold_vals))
     print('Minimum above threshold maximum value: %.3f' % min(above_threshold_vals))
 
+    plt.figure()
+    plt.title('%s %s histogram' % ('pet', 'max_vals'))
+    _ = plt.hist(info['max_vals']['pet'], bins='auto')
+    plt.savefig(os.path.join(dataset_info_dir, '%s-%s-histogram-%d.png' % ('pet', 'max_vals', threshold)))
 
 
 
