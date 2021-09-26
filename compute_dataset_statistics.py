@@ -128,7 +128,7 @@ def compute_dataset_statistics(config):
     print('Dataset Info related to the threshold: %d' % threshold)
     print('Num of max values below %d: %d'% (threshold, len(below_threshold_vals)))
     print('Maximum below threshold maximum value: %.3f' % max(below_threshold_vals))
-    print('Minimum below threshold maximum value: %.3f' % min(below_threshold_vals))
+    print('Minimum below threshold maximum value: %.7f' % min(below_threshold_vals))
 
     print('Num of max values above %d: %d'% (threshold, len(above_threshold_vals)))
     print('Maximum above threshold maximum value: %.3f' % max(above_threshold_vals))
