@@ -136,7 +136,7 @@ def compute_dataset_statistics(config):
 
     plt.figure()
     plt.title('%s %s histogram' % ('pet', 'max_vals'))
-    _ = plt.hist(info['max_vals']['pet'], bins='auto')
+    _ = plt.hist(below_threshold_vals, bins='auto')
     plt.savefig(os.path.join(dataset_info_dir, '%s-%s-histogram-%d.png' % ('pet', 'max_vals', threshold)))
 
 
