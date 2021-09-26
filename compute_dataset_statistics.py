@@ -122,7 +122,7 @@ def compute_dataset_statistics(config):
       return below_threshold_vals, above_threshold_vals
     
 
-    threshold = 4000
+    threshold = 1e4
     below_threshold_vals, above_threshold_vals = get_max_value_until_threshold(info['max_vals']['pet'], threshold)
 
     print('Dataset Info related to the threshold: %d' % threshold)
