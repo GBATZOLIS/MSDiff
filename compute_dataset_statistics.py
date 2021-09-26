@@ -109,6 +109,33 @@ def compute_dataset_statistics(config):
         plt.title('%s %s histogram' % (modality, quantity))
         _ = plt.hist(info[quantity][modality], bins='auto')
         plt.savefig(os.path.join(dataset_info_dir, '%s-%s-histogram.png' % (modality, quantity)))
+    
+    def get_max_value_until_threshold(vals, threshold):
+      below_threshold_vals = []
+      above_threshold_vals = []
+      for val in vals:
+        if val<=threshold:
+          below_threshold_vals.append(threshold)
+        elif val>threshold:
+          above_threshold_vals.append(val)
+      return below_threshold_vals, above_threshold_vals
+    
+
+    threshold = 2e5
+    below_threshold_vals, above_threshold_vals = get_max_value_until_threshold(info['max_vals']['pet'], threshold)
+
+    print('Dataset Info related to the threshold: %d' % threshold)
+    print('Num of max values below %d: %d'% (threshold, len(below_threshold_vals)))
+    print('Maximum below threshold maximum value: %.3f' % max(below_threshold_vals))
+    print('Minimum below threshold maximum value: %.3f' % min(below_threshold_vals))
+
+    print('Num of max values above %d: %d'% (threshold, len(above_threshold_vals)))
+    print('Maximum above threshold maximum value: %.3f' % max(above_threshold_vals))
+    print('Minimum above threshold maximum value: %.3f' % min(above_threshold_vals))
+
+
+
+
 
 
 
