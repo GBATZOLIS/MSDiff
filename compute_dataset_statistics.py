@@ -134,11 +134,12 @@ def compute_dataset_statistics(config):
     print('Maximum above threshold maximum value: %.3f' % max(above_threshold_vals))
     print('Minimum above threshold maximum value: %.3f' % min(above_threshold_vals))
 
+    '''
     plt.figure()
     plt.title('%s %s histogram' % ('pet', 'max_vals'))
     _ = plt.hist(below_threshold_vals, bins='auto')
     plt.savefig(os.path.join(dataset_info_dir, '%s-%s-histogram-%d.png' % ('pet', 'max_vals', threshold)))
-
+    '''
 
 
 
