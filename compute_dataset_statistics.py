@@ -121,9 +121,6 @@ def compute_dataset_statistics(config):
       return below_threshold_vals, above_threshold_vals
     
 
-    print(min(info['max_vals']['pet']), max(info['max_vals']['pet']))
-
-    '''
     threshold = 2e5
     below_threshold_vals, above_threshold_vals = get_max_value_until_threshold(info['max_vals']['pet'], threshold)
 
@@ -136,8 +133,6 @@ def compute_dataset_statistics(config):
     print('Maximum above threshold maximum value: %.3f' % max(above_threshold_vals))
     print('Minimum above threshold maximum value: %.3f' % min(above_threshold_vals))
 
-
-    '''
 
 
 
