@@ -34,8 +34,8 @@ class PairedDataset(Dataset):
             self.dim = len(config.data.shape_x)-1
             self.resolution = config.data.image_size
             #[torch.from_numpy, lambda x: x.type(torch.FloatTensor)]
-            transform_list_A = [torch.from_numpy, lambda x: x.type(torch.FloatTensor), lambda x: normalise(x)]
-            transform_list_B = [torch.from_numpy, lambda x: x.type(torch.FloatTensor), lambda x: normalise(x)]
+            transform_list_A = [torch.from_numpy, lambda x: x.type(torch.FloatTensor)]
+            transform_list_B = [torch.from_numpy, lambda x: x.type(torch.FloatTensor)]
             self.transform_A = transforms.Compose(transform_list_A)
             self.transform_B = transforms.Compose(transform_list_B)
         else:
