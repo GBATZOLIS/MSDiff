@@ -90,7 +90,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = None
+  model.checkpoint_path = 'score_sde_2/lightning_logs/version_3/checkpoints/epoch=1144-step=728219.ckpt'
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE

@@ -150,12 +150,12 @@ class ImageVisualizationCallback(Callback):
             else:
                 samples, _ = pl_module.sample(show_evolution=False)
 
-            self.visualise_samples(normalise_per_image(samples), pl_module)
+            self.visualise_samples(samples, pl_module)
 
     def visualise_samples(self, samples, pl_module):
         # log sampled images
         sample_imgs =  samples.cpu()
-        grid_images = torchvision.utils.make_grid(sample_imgs, normalize=True)
+        grid_images = torchvision.utils.make_grid(sample_imgs, normalize=True, scale_each=True)
         pl_module.logger.experiment.add_image('generated_images', grid_images, pl_module.current_epoch)
     
     def visualise_evolution(self, evolution, pl_module):
