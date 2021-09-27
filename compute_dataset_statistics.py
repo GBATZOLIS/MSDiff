@@ -7,6 +7,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
+from torch.utils.tensorboard import SummaryWriter
+from torchvision.utils import make_grid
 
 def max_pairwise_L2_distance(batch):
     num_images = batch.size(0)
@@ -147,4 +149,72 @@ def compute_dataset_statistics(config):
 
 
 
+    #create a paired video of the outliers - inspect those scans
+    def convert_to_3D(x):
+        if len(x.shape[1:]) == 3:
+            x = torch.swapaxes(x, 1, -1).unsqueeze(1)
+            print(x.size())
+            return x
+        elif len(x.shape[1:]) == 4:
+            return x
+        else:
+            raise NotImplementedError('x dimensionality is not supported.')
+    
+    def normalise(c, value_range=None):
+    x = c.clone()
+    if value_range is None:
+        x -= x.min()
+        x /= x.max()
+    else:
+        x -= value_range[0]
+        x /= value_range[1]
+    return x
 
+    def generate_paired_video(writer, Y, I, dim, batch_idx, pet_max_value):
+        #dim: the sliced dimension (choices: 1,2,3)
+        B = Y.size(0)
+        raw_length = 2
+
+        frames = Y.size(dim+1)
+        video_grid = []
+        for frame in range(frames):
+            if dim==1:
+                dim_cut = torch.zeros(tuple([B*raw_length, 1, I.shape[3], I.shape[4]])).type_as(Y)
+            elif dim==2:
+                dim_cut = torch.zeros(tuple([B*raw_length, 1, I.shape[2], I.shape[4]])).type_as(Y)
+            elif dim==3:
+                dim_cut = torch.zeros(tuple([B*raw_length, 1, I.shape[2], I.shape[3]])).type_as(Y)
+
+            for i in range(B):
+                if dim==1:
+                    dim_cut[i*raw_length] = normalise(Y[i, 0, frame, :, :]).unsqueeze(0)
+                    dim_cut[(i+1)*raw_length-1] = normalise(I[i, 0, frame, :, :]).unsqueeze(0)
+                elif dim==2:
+                    dim_cut[i*raw_length] = normalise(Y[i, 0, :, frame, :]).unsqueeze(0)
+                    dim_cut[(i+1)*raw_length-1] = normalise(I[i, 0, :, frame, :]).unsqueeze(0)
+                elif dim==3:
+                    dim_cut[i*raw_length] = normalise(Y[i, 0, :, :, frame]).unsqueeze(0)
+                    dim_cut[(i+1)*raw_length-1] = normalise(I[i, 0, :, :, frame]).unsqueeze(0)
+
+            grid_cut = make_grid(tensor=dim_cut, nrow=raw_length, normalize=False)
+            video_grid.append(grid_cut)
+
+        video_grid = torch.stack(video_grid, dim=0).unsqueeze(0)
+        str_title = 'paired_video_batch_%d_dim_%d_max_pet_value_%.5f' % (batch_idx, dim, pet_max_value)
+        writer.add_video(str_title, video_grid, pl_module.current_epoch)
+
+    writer = SummaryWriter("mri_to_pet_inspection")
+    under_1e3 = 0
+    above_5e5 = 0
+    for i, batch in tqdm(enumerate(train_dataloader)):
+      mri, pet = batch
+      mri_min, mri_max = torch.min(mri).item(), torch.max(mri).item()
+      pet_min, pet_max = torch.min(pet).item(), torch.max(pet).item()
+      
+      if pet_max < 1e3 and under_1e3<10:
+        generate_paired_video(writer, mri, pet, 3, i, pet_max)
+        under_1e3+=1
+      
+      if pet_max > 5e5 and above_5e5<10:
+        generate_paired_video(writer, mri, pet, 3, i, pet_max)
+        above_5e5+=1
