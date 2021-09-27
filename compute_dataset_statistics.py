@@ -201,7 +201,7 @@ def compute_dataset_statistics(config):
 
         video_grid = torch.stack(video_grid, dim=0).unsqueeze(0)
         str_title = 'paired_video_batch_%d_dim_%d_max_pet_value_%.5f' % (batch_idx, dim, pet_max_value)
-        writer.add_video(str_title, video_grid, pl_module.current_epoch)
+        writer.add_video(str_title, video_grid)
 
     writer = SummaryWriter("mri_to_pet_inspection")
     under_1e3 = 0
