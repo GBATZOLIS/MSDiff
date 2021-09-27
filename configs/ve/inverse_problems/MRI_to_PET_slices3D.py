@@ -70,8 +70,8 @@ def get_config():
   data.effective_image_size = data.image_size
   data.shape_x = [1, data.image_size, data.image_size, 16]
   data.shape_y = [1, data.image_size, data.image_size, 16]
-  data.range_x = [0,50000] #[0, 1226428]
-  data.range_y = [0,7000] #[0, 7190]
+  data.range_x = [0,25000] #[0, 1226428]
+  data.range_y = [0,5000] #[0, 7190]
   
   data.centered = False
   data.random_flip = False
