@@ -161,14 +161,14 @@ def compute_dataset_statistics(config):
             raise NotImplementedError('x dimensionality is not supported.')
     
     def normalise(c, value_range=None):
-    x = c.clone()
-    if value_range is None:
-        x -= x.min()
-        x /= x.max()
-    else:
-        x -= value_range[0]
-        x /= value_range[1]
-    return x
+      x = c.clone()
+      if value_range is None:
+          x -= x.min()
+          x /= x.max()
+      else:
+          x -= value_range[0]
+          x /= value_range[1]
+      return x
 
     def generate_paired_video(writer, Y, I, dim, batch_idx, pet_max_value):
         #dim: the sliced dimension (choices: 1,2,3)
