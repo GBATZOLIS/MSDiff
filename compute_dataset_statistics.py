@@ -170,7 +170,7 @@ def compute_dataset_statistics(config):
           x /= value_range[1]
       return x
 
-    def generate_paired_video(writer, Y, I, dim, batch_idx, pet_max_value):
+    def generate_paired_video(writer, Y, I, dim, batch_idx, mri_max_value, pet_max_value):
         #dim: the sliced dimension (choices: 1,2,3)
         B = Y.size(0)
         raw_length = 2
@@ -200,7 +200,7 @@ def compute_dataset_statistics(config):
             video_grid.append(grid_cut)
 
         video_grid = torch.stack(video_grid, dim=0).unsqueeze(0)
-        str_title = 'paired_video_batch_%d_dim_%d_max_pet_value_%.5f' % (batch_idx, dim, pet_max_value)
+        str_title = 'paired_video_batch_%d_dim_%d_mri_max_value_%.5f_max_pet_value_%.5f' % (batch_idx, dim, mri_max_value, pet_max_value)
         writer.add_video(str_title, video_grid)
 
     writer = SummaryWriter("mri_to_pet_inspection")
@@ -212,9 +212,9 @@ def compute_dataset_statistics(config):
       pet_min, pet_max = torch.min(pet).item(), torch.max(pet).item()
       
       if pet_max < 1e3 and under_1e3<10:
-        generate_paired_video(writer, mri, pet, 3, i, pet_max)
+        generate_paired_video(writer, mri, pet, 3, i, mri_max, pet_max)
         under_1e3+=1
       
       if pet_max > 5e5 and above_5e5<10:
-        generate_paired_video(writer, mri, pet, 3, i, pet_max)
+        generate_paired_video(writer, mri, pet, 3, i, mri_max, pet_max)
         above_5e5+=1
