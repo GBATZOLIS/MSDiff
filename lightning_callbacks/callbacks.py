@@ -150,7 +150,7 @@ class ImageVisualizationCallback(Callback):
             else:
                 samples, _ = pl_module.sample(show_evolution=False)
 
-            self.visualise_samples(samples, pl_module)
+            self.visualise_samples(normalise_per_image(samples), pl_module)
 
     def visualise_samples(self, samples, pl_module):
         # log sampled images
