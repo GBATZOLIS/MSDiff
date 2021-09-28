@@ -64,6 +64,55 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
         conditional_sampling_fn = get_conditional_sampling_fn(self.config, self.sde, sampling_shape, self.sampling_eps)
         return conditional_sampling_fn(self.score_model, y, show_evolution)
 
+@utils.register_lightning_module(name='deprecated_conditional_decreasing_variance')
+class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeModel):
+    def __init__(self, config, *args, **kwargs):
+        super().__init__(config)
+        self.register_buffer('sigma_max_y', torch.tensor(config.model.sigma_max_x).float())
+
+    def configure_sde(self, config, sigma_max_y = None):
+        if config.training.sde.lower() == 'vpsde':
+            self.sde = sde_lib.VPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
+            self.sampling_eps = 1e-3
+        elif config.training.sde.lower() == 'subvpsde':
+            self.sde = sde_lib.subVPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
+            self.sampling_eps = 1e-3
+        elif config.training.sde.lower() == 'vesde':
+            if sigma_max_y is None:
+                sigma_max_y = torch.tensor(config.model.sigma_max_y).float()
+            else:
+                sigma_max_y = torch.tensor(sigma_max_y).float()
+            
+            self.sigma_max_y = sigma_max_y
+            sde_y = sde_lib.VESDE(sigma_min=config.model.sigma_min_y, sigma_max=sigma_max_y.cpu(), N=config.model.num_scales)
+            
+            if config.data.use_data_mean:
+                data_mean_path = os.path.join(config.data.base_dir, 'datasets_mean', '%s_%d' % (config.data.dataset, config.data.image_size), 'mean.pt')
+                data_mean = torch.load(data_mean_path)
+            else:
+                data_mean = None
+            sde_x = sde_lib.cVESDE(sigma_min=config.model.sigma_min_x, sigma_max=config.model.sigma_max_x, N=config.model.num_scales, data_mean=data_mean)
+            
+            self.sde = {'x':sde_x, 'y':sde_y}
+            self.sampling_eps = 1e-5
+        else:
+            raise NotImplementedError(f"SDE {config.training.sde} unknown.")
+    
+    def reconfigure_conditioning_sde(self, config, sigma_max_y = None):
+        if config.training.sde.lower() == 'vesde':
+            if sigma_max_y is None:
+                sigma_max_y = torch.tensor(config.model.sigma_max_y).float()
+            else:
+                sigma_max_y = torch.tensor(sigma_max_y).float()
+            
+            self.sigma_max_y = sigma_max_y
+            self.sde['y'] = sde_lib.VESDE(sigma_min=config.model.sigma_min_y, sigma_max=sigma_max_y.cpu(), N=config.model.num_scales)
+        else:
+            raise NotImplementedError(f"Conditioning SDE {config.training.sde} not supported yet.")
+    
+    def test_step(self, batch, batch_idx):
+        print('Test batch %d' % batch_idx)
+
 @utils.register_lightning_module(name='conditional_decreasing_variance')
 class DecreasingVarianceConditionalSdeGenerativeModel(ConditionalSdeGenerativeModel):
     def __init__(self, config, *args, **kwargs):
