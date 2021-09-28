@@ -121,7 +121,7 @@ def multi_scale_test(master_config, log_path):
         lightning_module = scale_info[scale]['LightningModule']
         lr, info = lightning_module.sample(lr, show_evolution)
         if return_intermediate_images:
-          scales_bicubic.append(lr)
+          scales_bicubic.append(lr.clone().cpu())
       
       if return_intermediate_images:
         return scales_bicubic, []
