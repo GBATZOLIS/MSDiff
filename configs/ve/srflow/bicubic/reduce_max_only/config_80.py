@@ -90,7 +90,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = 'score_sde/experiments/beatSRFLOW/bicubic/80/lightning_logs/version_4/checkpoints/epoch=383-step=488447.ckpt'
+  model.checkpoint_path = 'experiments/bicubic_based_SR_celebA/80/decreasing_max_only/checkpoints/epoch=383-step=488447.ckpt'
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
