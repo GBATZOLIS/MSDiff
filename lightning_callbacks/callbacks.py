@@ -141,16 +141,19 @@ class ImageVisualizationCallback(Callback):
         super().__init__()
         self.show_evolution = show_evolution
 
-    def on_validation_epoch_end(self, trainer, pl_module):
-        if pl_module.current_epoch >= 1:
-            if self.show_evolution:
-                samples, sampling_info = pl_module.sample(show_evolution=True)
-                evolution = sampling_info['evolution']
-                self.visualise_evolution(evolution, pl_module)
-            else:
-                samples, _ = pl_module.sample(show_evolution=False)
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        current_epoch = pl_module.current_epoch
+        if batch_idx!=2 or current_epoch % 50 != 0:
+            return
 
-            self.visualise_samples(samples, pl_module)
+        if self.show_evolution:
+            samples, sampling_info = pl_module.sample(show_evolution=True)
+            evolution = sampling_info['evolution']
+            self.visualise_evolution(evolution, pl_module)
+        else:
+            samples, _ = pl_module.sample(show_evolution=False)
+
+        self.visualise_samples(samples, pl_module)
 
     def visualise_samples(self, samples, pl_module):
         # log sampled images
