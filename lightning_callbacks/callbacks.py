@@ -143,7 +143,7 @@ class ImageVisualizationCallback(Callback):
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         current_epoch = pl_module.current_epoch
-        if batch_idx!=2 or current_epoch % 50 != 0:
+        if batch_idx!=2:
             return
 
         if self.show_evolution:
@@ -159,7 +159,7 @@ class ImageVisualizationCallback(Callback):
         # log sampled images
         sample_imgs =  samples.cpu()
         grid_images = torchvision.utils.make_grid(sample_imgs, normalize=True, scale_each=True)
-        pl_module.logger.experiment.add_image('generated_images', grid_images, pl_module.current_epoch)
+        pl_module.logger.experiment.add_image('generated_images_%d' % pl_module.current_epoch, grid_images, pl_module.current_epoch)
     
     def visualise_evolution(self, evolution, pl_module):
         #to be implemented - has already been implemented for the conditional case
