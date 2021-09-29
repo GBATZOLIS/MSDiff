@@ -22,12 +22,14 @@ import torch
 import numpy as np
 import pytorch_lightning as pl
 
+
 ResnetBlockDDPM = layerspp.ResnetBlockDDPMpp
 ResnetBlockBigGAN = layerspp.ResnetBlockBigGANpp
 Combine = layerspp.Combine
 conv3x3 = layerspp.conv3x3
 conv1x1 = layerspp.conv1x1
 get_act = layers.get_act
+get_sigmas = utils.get_sigmas
 get_normalization = normalization.get_normalization
 default_initializer = layers.default_init
 
@@ -40,6 +42,8 @@ class NCSNpp(pl.LightningModule):
     super().__init__()
     self.config = config
     self.act = act = get_act(config)
+    #sigmas = torch.from_numpy(get_sigmas(config))
+    #self.register_buffer("sigmas", sigmas)
 
     self.nf = nf = config.model.nf
     ch_mult = config.model.ch_mult
@@ -235,15 +239,14 @@ class NCSNpp(pl.LightningModule):
     m_idx = 0
     if self.embedding_type == 'fourier':
       # Gaussian Fourier features embeddings.
-      used_sigmas = time_cond
-      temb = modules[m_idx](torch.log(used_sigmas))
+      temb = modules[m_idx](time_cond)
       m_idx += 1
 
     elif self.embedding_type == 'positional':
       # Sinusoidal positional embeddings.
-      timesteps = time_cond
-      used_sigmas = self.sigmas[time_cond.long()]
-      temb = layers.get_timestep_embedding(timesteps, self.nf)
+      #timesteps = time_cond
+      #used_sigmas = self.sigmas[time_cond.long()]
+      temb = layers.get_timestep_embedding(time_cond, self.nf)
 
     else:
       raise ValueError(f'embedding type {self.embedding_type} unknown.')
@@ -279,6 +282,7 @@ class NCSNpp(pl.LightningModule):
         hs.append(h)
 
       if i_level != self.num_resolutions - 1:
+        # ResBlock + Downsampling
         if self.resblock_type == 'ddpm':
           h = modules[m_idx](hs[-1])
           m_idx += 1
@@ -374,8 +378,9 @@ class NCSNpp(pl.LightningModule):
       m_idx += 1
 
     assert m_idx == len(modules)
-    if self.config.model.scale_by_sigma:
-      used_sigmas = used_sigmas.reshape((x.shape[0], *([1] * len(x.shape[1:]))))
-      h = h / used_sigmas
+
+    #if self.config.model.scale_by_sigma:
+    #  used_sigmas = used_sigmas.reshape((x.shape[0], *([1] * len(x.shape[1:]))))
+    #  h = h / used_sigmas
 
     return h

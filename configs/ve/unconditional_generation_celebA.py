@@ -32,8 +32,8 @@ def get_config():
 
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
-  training.likelihood_weighting = False
-  training.continuous = False
+  training.likelihood_weighting = True
+  training.continuous = True
   training.reduce_mean = True 
   training.sde = 'vesde'
   
@@ -79,32 +79,34 @@ def get_config():
   config.model = model = ml_collections.ConfigDict()
   model.checkpoint_path = None
   model.num_scales = 1000
-  model.sigma_max = np.sqrt(np.prod(data.shape)) #input range is [0,1] and resolution is 64^2
-  print('model.sigma_max: %.4f' % model.sigma_max)
-
-  #-------The three subsequent settings configure the reduction schedule of sigma_max_y
-  #model.reduction = 'inverse_exponentional' #choices=['linear', 'inverse_exponentional']
-  #model.reach_target_in_epochs = 64
-  #model.starting_transition_iterations = 2000
-  #-------
-
+  model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
   model.beta_min = 0.1
   model.beta_max = 20.
   model.dropout = 0.1
   model.embedding_type = 'fourier'
 
-  model.name = 'ddpm'
-  model.scale_by_sigma = True
+   # model architecture
+  model.name = 'ncsnpp'
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 128
   model.ch_mult = (1, 1, 2, 2)
   model.num_res_blocks = 2
-  model.attn_resolutions = (16, 8)
+  model.attn_resolutions = (16,)
   model.resamp_with_conv = True
   model.conditional = True
+  model.fir = True
+  model.fir_kernel = [1, 3, 3, 1]
+  model.skip_rescale = True
+  model.resblock_type = 'biggan'
+  model.progressive = 'output_skip'
+  model.progressive_input = 'input_skip'
+  model.progressive_combine = 'sum'
+  model.attention_type = 'ddpm'
+  model.init_scale = 0.
+  model.fourier_scale = 16
   model.conv_size = 3
 
   # optimization

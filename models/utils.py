@@ -47,7 +47,7 @@ def get_model(name):
   return _MODELS[name]
 
 
-def divide_by_sigmas(h, labels, sde):
+def divide_by_sigmas(h, labels, sde, continuous=False):
   #inputs:
   #h:the output of model_fn
   #labels -> point to the right sigmas
@@ -55,14 +55,22 @@ def divide_by_sigmas(h, labels, sde):
   #outputs: the scaled activation
 
   #calculate sigmas using sde and divide by sigmas
-  if isinstance(sde, dict) and isinstance(h, dict):
-    for domain in h.keys():
-      domain_sigmas = sde[domain].discrete_sigmas.type_as(h[domain])
-      h[domain] = h[domain] / domain_sigmas[(labels,) + (None,) * len(h[domain].shape[1:])] 
-  else:
-    sigmas = sde.discrete_sigmas.type_as(h)
-    h = h / sigmas[(labels,) + (None,) * len(h.shape[1:])]
-  
+  if not continuous:
+    if isinstance(sde, dict) and isinstance(h, dict):
+      for domain in h.keys():
+        domain_sigmas = sde[domain].discrete_sigmas.type_as(h[domain])
+        h[domain] = h[domain] / domain_sigmas[(labels,) + (None,) * len(h[domain].shape[1:])] 
+    else:
+      sigmas = sde.discrete_sigmas.type_as(h)
+      h = h / sigmas[(labels,) + (None,) * len(h.shape[1:])]
+  elif continuous:
+    if isinstance(sde, dict) and isinstance(h, dict):
+      for domain in h.keys():
+        domain_std = sde[domain].marginal_prob(torch.zeros_like(h[domain]), labels)[1]
+        h[domain] = h[domain] / domain_std[(...,) + (None,) * len(h[domain].shape[1:])] 
+    else:
+      std = sde.marginal_prob(torch.zeros_like(h), labels)[1]
+      h = h / std[(...,) + (None,) * len(h.shape[1:])]
   return h
 
 def get_sigmas(config):
@@ -163,15 +171,15 @@ def get_score_fn(sde, model, train=False, continuous=False):
     elif isinstance(sde['y'], sde_lib.VESDE) and isinstance(sde['x'], sde_lib.cVESDE) and len(sde)==2:
       def score_fn(x, t):
         if continuous:
-          raise NotImplementedError('Continuous training is not supported yet for conditional SDE.')
-          #labels = sde.marginal_prob(torch.zeros_like(x), t)[1]
-          #score = model_fn(x, labels)
+          labels = t * (sde['x'].N - 1)
+          score = model_fn(x, labels)
+          score = divide_by_sigmas(score, t, sde, continuous)
         else:
           # For VE-trained models, t=0 corresponds to the highest noise level
           labels = t*(sde['x'].N - 1)
           labels = torch.round(labels.float()).long()
           score = model_fn(x, labels)
-          score = divide_by_sigmas(score, labels, sde)
+          score = divide_by_sigmas(score, labels, sde, continuous)
 
         return score
     else:
@@ -184,30 +192,33 @@ def get_score_fn(sde, model, train=False, continuous=False):
         # For VP-trained models, t=0 corresponds to the lowest noise level
         # The maximum value of time embedding is assumed to 999 for
         # continuously-trained models.
-        labels = t * 999
+        labels = t * (sde.N - 1)
         score = model_fn(x, labels)
         std = sde.marginal_prob(torch.zeros_like(x), t)[1]
       else:
         # For VP-trained models, t=0 corresponds to the lowest noise level
         labels = t * (sde.N - 1)
         score = model_fn(x, labels)
-        std = sde.sqrt_1m_alphas_cumprod.to(labels.device)[labels.long()]
+        std = sde.sqrt_1m_alphas_cumprod.type_as(labels)[labels.long()]
 
-      score = -score / std[:, None, None, None] #-> why do they scale the output of the network by std ??
+      score = score / std[(...,)+(None)*len(x.shape[1:])] #-> why do they scale the output of the network by std ??
       return score
 
   elif isinstance(sde, sde_lib.VESDE) or isinstance(sde, sde_lib.cVESDE):
     def score_fn(x, t):
       if continuous:
-        raise NotImplementedError('Continuous training for VE SDE is not checked. Division by std should be included. Not completed yet.')
-        #labels = sde.marginal_prob(torch.zeros_like(x), t)[1]
-        #score = model_fn(x, labels)
+        #raise NotImplementedError('Continuous training for VE SDE is not checked. Division by std should be included. Not completed yet.')
+        std = labels = sde.marginal_prob(torch.zeros_like(x), t)[1]
+        time_embedding = torch.log(labels) if model.embedding_type == 'fourier' else labels
+        score = model_fn(x, time_embedding)
+        score = score / std[(...,)+(None)*len(x.shape[1:])]
       else:
         # For VE-trained models, t=0 corresponds to the lowest noise level
         labels = t*(sde.N - 1)
         labels = torch.round(labels).long()
-        score = model_fn(x, labels)
-        score = divide_by_sigmas(score, labels, sde) #needs generalisation
+        std = sigma_labels = sde.discrete_sigmas.type_as(x)[labels]
+        score = model_fn(x, sigma_labels)
+        score = score / std[(...,)+(None)*len(x.shape[1:])]
 
       return score
 
