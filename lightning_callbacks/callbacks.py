@@ -143,7 +143,7 @@ class ImageVisualizationCallback(Callback):
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         current_epoch = pl_module.current_epoch
-        if batch_idx!=2:
+        if batch_idx!=1:
             return
 
         if self.show_evolution:
