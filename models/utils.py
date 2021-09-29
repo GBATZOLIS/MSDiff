@@ -201,7 +201,7 @@ def get_score_fn(sde, model, train=False, continuous=False):
         score = model_fn(x, labels)
         std = sde.sqrt_1m_alphas_cumprod.type_as(labels)[labels.long()]
 
-      score = score / std[(...,)+(None)*len(x.shape[1:])] #-> why do they scale the output of the network by std ??
+      score = score / std[(...,)+(None,)*len(x.shape[1:])] #-> why do they scale the output of the network by std ??
       return score
 
   elif isinstance(sde, sde_lib.VESDE) or isinstance(sde, sde_lib.cVESDE):
@@ -211,14 +211,14 @@ def get_score_fn(sde, model, train=False, continuous=False):
         std = labels = sde.marginal_prob(torch.zeros_like(x), t)[1]
         time_embedding = torch.log(labels) if model.embedding_type == 'fourier' else labels
         score = model_fn(x, time_embedding)
-        score = score / std[(...,)+(None)*len(x.shape[1:])]
+        score = score / std[(...,)+(None,)*len(x.shape[1:])]
       else:
         # For VE-trained models, t=0 corresponds to the lowest noise level
         labels = t*(sde.N - 1)
         labels = torch.round(labels).long()
         std = sigma_labels = sde.discrete_sigmas.type_as(x)[labels]
         score = model_fn(x, sigma_labels)
-        score = score / std[(...,)+(None)*len(x.shape[1:])]
+        score = score / std[(...,)+(None,)*len(x.shape[1:])]
 
       return score
 
