@@ -142,7 +142,7 @@ class ImageVisualizationCallback(Callback):
         self.show_evolution = show_evolution
 
     def on_validation_epoch_end(self, trainer, pl_module):
-        if pl_module.current_epoch >= 0:
+        if pl_module.current_epoch >= 1:
             if self.show_evolution:
                 samples, sampling_info = pl_module.sample(show_evolution=True)
                 evolution = sampling_info['evolution']
