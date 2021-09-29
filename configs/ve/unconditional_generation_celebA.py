@@ -84,7 +84,7 @@ def get_config():
   model.beta_min = 0.1
   model.beta_max = 20.
   model.dropout = 0.1
-  model.embedding_type = 'fourier'
+  model.embedding_type = 'positional'
 
    # model architecture
   model.name = 'ncsnpp'
