@@ -97,7 +97,7 @@ def get_sde_loss_fn(sde, train, reduce_mean=True, continuous=True, likelihood_we
   return loss_fn
 
 
-def get_smld_loss_fn(vesde, train, reduce_mean=False):
+def get_smld_loss_fn(vesde, train, reduce_mean=False, likelihood_weighting=False):
   """Legacy code to reproduce previous results on SMLD(NCSN). Not recommended for new work."""
   assert isinstance(vesde, VESDE), "SMLD training only works for VESDEs."
 
@@ -110,12 +110,19 @@ def get_smld_loss_fn(vesde, train, reduce_mean=False):
     labels = torch.randint(0, vesde.N, (batch.shape[0],), device=batch.device)
     score_fn_labels = labels/(vesde.N - 1)
     sigmas = smld_sigma_array.to(batch.device)[labels]
-    noise = torch.randn_like(batch) * sigmas[:, None, None, None]
+    noise = torch.randn_like(batch) * sigmas[(..., ) + (None, ) * len(batch.shape[1:])]
     perturbed_data = noise + batch
     score = score_fn(perturbed_data, score_fn_labels)
-    target = -noise / (sigmas ** 2)[:, None, None, None]
+    target = -noise / (sigmas ** 2)[(..., ) + (None, ) * len(batch.shape[1:])]
     losses = torch.square(score - target)
-    losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1) * sigmas ** 2
+
+    if likelihood_weighting:
+      losses = losses*sigmas[(..., ) + (None, ) * len(batch.shape[1:])]**2
+      losses = losses.reshape(losses.shape[0], -1)
+      losses = reduce_op(losses, dim=-1)
+    else:
+      losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1) * sigmas ** 2
+
     loss = torch.mean(losses)
     return loss
 
