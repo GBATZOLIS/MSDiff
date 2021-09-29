@@ -8,6 +8,7 @@ from sde_lib import VESDE, VPSDE
 from . import utils
 import torch.optim as optim
 import os
+import torch
 
 @utils.register_lightning_module(name='base')
 class BaseSdeGenerativeModel(pl.LightningModule):
