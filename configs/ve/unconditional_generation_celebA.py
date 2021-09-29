@@ -51,7 +51,7 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4
-  evaluate.batch_size = training.batch_size 
+  evaluate.batch_size = training.batch_size//2
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
