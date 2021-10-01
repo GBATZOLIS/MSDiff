@@ -1,5 +1,5 @@
 import losses
-from losses import get_sde_loss_fn, get_smld_loss_fn, get_ddpm_loss_fn
+from losses import get_sde_loss_fn, get_smld_loss_fn, get_ddpm_loss_fn, get_general_sde_loss_fn
 import pytorch_lightning as pl
 import sde_lib
 from sampling.unconditional import get_sampling_fn
@@ -44,7 +44,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
 
     def configure_loss_fn(self, config, train):
         if config.training.continuous:
-            loss_fn = get_sde_loss_fn(self.sde, train, reduce_mean=config.training.reduce_mean,
+            loss_fn = get_general_sde_loss_fn(self.sde, train, reduce_mean=config.training.reduce_mean,
                                     continuous=True, likelihood_weighting=config.training.likelihood_weighting)
         else:
             if isinstance(self.sde, VESDE):

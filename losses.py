@@ -143,7 +143,7 @@ def get_general_sde_loss_fn(sde, train, reduce_mean=True, continuous=True, likel
         losses = reduce_op(losses, dim=-1)
         loss = torch.mean(losses)
         return loss
-        
+
     elif len(sde.keys()) >= 3:
       assert likelihood_weighting, 'For multi-speed diffussion, we support only likelihood weighting.'
       def loss_fn(model, batch):
@@ -178,6 +178,7 @@ def get_general_sde_loss_fn(sde, train, reduce_mean=True, continuous=True, likel
         losses = torch.cat(losses, dim=-1)
         losses = reduce_op(losses, dim=-1)
         loss = torch.mean(losses)
+        return loss
 
   else:
     def loss_fn(model, batch):
