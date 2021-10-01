@@ -11,7 +11,7 @@ def get_config():
   config.training.lightning_module = 'base'
   training.batch_size = 54
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4
@@ -84,7 +84,7 @@ def get_config():
   model.beta_min = 0.1
   model.beta_max = 20.
   model.dropout = 0.1
-  model.embedding_type = 'positional'
+  model.embedding_type = 'fourier'
 
    # model architecture
   model.name = 'ncsnpp'
