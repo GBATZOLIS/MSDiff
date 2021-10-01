@@ -33,9 +33,9 @@ def get_config():
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
   training.likelihood_weighting = True
-  training.continuous = False
+  training.continuous = True
   training.reduce_mean = True 
-  training.sde = 'vesde'
+  training.sde = 'vpsde'
   
 
   # sampling
