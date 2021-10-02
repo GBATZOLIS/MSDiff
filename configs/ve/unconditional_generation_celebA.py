@@ -35,7 +35,7 @@ def get_config():
   training.likelihood_weighting = True
   training.continuous = True
   training.reduce_mean = True 
-  training.sde = 'vpsde'
+  training.sde = 'vesde'
   
 
   # sampling
@@ -84,7 +84,7 @@ def get_config():
   model.beta_min = 0.1
   model.beta_max = 20.
   model.dropout = 0.1
-  model.embedding_type = 'positional'
+  model.embedding_type = 'fourier'
 
    # model architecture
   model.name = 'ncsnpp'
