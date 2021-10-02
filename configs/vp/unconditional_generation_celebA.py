@@ -35,7 +35,7 @@ def get_config():
   training.likelihood_weighting = True
   training.continuous = True
   training.reduce_mean = True 
-  training.sde = 'vesde'
+  training.sde = 'vpsde'
   
 
   # sampling
