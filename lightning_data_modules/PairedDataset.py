@@ -29,7 +29,7 @@ class PairedDataset(Dataset):
         # define the default transform function. You can use <base_dataset.get_transform>; You can also define your custom transform function
         if self.file_extension in ['.jpg', '.png']:
             transform_list = [transforms.ToTensor()]
-            self.transform = transforms.Compose(transform_list)
+            self.transform_A = self.transform_B = transforms.Compose(transform_list)
         elif self.file_extension in ['.npy']:
             self.dim = len(config.data.shape_x)-1
             self.resolution = config.data.image_size
