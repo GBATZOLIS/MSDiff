@@ -102,6 +102,16 @@ def get_config():
   model.attn_resolutions = (16, 8)
   model.resamp_with_conv = True
   model.conditional = True
+  model.fir = True
+  model.fir_kernel = [1, 3, 3, 1]
+  model.skip_rescale = True
+  model.resblock_type = 'biggan'
+  model.progressive = 'output_skip'
+  model.progressive_input = 'input_skip'
+  model.progressive_combine = 'sum'
+  model.attention_type = 'ddpm'
+  model.init_scale = 0.
+  model.fourier_scale = 16
   model.conv_size = 3
 
   # optimization
