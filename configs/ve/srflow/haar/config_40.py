@@ -82,28 +82,28 @@ def get_config():
   data.level = math.log(data.target_resolution // data.image_size, 2)
   data.effective_image_size = data.image_size // 2 #actual image size after preprocessing. Divided by two when using haar tranform.
   data.max_haar_depth = 2 #maximum depth of multi-level haar tranform -> 1+data.max_haar_depth resolution levels.
+  data.shape_x = [9, data.effective_image_size, data.effective_image_size]
+  data.shape_y = [3, data.effective_image_size, data.effective_image_size]
   data.centered = False
   data.random_flip = False
   data.uniform_dequantization = False
-  data.num_channels = 12 #because of the haar tranform we have 12 channels.
-  data.shape_x = [9, data.effective_image_size, data.effective_image_size]
+  data.num_channels = data.shape_x[0]+data.shape_y[0] #because of the haar tranform we have 12 channels.
+  
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = 'experiments/beatSRFLOW/40/lightning_logs/version_2/checkpoints/epoch=295-step=422983.ckpt'
+  model.checkpoint_path = None
   model.num_scales = 1000
-  model.sigma_max_x = 450 #change it to 480 for future experiments (not a big difference)
-  #we do not want to perturb y a lot. 
-  #A slight perturbation will result in better approximation of the conditional time-dependent score.
-  model.sigma_max_y = model.sigma_max_x
-  #-------The three subsequent settings configure the reduction schedule of sigma_max_y
-  model.reduction = 'inverse_exponentional' #choices=['linear', 'inverse_exponentional']
-  model.reach_target_in_epochs = 64
-  model.starting_transition_iterations = 8000
 
-  model.sigma_min_x = 0.01
-  model.sigma_min_y = 0.01
-  
+  #SIGMA INFORMATION FOR THE VE SDE
+  model.reach_target_steps = 8000
+  model.sigma_max_x = np.sqrt(np.prod(data.shape_x))*2**(data.level+1)
+  model.sigma_max_y = np.sqrt(np.prod(data.shape_y))
+  model.sigma_max_y_target = model.sigma_max_y/2
+  model.sigma_min_x = 1e-2
+  model.sigma_min_y = 1e-2
+  model.sigma_min_y_target = 1e-2
+
   model.beta_min = 0.1
   # We use an adjusted beta max 
   # because the range is doubled in each level starting from the first level
