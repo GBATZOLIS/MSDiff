@@ -11,10 +11,10 @@ def get_config():
   config.training.lightning_module = 'conditional_decreasing_variance'
   training.batch_size = 50
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
-  training.workers = 4
+  training.workers = 4*training.gpus
   #----- to be removed -----
   training.num_epochs = 10000
   training.n_iters = 2400001
@@ -25,16 +25,11 @@ def get_config():
   
   training.visualization_callback = 'paired'
   training.show_evolution = False
-  
-  ## store additional checkpoints for preemption in cloud computing environments
-  training.snapshot_freq_for_preemption = 5000
-  ## produce samples at each snapshot.
-  training.snapshot_sampling = True
+
   training.likelihood_weighting = True
-  training.continuous = False
+  training.continuous = True
   training.reduce_mean = True 
   training.sde = 'vesde'
-  
 
   # sampling
   config.sampling = sampling = ml_collections.ConfigDict()
@@ -48,7 +43,7 @@ def get_config():
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
-  evaluate.workers = 4
+  evaluate.workers = 4*training.gpus
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
   evaluate.batch_size = 25
@@ -79,27 +74,24 @@ def get_config():
   config.model = model = ml_collections.ConfigDict()
   model.checkpoint_path = None
   model.num_scales = 1000
-  model.sigma_max_x = 64 #input range is [0,1] and resolution is 64^2
-  #we do not want to perturb y a lot. 
-  #A slight perturbation will result in better approximation of the conditional time-dependent score.
-  model.sigma_max_y = model.sigma_max_x
-  #-------The three subsequent settings configure the reduction schedule of sigma_max_y
-  model.reduction = 'inverse_exponentional' #choices=['linear', 'inverse_exponentional']
-  model.reach_target_in_epochs = 64
-  model.starting_transition_iterations = 2000
-  #-------
-  model.sigma_min_x = 0.01
-  model.sigma_min_y = 0.01
-  
+
+  #SIGMA INFORMATION FOR THE VE SDE
+  model.reach_target_steps = 8000
+  model.sigma_max_x = np.sqrt(np.prod(data.shape_x))
+  model.sigma_max_y = np.sqrt(np.prod(data.shape_y))
+  model.sigma_max_y_target = model.sigma_max_y/2
+  model.sigma_min_x = 1e-2
+  model.sigma_min_y = 1e-2
+  model.sigma_min_y_target = 1e-2
+
   model.beta_min = 0.1
-  # We use an adjusted beta max 
-  # because the range is doubled in each level starting from the first level
   model.beta_max = 20.
+
   model.dropout = 0.1
-  model.embedding_type = 'fourier'
+  model.embedding_type = 'positional'
 
 
-  model.name = 'ddpm_paired'
+  model.name = 'ncsnpp_paired'
   model.scale_by_sigma = True
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
@@ -120,11 +112,9 @@ def get_config():
   optim.lr = 2e-4
   optim.beta1 = 0.9
   optim.eps = 1e-8
-  optim.warmup = 0 #set it to 0 if you do not want to use warm up.
+  optim.warmup = 2500 #set it to 0 if you do not want to use warm up.
   optim.grad_clip = 1 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.
 
   config.seed = 42
-  #config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
-
 
   return config
