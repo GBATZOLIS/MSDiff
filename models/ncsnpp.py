@@ -414,9 +414,9 @@ class SqueezeBlock(nn.Module):
           z = z.permute(0, 1, 4, 2, 5, 3)
           z = z.reshape(B, C//4, H*2, W*2)
       return z
-      
+
 @utils.register_model(name='ncsnpp_2xSR')
-class NCSNpp_2xSR(DDPM):
+class NCSNpp_2xSR(NCSNpp):
   def __init__(self, config, *args, **kwargs):
       super().__init__(config)
       self.squeeze_block = SqueezeBlock()
@@ -433,7 +433,7 @@ class NCSNpp_2xSR(DDPM):
 
 
 @utils.register_model(name='ncsnpp_KxSR')
-class NCSNpp_KxSR(DDPM):
+class NCSNpp_KxSR(NCSNpp):
   def __init__(self, config, *args, **kwargs):
       super().__init__(config)
       self.resize_to_GT = Resize(config.data.target_resolution, interpolation=InterpolationMode.NEAREST)
