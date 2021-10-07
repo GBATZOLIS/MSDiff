@@ -119,11 +119,21 @@ def get_config():
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 128
-  model.ch_mult = (1, 1, 2, 2, 3)
+  model.ch_mult = (1, 1, 2, 2)
   model.num_res_blocks = 2
-  model.attn_resolutions = (20, 10, 5)
+  model.attn_resolutions = (16, 8)
   model.resamp_with_conv = True
   model.conditional = True
+  model.fir = True
+  model.fir_kernel = [1, 3, 3, 1]
+  model.skip_rescale = True
+  model.resblock_type = 'biggan'
+  model.progressive = 'output_skip'
+  model.progressive_input = 'input_skip'
+  model.progressive_combine = 'sum'
+  model.attention_type = 'ddpm'
+  model.init_scale = 0.
+  model.fourier_scale = 16
   model.conv_size = 3
 
   # optimization
