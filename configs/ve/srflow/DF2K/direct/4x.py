@@ -27,7 +27,7 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional_decreasing_variance'
-  config.training.batch_size = 8
+  config.training.batch_size = 16
   training.num_nodes = 1
   training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
@@ -118,10 +118,10 @@ def get_config():
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
-  model.nf = 128
-  model.ch_mult = (1, 1, 2, 2)
+  model.nf = 64
+  model.ch_mult = (1, 1, 2, 2, 3)
   model.num_res_blocks = 2
-  model.attn_resolutions = (16, 8)
+  model.attn_resolutions = (20, 10)
   model.resamp_with_conv = True
   model.conditional = True
   model.fir = True
