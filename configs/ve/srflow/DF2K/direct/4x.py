@@ -29,7 +29,7 @@ def get_config():
   config.training.lightning_module = 'conditional_decreasing_variance'
   config.training.batch_size = 32
   training.num_nodes = 1
-  training.gpus = 0
+  training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -43,7 +43,7 @@ def get_config():
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
   training.likelihood_weighting = True
-  training.continuous = False
+  training.continuous = True
   training.reduce_mean = True 
   training.sde = 'vesde'
 
