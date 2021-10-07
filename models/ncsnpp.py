@@ -436,8 +436,8 @@ class NCSNpp_2xSR(NCSNpp):
 class NCSNpp_KxSR(NCSNpp):
   def __init__(self, config, *args, **kwargs):
       super().__init__(config)
-      self.resize_to_GT = Resize(config.data.target_resolution, interpolation=InterpolationMode.NEAREST)
-      self.resize_to_LQ = Resize(config.data.target_resolution//config.data.scale, interpolation=InterpolationMode.LINEAR)
+      self.resize_to_GT = Resize(config.data.target_resolution, interpolation=InterpolationMode.BILINEAR)
+      self.resize_to_LQ = Resize(config.data.target_resolution//config.data.scale, interpolation=InterpolationMode.BILINEAR)
   
   def forward(self, input_dict, labels):
     x, y = input_dict['x'], input_dict['y']
