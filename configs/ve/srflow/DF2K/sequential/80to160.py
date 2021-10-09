@@ -118,7 +118,7 @@ def get_config():
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
-  model.nf = 128
+  model.nf = 64
   model.ch_mult = (1, 1, 2, 2, 4)
   model.num_res_blocks = 2
   model.attn_resolutions = (20, 10, 5)
