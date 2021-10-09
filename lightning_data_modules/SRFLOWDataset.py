@@ -5,6 +5,8 @@ from torch.utils.data import DataLoader
 import numpy as np
 import time
 import torch
+from torchvision.transforms import Resize
+from torchvision.transforms.functional import InterpolationMode
 
 import pickle
 import pytorch_lightning as pl
@@ -34,8 +36,9 @@ def get_exact_paths(config, phase):
 class LRHR_PKLDataset(data.Dataset):
     def __init__(self, config, phase):
         super(LRHR_PKLDataset, self).__init__()
-        self.crop_size = config.data.target_resolution
-        self.scale = None
+        self.target_size = config.data.target_resolution #overall target size
+        self.crop_size = config.data.image_size #target image size for this scale
+        self.scale = config.data.scale
         self.random_scale_list = [1]
 
         hr_file_path = get_exact_paths(config, phase)['GT']
@@ -82,27 +85,54 @@ class LRHR_PKLDataset(data.Dataset):
         hr = self.hr_images[item]
         lr = self.lr_images[item]
 
-        if self.scale == None:
-            self.scale = hr.shape[1] // lr.shape[1]
-            assert hr.shape[1] == self.scale * lr.shape[1], ('non-fractional ratio', lr.shape, hr.shape)
+        if self.scale == hr.shape[1] // lr.shape[1]:
+            if self.use_crop:
+                hr, lr = random_crop(hr, lr, self.crop_size, self.scale, self.use_crop)
 
-        if self.use_crop:
-            hr, lr = random_crop(hr, lr, self.crop_size, self.scale, self.use_crop)
+            #if self.center_crop_hr_size:
+            #    hr, lr = center_crop(hr, self.center_crop_hr_size), center_crop(lr, self.center_crop_hr_size // self.scale)
 
-        #if self.center_crop_hr_size:
-        #    hr, lr = center_crop(hr, self.center_crop_hr_size), center_crop(lr, self.center_crop_hr_size // self.scale)
+            if self.use_flip:
+                hr, lr = random_flip(hr, lr)
 
-        if self.use_flip:
-            hr, lr = random_flip(hr, lr)
+            if self.use_rot:
+                hr, lr = random_rotation(hr, lr)
 
-        if self.use_rot:
-            hr, lr = random_rotation(hr, lr)
+            hr = hr / 255.0
+            lr = lr / 255.0
 
-        hr = hr / 255.0
-        lr = lr / 255.0
+            hr = torch.Tensor(hr)
+            lr = torch.Tensor(lr)
+        
+        elif self.scale < hr.shape[1] // lr.shape[1]:
+            if self.crop_size == self.scale * lr.shape[1]:
+                a_priori_scale = hr.shape[1] // lr.shape[1]
+                hr, lr = random_crop(hr, lr, self.target_size, a_priori_scale, self.use_crop)
+                
+                #convert hr, lr to tensors
+                hr, lr = hr / 255.0, lr / 255.0
+                hr, lr = torch.Tensor(hr), torch.Tensor(lr)
 
-        hr = torch.Tensor(hr)
-        lr = torch.Tensor(lr)
+                #resize hr to the right scale
+                resize = Resize(self.crop_size, interpolation=InterpolationMode.BICUBIC)
+                hr = resize(hr)
+            else:
+                size_hr_x, size_hr_y = hr.shape[1], hr.shape[2]
+                start_x_hr = np.random.randint(low=0, high=(size_hr_x - self.target_size) + 1) if size_hr_x > self.target_size else 0
+                start_y_hr = np.random.randint(low=0, high=(size_hr_y - self.target_size) + 1) if size_hr_y > self.target_size else 0
+                hr = hr[:, start_x_hr:start_x_hr + self.target_size, start_y_hr:start_y_hr + self.target_size]
+                
+                #convert hr to tensor
+                hr = hr / 255.0
+                hr = torch.Tensor(hr)
+                
+                #resize hr_patch to the crop size (target image size at that scale).
+                resize = Resize(self.crop_size, interpolation=InterpolationMode.BICUBIC)
+                hr = resize(hr)
+                
+                #resize hr to lr using the provided scale
+                resize = Resize(self.crop_size//self.scale, interpolation=InterpolationMode.BICUBIC)
+                lr = resize(hr)
 
         return lr, hr
 
@@ -137,8 +167,7 @@ def random_crop(hr, lr, size_hr, scale, random):
     start_y_hr = start_y_lr * scale
     hr_patch = hr[:, start_x_hr:start_x_hr + size_hr, start_y_hr:start_y_hr + size_hr]
 
-    return hr_patch, lr_patch
-
+    return hr_patch, lr_patch      
 
 def center_crop(img, size):
     assert img.shape[1] == img.shape[2], img.shape

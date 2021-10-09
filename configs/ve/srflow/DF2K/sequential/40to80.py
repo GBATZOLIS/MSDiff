@@ -27,23 +27,23 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional_decreasing_variance'
-  config.training.batch_size = 32
+  config.training.batch_size = 64
   training.num_nodes = 1
-  training.gpus = 4
+  training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
   #----- to be removed -----
   training.n_iters = 2400001
   #------              --------
-  training.visualization_callback = 'bicubic_SR'
+  training.visualization_callback = 'KxSR'
   training.show_evolution = False
   ## store additional checkpoints for preemption in cloud computing environments
   training.snapshot_freq_for_preemption = 5000
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
   training.likelihood_weighting = True
-  training.continuous = False
+  training.continuous = True
   training.reduce_mean = True 
   training.sde = 'vesde'
 
@@ -77,13 +77,12 @@ def get_config():
   data.datamodule = 'LRHR_PKLDataset'
   data.create_dataset = False
   data.target_resolution = 160 #this should remain constant for an experiment
-  data.image_size = 160 #we vary this for training on different resolutions
-  data.level = math.log(data.target_resolution // data.image_size, 2)
-  data.effective_image_size = data.image_size // 2 #actual image size after preprocessing. Divided by two when using haar tranform.
-  data.max_haar_depth = 2 #maximum depth of multi-level haar tranform -> 1+data.max_haar_depth resolution levels.
+  data.image_size = 80 #we vary this for training on different resolutions
+  data.effective_image_size = data.image_size//2 #because we squeeze the 2X HR image to concatenate it with the LR image.
+  data.scale = 2 #we address 4x super-resolution directly
   data.centered = False
-  data.num_channels = 15 #squeezed 12 + 3
   data.shape_x = [3, data.image_size, data.image_size]
+  data.num_channels = 3+12 #because of the squeezing and the concatenation -> important information for construction of the score based model.
 
   #data augmentation settings
   data.use_flip = True
@@ -109,22 +108,32 @@ def get_config():
   model.beta_min = 0.1
   # We use an adjusted beta max 
   # because the range is doubled in each level starting from the first level
-  model.beta_max = 20. + 4*(data.level+1)*np.log(2) #take the doubling value range into consideration.
+  model.beta_max = 20.
   model.dropout = 0.1
   model.embedding_type = 'fourier'
 
 
-  model.name = 'ddpm_SR'
+  model.name = 'ncsnpp_2xSR'
   model.scale_by_sigma = True
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 128
-  model.ch_mult = (1, 1, 2, 2, 3)
-  model.num_res_blocks = 2
+  model.ch_mult = (1, 1, 2, 2)
+  model.num_res_blocks = 3
   model.attn_resolutions = (20, 10, 5)
   model.resamp_with_conv = True
   model.conditional = True
+  model.fir = True
+  model.fir_kernel = [1, 3, 3, 1]
+  model.skip_rescale = True
+  model.resblock_type = 'biggan'
+  model.progressive = 'output_skip'
+  model.progressive_input = 'input_skip'
+  model.progressive_combine = 'sum'
+  model.attention_type = 'ddpm'
+  model.init_scale = 0.
+  model.fourier_scale = 16
   model.conv_size = 3
 
   # optimization

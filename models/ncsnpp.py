@@ -54,7 +54,7 @@ class NCSNpp(pl.LightningModule):
     dropout = config.model.dropout
     resamp_with_conv = config.model.resamp_with_conv
     self.num_resolutions = num_resolutions = len(ch_mult)
-    self.all_resolutions = all_resolutions = [config.data.image_size // (2 ** i) for i in range(num_resolutions)]
+    self.all_resolutions = all_resolutions = [config.data.effective_image_size // (2 ** i) for i in range(num_resolutions)]
 
     self.conditional = conditional = config.model.conditional  # noise-conditional
     fir = config.model.fir
