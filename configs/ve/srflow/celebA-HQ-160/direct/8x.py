@@ -27,9 +27,9 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional_decreasing_variance'
-  config.training.batch_size = 16
+  config.training.batch_size = 20
   training.num_nodes = 1
-  training.gpus = 2
+  training.gpus = 4
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -72,7 +72,7 @@ def get_config():
   # data
   config.data = data = ml_collections.ConfigDict()
   data.base_dir = 'datasets'
-  data.dataset = 'celebA'
+  data.dataset = 'celebA-HQ-160'
   data.use_data_mean = False
   data.datamodule = 'LRHR_PKLDataset'
   data.create_dataset = False
@@ -82,7 +82,8 @@ def get_config():
   data.scale = 8 #we address 4x super-resolution directly
   data.centered = False
   data.shape_x = [3, data.image_size, data.image_size]
-  data.num_channels = 2*data.shape_x[0]
+  data.shape_y = [3, data.image_size, data.image_size]
+  data.num_channels = data.shape_x[0]+data.shape_y[0]
 
   #data augmentation settings
   data.use_flip = True
@@ -97,28 +98,26 @@ def get_config():
   model.num_scales = 1000
   
   #SIGMA INFORMATION FOR THE VE SDE
-  model.reach_target_steps = 8000
-  model.sigma_max_x = data.image_size*np.sqrt(3)
-  model.sigma_max_y = model.sigma_max_x
+  model.reach_target_steps = 4000
+  model.sigma_max_x = np.sqrt(np.prod(data.shape_x))
+  model.sigma_max_y = np.sqrt(np.prod(data.shape_y))
   model.sigma_max_y_target = model.sigma_max_y/2
-  model.sigma_min_x = 1e-2
-  model.sigma_min_y = 1e-2
-  model.sigma_min_y_target = 1e-2
+  model.sigma_min_x = 5e-3
+  model.sigma_min_y = 5e-3
+  model.sigma_min_y_target = 5e-3
 
   model.beta_min = 0.1
-  # We use an adjusted beta max 
-  # because the range is doubled in each level starting from the first level
   model.beta_max = 20.
   model.dropout = 0.1
   model.embedding_type = 'fourier'
 
 
-  model.name = 'ncsnpp_KxSR'
+  model.name = 'ddpm_KxSR'
   model.scale_by_sigma = True
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
-  model.nf = 64
+  model.nf = 80
   model.ch_mult = (1, 1, 2, 2, 4, 4)
   model.num_res_blocks = 2
   model.attn_resolutions = (20, 10, 5)
