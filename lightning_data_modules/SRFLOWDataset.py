@@ -25,6 +25,18 @@ def get_exact_paths(config, phase):
             GT_file = 'DIV2K-teFullMod8.pklv4'
         else:
             return NotImplementedError('%s is not supported.' % phase)
+    elif config.data.dataset == 'celebA':
+        if phase == 'train':
+            LQ_file = 'CelebAHq_160_MBic_tr_X8.pklv4'
+            GT_file = 'CelebAHq_160_MBic_tr.pklv4'
+        elif phase == 'val':
+            LQ_file = 'CelebAHq_160_MBic_va.pklv4'
+            GT_file = 'CelebAHq_160_MBic_va_X8.pklv4'
+        elif phase == 'test':
+            LQ_file = 'CelebAHq_160_MBic_va.pklv4'
+            GT_file = 'CelebAHq_160_MBic_va_X8.pklv4'
+        else:
+            return NotImplementedError('%s is not supported.' % phase)
     else:
         return NotImplementedError('%s is not supported.' % config.data.dataset)
     

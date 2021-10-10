@@ -51,6 +51,32 @@ class SqueezeBlock(nn.Module):
           z = z.reshape(B, C//4, H*2, W*2)
       return z
 
+def permute_channels(haar_image, forward=True):
+        permuted_image = torch.zeros_like(haar_image)
+        if forward:
+            for i in range(4):
+                if i == 0:
+                    k = 1
+                elif i == 1:
+                    k = 0
+                else:
+                    k = i
+                for j in range(3):
+                    permuted_image[:, 3*k+j, :, :] = haar_image[:, 4*j+i, :, :]
+        else:
+            for i in range(4):
+                if i == 0:
+                    k = 1
+                elif i == 1:
+                    k = 0
+                else:
+                    k = i
+                
+                for j in range(3):
+                    permuted_image[:,4*j+k,:,:] = haar_image[:, 3*i+j, :, :]
+
+        return permuted_image
+
 @utils.register_model(name='ddpm')
 class DDPM(pl.LightningModule):
   def __init__(self, config):
@@ -185,6 +211,66 @@ class DDPM(pl.LightningModule):
 
     return h
 
+@utils.register_model(name='ddpm_multi_speed_haar')
+class DDPM_multi_speed_haar(DDPM):
+  def __init__(self, config, *args, **kwargs):
+      super().__init__(config)
+      self.haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
+      self.max_haar_depth = config.data.max_haar_depth
+  
+  def haar_forward(self, x):
+      x = self.haar_transform(x)
+      x = permute_channels(x)
+      return x
+    
+  def haar_backward(self, x):
+      x = permute_channels(x, forward=False)
+      x = self.haar_transform.inverse(x)
+      return x
+    
+  def get_dc_coefficients(self, x):
+      return self.haar_forward(x)[:,:3,::]
+    
+  def get_hf_coefficients(self, x):
+      return self.haar_forward(x)[:,3:,::]
+
+  def convert_to_haar_space(self, x, max_depth=None):
+      if max_depth is None:
+        max_depth = self.max_haar_depth
+      
+      haar_x = {}
+      for i in range(max_depth):
+        x = self.haar_forward(x)
+        if i < max_depth - 1:
+          haar_x['d%d'%(i+1)] = x[:,3:,::]
+        elif i == max_depth - 1:
+          haar_x['d%d'%(i+1)] = x[:,3:,::]
+          haar_x['a%d'%(i+1)] = x[:,:3,::]
+  
+  def detect_haar_depth(self, haar_x : dict):
+    for key in haar_x.keys():
+      if key.startswith('a'):
+        approx_key = key
+        break
+    return int(approx_key[1])
+
+  def convert_to_image_space(self, haar_x):
+    depth = self.detect_haar_depth(haar_x)
+
+    a = haar_x['a%d'%depth]
+    for i in range(depth):
+      d = haar_x['d%d'%(depth-i)]
+      concat = torch.cat((a,d), dim=1)
+      a = self.haar_backward(concat)
+    
+    return a
+
+  def forward(self, haar_x:dict, labels):
+    x = self.convert_to_image_space(haar_x)
+    image_output = super().forward(x, labels)
+    haar_output = self.convert_to_haar_space(image_output)
+    return haar_output
+  
 @utils.register_model(name='ddpm_paired')
 class DDPM_paired(DDPM):
   def __init__(self, config, *args, **kwargs):
