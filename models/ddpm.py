@@ -198,7 +198,7 @@ class DDPM_paired(DDPM):
     return {'x': output[:,:x_channels,::], \
             'y':output[:,x_channels:,::]}
 
-@utils.register_model(name='ddpm_SR')
+@utils.register_model(name='ddpm_2xSR')
 class DDPM_2xSR(DDPM):
   def __init__(self, config, *args, **kwargs):
       super().__init__(config)
