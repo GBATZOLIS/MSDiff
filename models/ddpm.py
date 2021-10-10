@@ -304,8 +304,9 @@ class DDPM_2xSR(DDPM):
 class ddpm_KxSR(DDPM):
   def __init__(self, config, *args, **kwargs):
       super().__init__(config)
-      self.resize_to_GT = Resize(config.data.target_resolution, interpolation=InterpolationMode.NEAREST)
-
+      self.resize_to_GT = Resize(config.data.target_resolution, interpolation=InterpolationMode.BILINEAR)
+      self.resize_to_LQ = Resize(config.data.target_resolution//config.data.scale, interpolation=InterpolationMode.BILINEAR)
+  
   def forward(self, input_dict, labels):
     x, y = input_dict['x'], input_dict['y']
     y = self.resize_to_GT(y)
@@ -314,4 +315,4 @@ class ddpm_KxSR(DDPM):
     output = super().forward(concat, labels)
     
     return {'x':output[:,:x_channels,::],\
-            'y':output[:,x_channels:,::]}
+            'y':self.resize_to_LQ(output[:,x_channels:,::])}
