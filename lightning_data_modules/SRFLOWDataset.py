@@ -189,11 +189,11 @@ class Haar_PKLDataset(data.Dataset):
         return x
 
     def multi_level_haar_forward(self, x, level):
-        approx_cf = x
+        approx_cf = x.unsqueeze(0)
         for _ in range(int(level)):
             haar = self.haar_forward(approx_cf)
             approx_cf, detail_cf = haar[:,:3,::], haar[:,3:,::]
-        return approx_cf, detail_cf
+        return torch.squeeze(approx_cf, 0), torch.squeeze(detail_cf, 0)
 
     def __len__(self):
         return len(self.hr_images)
