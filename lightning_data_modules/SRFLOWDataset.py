@@ -7,6 +7,7 @@ import time
 import torch
 from torchvision.transforms import Resize
 from torchvision.transforms.functional import InterpolationMode
+from iunets.layers import InvertibleDownsampling2D
 
 import pickle
 import pytorch_lightning as pl
@@ -100,7 +101,7 @@ class LRHR_PKLDataset(data.Dataset):
 
         if self.scale == hr.shape[1] // lr.shape[1]:
             if self.use_crop:
-                hr, lr = random_crop(hr, lr, self.crop_size, self.scale, self.use_crop)
+                hr, lr = random_crop(hr, lr, self.crop_size, self.scale)
 
             #if self.center_crop_hr_size:
             #    hr, lr = center_crop(hr, self.center_crop_hr_size), center_crop(lr, self.center_crop_hr_size // self.scale)
@@ -120,7 +121,7 @@ class LRHR_PKLDataset(data.Dataset):
         elif self.scale < hr.shape[1] // lr.shape[1]:
             if self.crop_size == self.scale * lr.shape[1]:
                 a_priori_scale = hr.shape[1] // lr.shape[1]
-                hr, lr = random_crop(hr, lr, self.target_size, a_priori_scale, self.use_crop)
+                hr, lr = random_crop(hr, lr, self.target_size, a_priori_scale)
                 
                 #convert hr, lr to tensors
                 hr, lr = hr / 255.0, lr / 255.0
@@ -149,6 +150,111 @@ class LRHR_PKLDataset(data.Dataset):
 
         return lr, hr
 
+class Haar_PKLDataset(data.Dataset):
+    def __init__(self, config, phase):
+        super(Haar_PKLDataset, self).__init__()
+        self.haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
+
+        self.target_size = config.data.target_resolution #overall target size
+        self.crop_size = config.data.image_size #target image size for this scale
+        self.level = config.data.level
+        self.scale = config.data.scale
+        self.map = config.data.map
+        self.random_scale_list = [1]
+
+        hr_file_path = get_exact_paths(config, phase)['GT']
+        lr_file_path = get_exact_paths(config, phase)['LQ']
+
+        self.use_flip = config.data.use_flip
+        self.use_rot = config.data.use_rot
+        self.use_crop = config.data.use_crop
+        #self.center_crop_hr_size = opt.get("center_crop_hr_size", None)
+        #n_max = opt["n_max"] if "n_max" in opt.keys() else int(1e8)
+        self.lr_images = self.load_pkls(lr_file_path, n_max=int(1e9))
+        self.hr_images = self.load_pkls(hr_file_path, n_max=int(1e9))
+
+    def load_pkls(self, path, n_max):
+        assert os.path.isfile(path), path
+        images = []
+        with open(path, "rb") as f:
+            images += pickle.load(f)
+        assert len(images) > 0, path
+        images = images[:n_max]
+        images = [np.transpose(image, [2, 0, 1]) for image in images]
+        return images
+
+    def haar_forward(self, x):
+        x = self.haar_transform(x)
+        x = permute_channels(x)
+        return x
+
+    def multi_level_haar_forward(self, x, level):
+        approx_cf = x
+        for i in range(level):
+            haar = self.haar_forward(approx_cf)
+            approx_cf, detail_cf = haar[:,:3,::], haar[:,3:,::]
+        return approx_cf, detail_cf
+
+    def __len__(self):
+        return len(self.hr_images)
+
+    def __getitem__(self, item):
+        hr = self.hr_images[item]
+        lr = self.lr_images[item]
+
+        if self.use_crop:   
+            hr, lr = random_crop(hr, lr, self.crop_size, hr.shape[1] // lr.shape[1])
+        
+        if self.use_flip:
+            hr, lr = random_flip(hr, lr)
+
+        if self.use_rot:
+            hr, lr = random_rotation(hr, lr)
+
+        hr = hr / 255.0
+        lr = lr / 255.0
+
+        hr = torch.Tensor(hr)
+        lr = torch.Tensor(lr)
+
+        approx_cf, detail_cf = self.multi_level_haar_forward(hr, level=self.level+1)
+
+        if self.map == 'approx to detail':
+            return approx_cf, detail_cf
+        elif self.map == 'bicubic to approx':
+            return  lr, approx_cf
+        elif self.map == 'bicubic to haar':
+            return lr, torch.cat((approx_cf, detail_cf), dim=1)
+        else:
+            raise NotImplementedError('Mapping <<%s>> is not supported' % self.map)
+
+        
+def permute_channels(haar_image, forward=True):
+    permuted_image = torch.zeros_like(haar_image)
+    if forward:
+        for i in range(4):
+            if i == 0:
+                k = 1
+            elif i == 1:
+                k = 0
+            else:
+                k = i
+            for j in range(3):
+                permuted_image[:, 3*k+j, :, :] = haar_image[:, 4*j+i, :, :]
+    else:
+        for i in range(4):
+            if i == 0:
+                k = 1
+            elif i == 1:
+                k = 0
+            else:
+                k = i
+                
+            for j in range(3):
+                permuted_image[:,4*j+k,:,:] = haar_image[:, 3*i+j, :, :]
+
+    return permuted_image
+
 def random_flip(img, seg):
     random_choice = np.random.choice([True, False])
     img = img if random_choice else np.flip(img, 2).copy()
@@ -163,24 +269,28 @@ def random_rotation(img, seg):
     return img, seg
 
 
-def random_crop(hr, lr, size_hr, scale, random):
-    size_lr = size_hr // scale
+def random_crop(hr, lr, size_hr, scale):
+    if size_hr == hr.shape[1] and size_hr == hr.shape[2]:
+        print('cropped size == original size')
+        return hr, lr
+    else:
+        size_lr = size_hr // scale
 
-    size_lr_x = lr.shape[1]
-    size_lr_y = lr.shape[2]
+        size_lr_x = lr.shape[1]
+        size_lr_y = lr.shape[2]
 
-    start_x_lr = np.random.randint(low=0, high=(size_lr_x - size_lr) + 1) if size_lr_x > size_lr else 0
-    start_y_lr = np.random.randint(low=0, high=(size_lr_y - size_lr) + 1) if size_lr_y > size_lr else 0
+        start_x_lr = np.random.randint(low=0, high=(size_lr_x - size_lr) + 1) if size_lr_x > size_lr else 0
+        start_y_lr = np.random.randint(low=0, high=(size_lr_y - size_lr) + 1) if size_lr_y > size_lr else 0
 
-    # LR Patch
-    lr_patch = lr[:, start_x_lr:start_x_lr + size_lr, start_y_lr:start_y_lr + size_lr]
+        # LR Patch
+        lr_patch = lr[:, start_x_lr:start_x_lr + size_lr, start_y_lr:start_y_lr + size_lr]
 
-    # HR Patch
-    start_x_hr = start_x_lr * scale
-    start_y_hr = start_y_lr * scale
-    hr_patch = hr[:, start_x_hr:start_x_hr + size_hr, start_y_hr:start_y_hr + size_hr]
+        # HR Patch
+        start_x_hr = start_x_lr * scale
+        start_y_hr = start_y_lr * scale
+        hr_patch = hr[:, start_x_hr:start_x_hr + size_hr, start_y_hr:start_y_hr + size_hr]
 
-    return hr_patch, lr_patch      
+        return hr_patch, lr_patch      
 
 def center_crop(img, size):
     assert img.shape[1] == img.shape[2], img.shape
@@ -199,6 +309,34 @@ def center_crop_tensor(img, size):
 
 
 @utils.register_lightning_datamodule(name='LRHR_PKLDataset')
+class PairedDataModule(pl.LightningDataModule):
+    def __init__(self, config):
+        super().__init__()
+        #DataLoader arguments
+        self.config = config
+        self.train_workers = config.training.workers
+        self.val_workers = config.eval.workers
+        self.test_workers = config.eval.workers
+
+        self.train_batch = config.training.batch_size
+        self.val_batch = config.eval.batch_size
+        self.test_batch = config.eval.batch_size
+
+    def setup(self, stage=None): 
+        self.train_dataset = LRHR_PKLDataset(self.config, phase='train')
+        self.val_dataset = LRHR_PKLDataset(self.config, phase='val')
+        self.test_dataset = LRHR_PKLDataset(self.config, phase='test')
+
+    def train_dataloader(self):
+        return DataLoader(self.train_dataset, batch_size = self.train_batch, shuffle=True, num_workers=self.train_workers) 
+  
+    def val_dataloader(self):
+        return DataLoader(self.val_dataset, batch_size = self.val_batch, shuffle=False, num_workers=self.val_workers) 
+  
+    def test_dataloader(self): 
+        return DataLoader(self.test_dataset, batch_size = self.test_batch, shuffle=False, num_workers=self.test_workers) 
+
+@utils.register_lightning_datamodule(name='Haar_PKLDataset')
 class PairedDataModule(pl.LightningDataModule):
     def __init__(self, config):
         super().__init__()

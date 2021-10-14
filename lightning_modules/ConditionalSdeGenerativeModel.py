@@ -59,9 +59,10 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
         
         return loss_fn
     
-    def sample(self, y, show_evolution=False):
+    def sample(self, y, show_evolution=False, predictor='default', corrector='default', p_steps='default', c_steps='default'):
         sampling_shape = [y.size(0)]+self.config.data.shape_x
-        conditional_sampling_fn = get_conditional_sampling_fn(self.config, self.sde, sampling_shape, self.sampling_eps)
+        conditional_sampling_fn = get_conditional_sampling_fn(self.config, self.sde, sampling_shape, 
+                                            self.sampling_eps, predictor, corrector, p_steps, c_steps)
         return conditional_sampling_fn(self.score_model, y, show_evolution)
 
 @utils.register_lightning_module(name='deprecated_conditional_decreasing_variance')

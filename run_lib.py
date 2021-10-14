@@ -111,7 +111,10 @@ def multi_scale_test(master_config, log_path):
     else:
       return NotImplementedError('%s space is not supported for sequential downsampling.' % coord_space)
 
-  def get_autoregressive_sampler(scale_info, coord_space='bicubic'):
+  def get_autoregressive_sampler(scale_info, coord_space='bicubic', 
+                                 predictor='default', corrector='default', 
+                                 p_steps='default', c_steps='default'):
+
     def bicubic_autoregressive_sampler(lr, return_intermediate_images = True,  show_evolution = False):
       if return_intermediate_images:
         scales_bicubic = []
@@ -119,7 +122,7 @@ def multi_scale_test(master_config, log_path):
       
       for count, scale in enumerate(sorted(scale_info.keys())):
         lightning_module = scale_info[scale]['LightningModule']
-        lr, info = lightning_module.sample(lr, show_evolution)
+        lr, info = lightning_module.sample(lr, show_evolution, predictor, corrector, p_steps, c_steps)
         if return_intermediate_images:
           scales_bicubic.append(lr.clone().cpu())
       
@@ -142,7 +145,9 @@ def multi_scale_test(master_config, log_path):
         print('lightning_module.sde[0].sigma_max: ', lightning_module.sde[0].sigma_max)
         print('lightning_module.device: ', lightning_module.device)
         print('dc.device: ', dc.device)
-        hf, info = lightning_module.sample(dc, show_evolution) #inpaint the high frequencies of the next resolution level
+
+        #inpaint the high frequencies of the next resolution level
+        hf, info = lightning_module.sample(dc, show_evolution, predictor, corrector, p_steps, c_steps) 
 
         if show_evolution:
           evolution = info['evolution']
@@ -230,7 +235,7 @@ def multi_scale_test(master_config, log_path):
     scale = config.data.image_size
     scale_info[scale] = {}
 
-    coord_space = config.data.datamodule.split('_')[0]
+    coord_space = config.data.coordinate_space
     DataModule = create_lightning_datamodule(config)
     scale_info[scale]['DataModule'] = DataModule
     

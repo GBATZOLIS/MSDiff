@@ -26,17 +26,17 @@ def get_config():
 
   # training
   config.training = training = ml_collections.ConfigDict()
-  config.training.lightning_module = 'conditional_decreasing_variance'
-  config.training.batch_size = 64
+  config.training.lightning_module = 'haar_conditional_decreasing_variance'
+  config.training.batch_size = 32
   training.num_nodes = 1
-  training.gpus = 2
+  training.gpus = 4
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
   #----- to be removed -----
   training.n_iters = 2400001
   #------              --------
-  training.visualization_callback = 'KxSR'
+  training.visualization_callback = 'conditional_haar_multiscale'
   training.show_evolution = False
   ## store additional checkpoints for preemption in cloud computing environments
   training.snapshot_freq_for_preemption = 5000
@@ -62,7 +62,7 @@ def get_config():
   evaluate.workers = 4*training.gpus
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 64
+  evaluate.batch_size = 32
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -73,22 +73,27 @@ def get_config():
   config.data = data = ml_collections.ConfigDict()
   data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
   data.dataset = 'celebA-HQ-160'
+  data.coordinate_space = 'haar'
   data.use_data_mean = False
-  data.datamodule = 'LRHR_PKLDataset'
+  data.datamodule = 'Haar_PKLDataset'
+  data.map = 'approx to detail'
   data.create_dataset = False
   data.target_resolution = 160 #this should remain constant for an experiment
-  data.image_size = 80 #we vary this for training on different resolutions
-  data.effective_image_size = data.image_size//2 #because we squeeze the 2X HR image to concatenate it with the LR image.
+  data.image_size = 160 #we vary this for training on different resolutions
+  data.effective_image_size = data.image_size//2
   data.scale = 2 #we address 4x super-resolution directly
   data.centered = False
-  data.shape_x = [3, data.image_size, data.image_size]
+  data.level = math.log(data.target_resolution // data.image_size, 2)
+  data.range_x = [-2**data.level, 2**data.level]
+  data.range_y = [0, 2**(data.level+1)]
+  data.shape_x = [9, data.image_size // 2, data.image_size // 2]
   data.shape_y = [3, data.image_size // 2, data.image_size // 2]
-  data.num_channels = 3+12 #because of the squeezing and the concatenation -> important information for construction of the score based model.
+  data.num_channels = data.shape_x[0]+ data.shape_y[0] #because of the squeezing and the concatenation -> important information for construction of the score based model.
 
   #data augmentation settings
   data.use_flip = True
   data.use_rot = False
-  data.use_crop = False
+  data.use_crop = True
   data.uniform_dequantization = False
   
 
@@ -99,8 +104,8 @@ def get_config():
   
   #SIGMA INFORMATION FOR THE VE SDE
   model.reach_target_steps = 8000
-  model.sigma_max_x = np.sqrt(np.prod(data.shape_x))
-  model.sigma_max_y = np.sqrt(np.prod(data.shape_y))
+  model.sigma_max_x = np.sqrt(np.prod(data.shape_x))*(data.range_x[1] - data.range_x[0])
+  model.sigma_max_y = np.sqrt(np.prod(data.shape_y))*(data.range_y[1] - data.range_y[0])
   model.sigma_max_y_target = model.sigma_max_y/2
   model.sigma_min_x = 5e-3
   model.sigma_min_y = 5e-3
@@ -119,8 +124,8 @@ def get_config():
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
-  model.nf = 96
-  model.ch_mult = (1, 1, 2, 2)
+  model.nf = 64
+  model.ch_mult = (1, 1, 2, 2, 4)
   model.num_res_blocks = 2
   model.attn_resolutions = (20, 10, 5)
   model.resamp_with_conv = True

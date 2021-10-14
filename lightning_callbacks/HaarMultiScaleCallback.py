@@ -100,16 +100,11 @@ class ConditionalHaarMultiScaleVisualizationCallback(Callback):
         self.upsample_fn = Upsample(scale_factor=2, mode='nearest').to('cpu')
     
     def visualise_conditional_sample(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        orig_batch = batch.clone().cpu()
-            
-        batch = pl_module.haar_transform(batch.to(pl_module.device)) 
-        batch = permute_channels(batch)
-        y = batch[:,:3,::]
+        y, x = batch
+        orig_batch = pl_module.haar_backward(torch.cat((y,x), dim=1))
 
         sampled_x, _ = pl_module.sample(y, self.show_evolution)
-        concat_samples = torch.cat([y, sampled_x], dim=1)
-        back_permuted_samples = permute_channels(concat_samples, forward=False)
-        sampled_images = pl_module.haar_transform.inverse(back_permuted_samples)
+        sampled_images = pl_module.haar_backward(torch.cat((y, sampled_x), dim=1))
 
         sampled_images = sampled_images.to('cpu')
         DC_coeff_interp = self.upsample_fn(y.to('cpu'))
@@ -119,7 +114,7 @@ class ConditionalHaarMultiScaleVisualizationCallback(Callback):
         pl_module.logger.experiment.add_image('samples_batch_%d_epoch_%d' % (batch_idx, pl_module.current_epoch), image_grid, pl_module.current_epoch)
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        if batch_idx==5 and pl_module.current_epoch % 3 == 1:
+        if batch_idx == 3 and pl_module.current_epoch % 5 == 0:
             self.visualise_conditional_sample(trainer, pl_module, outputs, batch, batch_idx, dataloader_idx)
 
     def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):

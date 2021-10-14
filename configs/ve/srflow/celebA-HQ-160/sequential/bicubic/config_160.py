@@ -27,9 +27,9 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional_decreasing_variance'
-  config.training.batch_size = 128
+  config.training.batch_size = 32
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 4
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -62,7 +62,7 @@ def get_config():
   evaluate.workers = 4*training.gpus
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 128
+  evaluate.batch_size = 32
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -73,12 +73,13 @@ def get_config():
   config.data = data = ml_collections.ConfigDict()
   data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
   data.dataset = 'celebA-HQ-160'
+  data.coordinate_space = 'bicubic'
   data.use_data_mean = False
   data.datamodule = 'LRHR_PKLDataset'
   data.create_dataset = False
   data.target_resolution = 160 #this should remain constant for an experiment
-  data.image_size = 40 #we vary this for training on different resolutions
-  data.effective_image_size = data.image_size//2 #because we squeeze the 2X HR image to concatenate it with the LR image.
+  data.image_size = 160 #we vary this for training on different resolutions
+  data.effective_image_size = data.image_size//2
   data.scale = 2 #we address 4x super-resolution directly
   data.centered = False
   data.shape_x = [3, data.image_size, data.image_size]
@@ -107,6 +108,8 @@ def get_config():
   model.sigma_min_y_target = 5e-3
 
   model.beta_min = 0.1
+  # We use an adjusted beta max 
+  # because the range is doubled in each level starting from the first level
   model.beta_max = 20.
   model.dropout = 0.1
   model.embedding_type = 'fourier'
@@ -117,8 +120,8 @@ def get_config():
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
-  model.nf = 96
-  model.ch_mult = (1, 1, 2)
+  model.nf = 64
+  model.ch_mult = (1, 1, 2, 2, 4)
   model.num_res_blocks = 2
   model.attn_resolutions = (20, 10, 5)
   model.resamp_with_conv = True
