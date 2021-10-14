@@ -185,14 +185,6 @@ class HaarDecreasingVarianceConditionalSdeGenerativeModel(DecreasingVarianceCond
         super().__init__(config)
         self.haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
     
-    def training_step(self, batch, batch_idx):
-        batch = self.haar_transform(batch) #apply the haar transform
-        batch = permute_channels(batch) #group the frequency bands: 0:3->LL, 3:6->LH, 6:9->HL, 9:12->HH
-        batch = [batch[:,:3,::], batch[:,3:,:,:]] #[y,x]
-        loss = self.train_loss_fn(self.score_model, batch)
-        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        return loss
-    
     def haar_forward(self, x):
         x = self.haar_transform(x)
         x = permute_channels(x)
