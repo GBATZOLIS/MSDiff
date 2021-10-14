@@ -101,7 +101,7 @@ class ConditionalHaarMultiScaleVisualizationCallback(Callback):
     
     def visualise_conditional_sample(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         y, x = batch
-        orig_batch = pl_module.haar_backward(torch.cat((y,x), dim=1))
+        orig_batch = pl_module.haar_backward(torch.cat((y,x), dim=1)).to('cpu')
 
         sampled_x, _ = pl_module.sample(y, self.show_evolution)
         sampled_images = pl_module.haar_backward(torch.cat((y, sampled_x), dim=1))
