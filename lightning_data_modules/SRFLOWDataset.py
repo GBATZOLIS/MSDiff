@@ -203,7 +203,7 @@ class Haar_PKLDataset(data.Dataset):
         lr = self.lr_images[item]
 
         if self.use_crop:   
-            hr, lr = random_crop(hr, lr, self.crop_size, hr.shape[1] // lr.shape[1])
+            hr, lr = random_crop(hr, lr, self.target_size, hr.shape[1] // lr.shape[1])
         
         if self.use_flip:
             hr, lr = random_flip(hr, lr)
