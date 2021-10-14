@@ -271,7 +271,6 @@ def random_rotation(img, seg):
 
 def random_crop(hr, lr, size_hr, scale):
     if size_hr == hr.shape[1] and size_hr == hr.shape[2]:
-        print('cropped size == original size')
         return hr, lr
     else:
         size_lr = size_hr // scale
