@@ -193,14 +193,6 @@ class HaarDecreasingVarianceConditionalSdeGenerativeModel(DecreasingVarianceCond
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
     
-    def validation_step(self, batch, batch_idx):
-        batch = self.haar_transform(batch) 
-        batch = permute_channels(batch)
-        batch = [batch[:,:3,::], batch[:,3:,:,:]] #[y,x]
-        loss = self.eval_loss_fn(self.score_model, batch)
-        self.log('eval_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        return loss
-    
     def haar_forward(self, x):
         x = self.haar_transform(x)
         x = permute_channels(x)
