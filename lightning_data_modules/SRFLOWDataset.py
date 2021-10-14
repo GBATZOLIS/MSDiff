@@ -217,11 +217,9 @@ class Haar_PKLDataset(data.Dataset):
         hr = torch.Tensor(hr)
         lr = torch.Tensor(lr)
 
-        print(hr.size())
         approx_cf, detail_cf = self.multi_level_haar_forward(hr, level=self.level+1)
 
         if self.map == 'approx to detail':
-            print(approx_cf.size(), detail_cf.size())
             return approx_cf, detail_cf
         elif self.map == 'bicubic to approx':
             return  lr, approx_cf
