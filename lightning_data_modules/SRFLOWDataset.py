@@ -190,7 +190,7 @@ class Haar_PKLDataset(data.Dataset):
 
     def multi_level_haar_forward(self, x, level):
         approx_cf = x
-        for i in range(level):
+        for _ in range(int(level)):
             haar = self.haar_forward(approx_cf)
             approx_cf, detail_cf = haar[:,:3,::], haar[:,3:,::]
         return approx_cf, detail_cf
@@ -220,7 +220,6 @@ class Haar_PKLDataset(data.Dataset):
         approx_cf, detail_cf = self.multi_level_haar_forward(hr, level=self.level+1)
 
         if self.map == 'approx to detail':
-            print(approx_cf.size(), detail_cf.size())
             return approx_cf, detail_cf
         elif self.map == 'bicubic to approx':
             return  lr, approx_cf
