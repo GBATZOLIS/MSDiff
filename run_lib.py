@@ -261,7 +261,9 @@ def multi_scale_test(master_config, log_path):
   #iterate over the test dataloader of the highest scale
   for i, batch in enumerate(test_dataloader):
     if coord_space == 'haar':
-      hr_batch = batch.clone().cpu()
+      lr2x, hr = batch
+      hr_batch = hr.clone().cpu()
+      batch = hr
     elif coord_space == 'bicubic':
       lr2x, hr = batch
       hr_batch = hr.clone().cpu()
