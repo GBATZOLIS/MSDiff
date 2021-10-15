@@ -99,7 +99,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = None
+  model.checkpoint_path = '/home/gb511/saved_checkpoints/celebA/sequential/haar/20to40/checkpoints'
   model.num_scales = 1000
   
   #SIGMA INFORMATION FOR THE VE SDE
