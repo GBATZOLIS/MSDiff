@@ -1,4 +1,4 @@
-from configs.ve.srflow.bicubic.reduce_max_only import config_160, config_80, config_40
+from configs.ve.srflow.celebAHQ160.sequential.haar import config_160, config_80, config_40
 import ml_collections
 
 def get_config():
