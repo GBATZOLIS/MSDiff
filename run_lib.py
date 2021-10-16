@@ -142,7 +142,7 @@ def multi_scale_test(master_config, log_path):
       for count, scale in enumerate(sorted(scale_info.keys())):
         lightning_module = scale_info[scale]['LightningModule']
         print('sigma_max_y: %.4f' % lightning_module.sigma_max_y)
-        print('lightning_module.sde[0].sigma_max: ', lightning_module.sde[0].sigma_max)
+        print('lightning_module.sde.sigma_max: ', lightning_module.sde['y'].sigma_max)
         print('lightning_module.device: ', lightning_module.device)
         print('dc.device: ', dc.device)
 
