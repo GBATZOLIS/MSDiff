@@ -256,10 +256,18 @@ def multi_scale_test(master_config, log_path):
   max_scale = max(list(scale_info.keys()))
   max_scale_datamodule = scale_info[max_scale]['DataModule']
   max_scale_datamodule.setup()
-  test_dataloader = max_scale_datamodule.test_dataloader()
+  max_test_dataloader = max_scale_datamodule.test_dataloader()
+
+  #get test dataloader of the minimum scale
+  min_scale = min(list(scale_info.keys()))
+  min_scale_datamodule = scale_info[min_scale]['DataModule']
+  min_scale_datamodule.setup()
+  min_test_dataloader = min_scale_datamodule.test_dataloader()
   
   #iterate over the test dataloader of the highest scale
-  for i, batch in enumerate(test_dataloader):
+  for i, (batch_lr, batch_hr)in enumerate(zip(min_test_dataloader, max_test_dataloader)):
+
+    '''
     if coord_space == 'haar':
       lr2x, hr = batch
       hr_batch = hr.clone().cpu()
@@ -268,12 +276,16 @@ def multi_scale_test(master_config, log_path):
       lr2x, hr = batch
       hr_batch = hr.clone().cpu()
       batch = hr
-
+    
     batch = lowest_level_fn(batch.to('cuda:0')) #compute the DC/Bicubic coefficients at maximum depth (smallest resolution)
-    intermediate_images, scale_evolutions = autoregressive_sampler(batch, return_intermediate_images=True, show_evolution=False)
+    '''
+
+    lr = batch_lr[0].to('cuda:0')
+    hr = batch_hr[1].cpu()
+    intermediate_images, scale_evolutions = autoregressive_sampler(lr, return_intermediate_images=True, show_evolution=False)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
 
-    vis_concat = torch.cat((concat_upsampled_images, normalise_per_image(hr_batch)), dim=-1) #concatenated intermediate images and the GT hr batch
+    vis_concat = torch.cat((concat_upsampled_images, normalise_per_image(hr)), dim=-1) #concatenated intermediate images and the GT hr batch
     
     concat_grid = make_grid(vis_concat, nrow=1, normalize=False)
     logger.experiment.add_image('Autoregressive_Sampling_batch_%d' % i, concat_grid)
