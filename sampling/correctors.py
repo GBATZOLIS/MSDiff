@@ -157,3 +157,13 @@ class NoneCorrector(Corrector):
 
   def update_fn(self, x, t):
     return x, x
+
+@register_corrector(name='conditional_none')
+class NoneCorrector(Corrector):
+  """An empty corrector that does nothing."""
+
+  def __init__(self, sde, score_fn, snr, n_steps):
+    pass
+
+  def update_fn(self, x, y, t):
+    return x, x
