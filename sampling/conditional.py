@@ -6,19 +6,19 @@ from tqdm import tqdm
 from models import utils as mutils
 
 def get_conditional_sampling_fn(config, sde, shape, eps, predictor='default', corrector='default', p_steps='default', c_steps='default'):
-    if predictor is 'default':
+    if predictor == 'default':
       predictor = get_predictor(config.sampling.predictor.lower())
     else:
       predictor = get_predictor(predictor.lower())
 
-    if corrector is 'default':
+    if corrector == 'default':
       corrector = get_corrector(config.sampling.corrector.lower())
     else:
       corrector = get_corrector(corrector.lower())
-      
-    if p_steps is 'default':
+
+    if p_steps == 'default':
       p_steps = config.model.num_scales
-    if c_steps is 'default':
+    if c_steps == 'default':
       c_steps = config.sampling.n_steps_each
     
     sampling_fn = get_pc_conditional_sampler(sde=sde, 
