@@ -247,7 +247,7 @@ def multi_scale_test(master_config, log_path):
     scale_info[scale]['LightningModule'].eval()
   
   #instantiate the autoregressive sampling function
-  autoregressive_sampler = get_autoregressive_sampler(scale_info, coord_space)
+  autoregressive_sampler = get_autoregressive_sampler(scale_info, coord_space, corrector='none')
 
   #instantiate the function that computes the dc coefficients of the input batch at the required depth/level.
   #lowest_level_fn = get_lowest_level_fn(scale_info, coord_space)
@@ -289,7 +289,7 @@ def multi_scale_test(master_config, log_path):
     else:
       hr = batch_hr[1].cpu()
 
-    intermediate_images, scale_evolutions = autoregressive_sampler(lr, return_intermediate_images=True, show_evolution=False, corrector='none')
+    intermediate_images, scale_evolutions = autoregressive_sampler(lr, return_intermediate_images=True, show_evolution=False)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
 
     vis_concat = torch.cat((concat_upsampled_images, normalise_per_image(hr)), dim=-1) #concatenated intermediate images and the GT hr batch
