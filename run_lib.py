@@ -289,7 +289,7 @@ def multi_scale_test(master_config, log_path):
     else:
       hr = batch_hr[1].cpu()
 
-    intermediate_images, scale_evolutions = autoregressive_sampler(lr, return_intermediate_images=True, show_evolution=False)
+    intermediate_images, scale_evolutions = autoregressive_sampler(lr, return_intermediate_images=True, show_evolution=False, corrector='none')
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
 
     vis_concat = torch.cat((concat_upsampled_images, normalise_per_image(hr)), dim=-1) #concatenated intermediate images and the GT hr batch
