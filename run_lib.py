@@ -250,22 +250,24 @@ def multi_scale_test(master_config, log_path):
   autoregressive_sampler = get_autoregressive_sampler(scale_info, coord_space)
 
   #instantiate the function that computes the dc coefficients of the input batch at the required depth/level.
-  lowest_level_fn = get_lowest_level_fn(scale_info, coord_space)
+  #lowest_level_fn = get_lowest_level_fn(scale_info, coord_space)
 
   #get test dataloader of the highest scale
   max_scale = max(list(scale_info.keys()))
   max_scale_datamodule = scale_info[max_scale]['DataModule']
   max_scale_datamodule.setup()
   max_test_dataloader = max_scale_datamodule.test_dataloader()
+  max_test_batch = max_scale_datamodule.test_batch
 
   #get test dataloader of the minimum scale
   min_scale = min(list(scale_info.keys()))
   min_scale_datamodule = scale_info[min_scale]['DataModule']
   min_scale_datamodule.setup()
+  min_scale_datamodule.test_batch = max_test_batch
   min_test_dataloader = min_scale_datamodule.test_dataloader()
   
   #iterate over the test dataloader of the highest scale
-  for i, (batch_lr, batch_hr)in enumerate(zip(min_test_dataloader, max_test_dataloader)):
+  for i, (batch_lr, batch_hr) in enumerate(zip(min_test_dataloader, max_test_dataloader)):
 
     '''
     if coord_space == 'haar':
@@ -281,7 +283,12 @@ def multi_scale_test(master_config, log_path):
     '''
 
     lr = batch_lr[0].to('cuda:0')
-    hr = batch_hr[1].cpu()
+
+    if coord_space == 'haar':
+      hr = scale_info[max_scale]['LightningModule'].haar_backward(torch.cat(batch_hr, dim=1).to('cuda:0')).cpu()
+    else:
+      hr = batch_hr[1].cpu()
+
     intermediate_images, scale_evolutions = autoregressive_sampler(lr, return_intermediate_images=True, show_evolution=False)
     concat_upsampled_images = rescale_and_concatenate(intermediate_images)
 
