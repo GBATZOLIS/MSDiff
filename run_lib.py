@@ -247,7 +247,7 @@ def multi_scale_test(master_config, log_path):
     scale_info[scale]['LightningModule'].eval()
   
   #instantiate the autoregressive sampling function
-  autoregressive_sampler = get_autoregressive_sampler(scale_info, coord_space, corrector='conditional_none', p_steps=2000)
+  autoregressive_sampler = get_autoregressive_sampler(scale_info, coord_space, p_steps=2000)
 
   #instantiate the function that computes the dc coefficients of the input batch at the required depth/level.
   #lowest_level_fn = get_lowest_level_fn(scale_info, coord_space)
