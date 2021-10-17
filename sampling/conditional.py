@@ -131,7 +131,7 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
 
 def conditional_shared_predictor_update_fn(x, y, t, sde, model, predictor, probability_flow, continuous):
   """A wrapper that configures and returns the update function of predictors."""
-  score_fn = mutils.get_score_fn(sde, model, train=False, continuous=continuous)
+  score_fn = mutils.get_score_fn(sde, model, conditional=True, train=False, continuous=continuous)
   score_fn = mutils.get_conditional_score_fn(score_fn, target_domain='x')
 
   if predictor is None:
@@ -144,7 +144,7 @@ def conditional_shared_predictor_update_fn(x, y, t, sde, model, predictor, proba
 
 def conditional_shared_corrector_update_fn(x, y, t, sde, model, corrector, continuous, snr, n_steps):
   """A wrapper that configures and returns the update function of correctors."""
-  score_fn = mutils.get_score_fn(sde, model, train=False, continuous=continuous)
+  score_fn = mutils.get_score_fn(sde, model, conditional=True, train=False, continuous=continuous)
   score_fn = mutils.get_conditional_score_fn(score_fn, target_domain='x')
 
   if corrector is None:

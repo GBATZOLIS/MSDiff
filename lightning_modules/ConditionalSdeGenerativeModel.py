@@ -22,13 +22,15 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
             self.sde = sde_lib.subVPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
             self.sampling_eps = 1e-3
         elif config.training.sde.lower() == 'vesde':
-            sde_y = sde_lib.VESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max_y, N=config.model.num_scales)
+            sde_y = sde_lib.VESDE(sigma_min=config.model.sigma_min_y, sigma_max=config.model.sigma_max_y, N=config.model.num_scales)
+            
             if config.data.use_data_mean:
                 data_mean_path = os.path.join(config.data.base_dir, 'datasets_mean', '%s_%d' % (config.data.dataset, config.data.image_size), 'mean.pt')
                 data_mean = torch.load(data_mean_path)
             else:
                 data_mean = None
-            sde_x = sde_lib.cVESDE(sigma_min=config.model.sigma_min, sigma_max=config.model.sigma_max_x, N=config.model.num_scales, data_mean=data_mean)
+
+            sde_x = sde_lib.cVESDE(sigma_min=config.model.sigma_min_x, sigma_max=config.model.sigma_max_x, N=config.model.num_scales, data_mean=data_mean)
             self.sde = {'x':sde_x, 'y':sde_y}
             self.sampling_eps = 1e-5
         else:
@@ -36,7 +38,7 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
     
     def configure_loss_fn(self, config, train):
         if config.training.continuous:
-            loss_fn = get_general_sde_loss_fn(self.sde, train, reduce_mean=config.training.reduce_mean,
+            loss_fn = get_general_sde_loss_fn(self.sde, train, conditional=True, reduce_mean=config.training.reduce_mean,
                                     continuous=True, likelihood_weighting=config.training.likelihood_weighting)
         else:
             #assert not likelihood_weighting, "Likelihood weighting is not supported for original SMLD/DDPM training."

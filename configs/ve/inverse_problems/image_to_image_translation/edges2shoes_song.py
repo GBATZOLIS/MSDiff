@@ -8,7 +8,7 @@ def get_config():
 
   # training
   config.training = training = ml_collections.ConfigDict()
-  config.training.lightning_module = 'conditional_decreasing_variance'
+  config.training.lightning_module = 'conditional'
   training.batch_size = 40
   training.num_nodes = 1
   training.gpus = 2
@@ -17,7 +17,7 @@ def get_config():
   training.workers = 4*training.gpus
   #----- to be removed -----
   training.num_epochs = 10000
-  training.n_iters = 2400001
+  training.n_iters = 300000
   training.snapshot_freq = 5000
   training.log_freq = 250
   training.eval_freq = 2500
@@ -39,7 +39,7 @@ def get_config():
   sampling.n_steps_each = 1
   sampling.noise_removal = True
   sampling.probability_flow = False
-  sampling.snr = 0.16 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
+  sampling.snr = 0.15 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
@@ -61,7 +61,7 @@ def get_config():
   data.datamodule = 'paired'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
-  data.image_size = 64
+  data.image_size = 128
   data.effective_image_size = data.image_size
   data.shape_x = [3, data.image_size, data.image_size]
   data.shape_y = [3, data.image_size, data.image_size]
@@ -76,13 +76,13 @@ def get_config():
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
-  model.reach_target_steps = 8000
+  #model.reach_target_steps = training.n_iters
   model.sigma_max_x = np.sqrt(np.prod(data.shape_x))
-  model.sigma_max_y = np.sqrt(np.prod(data.shape_y))
-  model.sigma_max_y_target = model.sigma_max_y/2
-  model.sigma_min_x = 1e-2
-  model.sigma_min_y = 1e-2
-  model.sigma_min_y_target = 1e-2
+  model.sigma_max_y = model.sigma_max_x
+  #model.sigma_max_y_target = 1
+  model.sigma_min_x = 5e-3
+  model.sigma_min_y = 5e-3
+  model.sigma_min_y_target = 5e-3
 
   model.beta_min = 0.1
   model.beta_max = 20.
@@ -91,7 +91,7 @@ def get_config():
   model.embedding_type = 'positional'
 
 
-  model.name = 'ncsnpp_paired'
+  model.name = 'ddpm_paired'
   model.scale_by_sigma = True
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
@@ -113,6 +113,9 @@ def get_config():
   model.init_scale = 0.
   model.fourier_scale = 16
   model.conv_size = 3
+  model.input_channels = data.num_channels
+  model.output_channels = data.num_channels
+
 
   # optimization
   config.optim = optim = ml_collections.ConfigDict()
