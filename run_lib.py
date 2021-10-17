@@ -85,7 +85,7 @@ def test(config, log_path):
 
         y, x = batch
         orig_x = x.clone().cpu()
-        sampled_images, _ = LightningModule.sample(y, p_steps=p_steps)
+        sampled_images, _ = LightningModule.sample(y.to(LightningModule.device), p_steps=p_steps)
         sampled_images = sampled_images.to('cpu')
         upsampled_y = upsample_fn(y.to('cpu'))
         super_batch = torch.cat([normalise_per_image(upsampled_y), normalise_per_image(sampled_images), normalise_per_image(orig_x)], dim=-1)
