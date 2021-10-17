@@ -8,7 +8,7 @@ def get_config():
 
   # training
   config.training = training = ml_collections.ConfigDict()
-  config.training.lightning_module = 'conditional
+  config.training.lightning_module = 'conditional'
   training.conditioning_approach = 'sr3'
   training.batch_size = 25
   training.num_nodes = 1
