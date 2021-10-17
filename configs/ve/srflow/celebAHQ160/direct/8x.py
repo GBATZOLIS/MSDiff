@@ -55,14 +55,14 @@ def get_config():
   sampling.n_steps_each = 1
   sampling.noise_removal = True
   sampling.probability_flow = False
-  sampling.snr = 0.16 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
+  sampling.snr = 0.15 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 32
+  evaluate.batch_size = 16
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -94,7 +94,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = None
+  model.checkpoint_path = '/home/gb511/saved_checkpoints/celebA/direct/epoch=162-step=414671.ckpt'
   model.num_scales = 1000
   
   #SIGMA INFORMATION FOR THE VE SDE
