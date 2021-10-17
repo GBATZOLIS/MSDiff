@@ -20,7 +20,7 @@ def main(argv):
   if FLAGS.mode == 'train':
     run_lib.train(FLAGS.config, FLAGS.log_path, FLAGS.checkpoint_path)
   elif FLAGS.mode == 'test':
-    run_lib.test(FLAGS.config, FLAGS.log_path, FLAGS.checkpoint_path)
+    run_lib.test(FLAGS.config, FLAGS.log_path)
   elif FLAGS.mode == 'multi_scale_test':
     run_lib.multi_scale_test(FLAGS.config, FLAGS.log_path)
   elif FLAGS.mode == 'compute_dataset_statistics':
