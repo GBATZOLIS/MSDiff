@@ -21,9 +21,7 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
         elif config.training.sde.lower() == 'subvpsde':
             self.sde = sde_lib.subVPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
             self.sampling_eps = 1e-3
-        elif config.training.sde.lower() == 'vesde':
-            sde_y = sde_lib.VESDE(sigma_min=config.model.sigma_min_y, sigma_max=config.model.sigma_max_y, N=config.model.num_scales)
-            
+        elif config.training.sde.lower() == 'vesde':            
             if config.data.use_data_mean:
                 data_mean_path = os.path.join(config.data.base_dir, 'datasets_mean', '%s_%d' % (config.data.dataset, config.data.image_size), 'mean.pt')
                 data_mean = torch.load(data_mean_path)
@@ -31,8 +29,14 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
                 data_mean = None
 
             sde_x = sde_lib.cVESDE(sigma_min=config.model.sigma_min_x, sigma_max=config.model.sigma_max_x, N=config.model.num_scales, data_mean=data_mean)
-            self.sde = {'x':sde_x, 'y':sde_y}
             self.sampling_eps = 1e-5
+
+            if config.training.conditioning_approach == 'sr3':
+                self.sde = sde_x
+            else:
+                sde_y = sde_lib.VESDE(sigma_min=config.model.sigma_min_y, sigma_max=config.model.sigma_max_y, N=config.model.num_scales)
+                self.sde = {'x':sde_x, 'y':sde_y}
+            
         else:
             raise NotImplementedError(f"SDE {config.training.sde} unknown.")
     
