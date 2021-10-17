@@ -64,20 +64,36 @@ def train(config, log_path, checkpoint_path):
 
     trainer.fit(LightningModule, datamodule=DataModule)
 
-def test(config, log_path, checkpoint_path):
-  DataModule = create_lightning_datamodule(config)
-  DataModule.setup() #instantiate the datasets
+def test(config, log_path):
+    logger = pl.loggers.TensorBoardLogger(log_path, name='lightning_logs/autoregressive_samples') 
+    
+    DataModule = create_lightning_datamodule(config)
+    DataModule.setup()
+    test_dataloader = DataModule.test_dataloader()
+    
+    LightningModule = create_lightning_module(config)
+    LightningModule = LightningModule.load_from_checkpoint(config.model.checkpoint_path)
+    LightningModule.configure_sde(config, sigma_max_y = LightningModule.sigma_max_y)
+    LightningModule = LightningModule.to('cuda:0')
+    LightningModule.eval()
 
-  callbacks = get_callbacks(config)
-  LightningModule = create_lightning_module(config)
-  logger = pl.loggers.TensorBoardLogger(log_path, name='test_lightning_logs')
+    upsample_fn = Upsample(scale_factor=LightningModule.config.data.scale, mode='nearest').to('cpu')
+    for p_steps in [500, 1000, 2000]:
+      for batch_idx, batch in enumerate(test_dataloader):
+        if batch_idx>=1:
+          break
 
-  trainer = pl.Trainer(gpus=config.training.gpus,
-                      callbacks=callbacks, 
-                      logger = logger,
-                      resume_from_checkpoint=checkpoint_path)
+        y, x = batch
+        orig_x = x.clone().cpu()
+        sampled_images, _ = LightningModule.sample(y, p_steps=p_steps)
+        sampled_images = sampled_images.to('cpu')
+        upsampled_y = upsample_fn(y.to('cpu'))
+        super_batch = torch.cat([normalise_per_image(upsampled_y), normalise_per_image(sampled_images), normalise_per_image(orig_x)], dim=-1)
 
-  trainer.test(LightningModule, DataModule.test_dataloader())
+        image_grid = make_grid(super_batch, nrow=int(np.sqrt(super_batch.size(0))))
+        logger.experiment.add_image('batch_%d_psteps_%d' % (batch_idx, p_steps), image_grid)
+
+
 
 def multi_scale_test(master_config, log_path):
   def get_lowest_level_fn(scale_info, coord_space):
