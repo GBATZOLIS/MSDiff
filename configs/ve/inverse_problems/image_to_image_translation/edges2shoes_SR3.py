@@ -10,7 +10,7 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional'
   training.conditioning_approach = 'sr3'
-  training.batch_size = 25
+  training.batch_size = 40
   training.num_nodes = 1
   training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
