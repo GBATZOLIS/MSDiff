@@ -58,7 +58,7 @@ def get_config():
   config.data = data = ml_collections.ConfigDict()
   data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
   data.dataset = 'celebA-HQ-160'
-  data.task = 'super-resolution'
+  data.task = 'inpainting'
   data.scale = 8
   data.mask_coverage = 0.25
   data.use_data_mean = False
