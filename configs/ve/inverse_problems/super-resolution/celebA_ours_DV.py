@@ -62,7 +62,7 @@ def get_config():
   data.scale = 8
   data.mask_coverage = 0.25
   data.use_data_mean = False
-  data.datamodule = 'paired'
+  data.datamodule = 'General_PKLDataset'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
   data.image_size = 128
