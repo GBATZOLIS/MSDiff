@@ -56,7 +56,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = 'datasets'
+  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
   data.dataset = 'edges2shoes'
   data.use_data_mean = False
   data.datamodule = 'paired'
