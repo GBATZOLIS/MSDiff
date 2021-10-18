@@ -191,7 +191,7 @@ def get_general_sde_loss_fn(sde, train, conditional=False, reduce_mean=True, con
         perturbed_x = mean + std[(...,) + (None,) * len(x.shape[1:])] * z
         perturbed_data = {'x':perturbed_x, 'y':y}
 
-        score = score_fn(perturbed_data, t)
+        score = score_fn(perturbed_data, t)['x']
 
         if not likelihood_weighting:
           losses = torch.square(score * std[(...,) + (None,) * len(x.shape[1:])] + z)

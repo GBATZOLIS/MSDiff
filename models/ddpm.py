@@ -281,7 +281,8 @@ class DDPM_paired_SR3(DDPM):
     x, y = input_dict['x'], input_dict['y']
     x_channels = x.size(1)
     concat = torch.cat((x, y), dim=1)
-    return super().forward(concat, labels)
+    score_x = super().forward(concat, labels)
+    return {'x':score_x}
 
 @utils.register_model(name='ddpm_paired')
 class DDPM_paired(DDPM):
