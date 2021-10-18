@@ -212,12 +212,12 @@ def get_score_fn(sde, model, conditional=False, train=False, continuous=False):
           if continuous:
             labels = t * (sde.N - 1)
             score = model_fn(x, labels)
-            score = divide_by_sigmas(score, t, sde, continuous)
+            score = divide_by_sigmas(score['x'], t, sde, continuous)
           else:
             labels = t*(sde.N - 1)
             labels = torch.round(labels.float()).long()
             score = model_fn(x, labels)
-            score = divide_by_sigmas(score, labels, sde, continuous)
+            score = divide_by_sigmas(score['x'], labels, sde, continuous)
           return score
       else:
         raise NotImplementedError(f"SDE class {sde.__class__.__name__} not yet supported.")
