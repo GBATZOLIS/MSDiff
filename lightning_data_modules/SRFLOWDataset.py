@@ -256,8 +256,6 @@ class General_PKLDataset(data.Dataset):
 
     def __getitem__(self, item):
         hr = self.hr_images[item]
-        resize_to_target = Resize(self.image_size, interpolation=InterpolationMode.BICUBIC)
-        hr = resize_to_target(hr)
 
         if self.use_flip:
             random_choice = np.random.choice([True, False])
@@ -265,6 +263,9 @@ class General_PKLDataset(data.Dataset):
         
         hr = hr / 255.0
         hr = torch.Tensor(hr)
+
+        resize_to_target = Resize(self.image_size, interpolation=InterpolationMode.BICUBIC)
+        hr = resize_to_target(hr)
 
         if self.task == 'super-resolution':
             resize_to_lr = Resize(self.image_size//self.scale, interpolation=InterpolationMode.BICUBIC)
