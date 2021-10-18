@@ -69,13 +69,20 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
   def get_conditional_update_fn(update_fn):
     """Modify the update function of predictor & corrector to incorporate data information."""
 
-    def conditional_update_fn(x, y, t, model):
-      with torch.no_grad():
-        vec_t = torch.ones(x.shape[0]).to(model.device) * t
-        y_mean, y_std = sde['y'].marginal_prob(y, vec_t)
-        y_perturbed = y_mean + torch.randn_like(y) * y_std[(...,) + (None,) * len(y.shape[1:])]
-        x, x_mean = update_fn(x=x, y=y_perturbed, t=vec_t, model=model)
-        return x, x_mean, y_perturbed, y_mean
+    if isinstance(sde, dict) and len(sde.keys())==2:
+      def conditional_update_fn(x, y, t, model):
+        with torch.no_grad():
+          vec_t = torch.ones(x.shape[0]).to(model.device) * t
+          y_mean, y_std = sde['y'].marginal_prob(y, vec_t)
+          y_perturbed = y_mean + torch.randn_like(y) * y_std[(...,) + (None,) * len(y.shape[1:])]
+          x, x_mean = update_fn(x=x, y=y_perturbed, t=vec_t, model=model)
+          return x, x_mean, y_perturbed, y_mean
+    else:
+      def conditional_update_fn(x, y, t, model):
+        with torch.no_grad():
+          vec_t = torch.ones(x.shape[0]).to(model.device) * t
+          x, x_mean = update_fn(x=x, y=y, t=vec_t, model=model)
+        return x, x_mean, y, y
 
     return conditional_update_fn
 
@@ -96,13 +103,15 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
     def corrections_steps(i):
         return 1
 
+    c_sde = sde['x'] if isinstance(sde, dict) else sde
+
     with torch.no_grad():
       # Initial sample
-      x = sde['x'].prior_sampling(shape).to(model.device)
+      x = c_sde.prior_sampling(shape).to(model.device)
       if show_evolution:
         evolution = {'x':[], 'y':[]}
 
-      timesteps = torch.linspace(sde['x'].T, eps, p_steps, device=model.device)
+      timesteps = torch.linspace(c_sde.T, eps, p_steps, device=model.device)
 
       for i in tqdm(range(p_steps)):
         t = timesteps[i]
@@ -134,11 +143,12 @@ def conditional_shared_predictor_update_fn(x, y, t, sde, model, predictor, proba
   score_fn = mutils.get_score_fn(sde, model, conditional=True, train=False, continuous=continuous)
   score_fn = mutils.get_conditional_score_fn(score_fn, target_domain='x')
 
+  c_sde = sde['x'] if isinstance(sde, dict) else sde
   if predictor is None:
     # Corrector-only sampler
-    predictor_obj = NonePredictor(sde['x'], score_fn, probability_flow)
+    predictor_obj = NonePredictor(c_sde, score_fn, probability_flow)
   else:
-    predictor_obj = predictor(sde['x'], score_fn, probability_flow)
+    predictor_obj = predictor(c_sde, score_fn, probability_flow)
 
   return predictor_obj.update_fn(x, y, t)
 
@@ -147,9 +157,10 @@ def conditional_shared_corrector_update_fn(x, y, t, sde, model, corrector, conti
   score_fn = mutils.get_score_fn(sde, model, conditional=True, train=False, continuous=continuous)
   score_fn = mutils.get_conditional_score_fn(score_fn, target_domain='x')
 
+  c_sde = sde['x'] if isinstance(sde, dict) else sde
   if corrector is None:
     # Predictor-only sampler
-    corrector_obj = NoneCorrector(sde['x'], score_fn, snr, n_steps)
+    corrector_obj = NoneCorrector(c_sde, score_fn, snr, n_steps)
   else:
-    corrector_obj = corrector(sde['x'], score_fn, snr, n_steps)
+    corrector_obj = corrector(c_sde, score_fn, snr, n_steps)
   return corrector_obj.update_fn(x, y, t)
