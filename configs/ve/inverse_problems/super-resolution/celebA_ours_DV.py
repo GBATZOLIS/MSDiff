@@ -70,7 +70,7 @@ def get_config():
   data.shape_x = [3, data.image_size, data.image_size]
   data.shape_y = [3, data.image_size, data.image_size]
   data.centered = False
-  data.random_flip = False
+  data.use_flip = True
   data.uniform_dequantization = False
   data.num_channels = data.shape_x[0]+data.shape_y[0] #the number of channels the model sees as input.
 

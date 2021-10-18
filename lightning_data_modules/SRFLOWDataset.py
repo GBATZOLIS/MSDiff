@@ -236,10 +236,7 @@ class General_PKLDataset(data.Dataset):
 
         self.scale = config.data.scale #used for SR
         self.mask_coverage = config.data.mask_coverage #used for inpainting
-
         self.use_flip = config.data.use_flip
-        self.use_rot = config.data.use_rot
-        self.use_crop = config.data.use_crop
 
         hr_file_path = get_exact_paths(config, phase)['GT']
         self.hr_images = self.load_pkls(hr_file_path, n_max=int(1e9))
