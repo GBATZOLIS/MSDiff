@@ -280,7 +280,7 @@ class General_PKLDataset(data.Dataset):
 
         elif self.task == 'inpainting':
             masked_img = hr.clone()
-            mask_size = np.sqrt(self.mask_coverage * hr.shape[1] * hr.shape[2])
+            mask_size = int(np.sqrt(self.mask_coverage * hr.shape[1] * hr.shape[2]))
             size_x, size_y = masked_img.shape[1], masked_img.shape[2]
             start_x = np.random.randint(low=0, high=(size_x - mask_size) + 1) if size_x > mask_size else 0
             start_y = np.random.randint(low=0, high=(size_y - mask_size) + 1) if size_y > mask_size else 0
