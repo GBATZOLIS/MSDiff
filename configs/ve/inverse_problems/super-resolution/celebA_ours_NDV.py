@@ -56,18 +56,21 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
-  data.dataset = 'edges2shoes'
+  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
+  data.dataset = 'celebA-HQ-160'
+  data.task = 'super-resolution'
+  data.scale = 8
+  data.mask_coverage = 0.25
   data.use_data_mean = False
-  data.datamodule = 'paired'
+  data.datamodule = 'General_PKLDataset'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
-  data.image_size = 64
+  data.image_size = 128
   data.effective_image_size = data.image_size
   data.shape_x = [3, data.image_size, data.image_size]
   data.shape_y = [3, data.image_size, data.image_size]
   data.centered = False
-  data.random_flip = False
+  data.use_flip = True
   data.uniform_dequantization = False
   data.num_channels = data.shape_x[0]+data.shape_y[0] #the number of channels the model sees as input.
 
