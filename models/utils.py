@@ -212,12 +212,12 @@ def get_score_fn(sde, model, conditional=False, train=False, continuous=False):
           if continuous:
             labels = t * (sde.N - 1)
             score = model_fn(x, labels)
-            score = divide_by_sigmas(score['x'], t, sde, continuous)
+            score = divide_by_sigmas(score, t, sde, continuous)
           else:
             labels = t*(sde.N - 1)
             labels = torch.round(labels.float()).long()
             score = model_fn(x, labels)
-            score = divide_by_sigmas(score['x'], labels, sde, continuous)
+            score = divide_by_sigmas(score, labels, sde, continuous)
           return score
       else:
         raise NotImplementedError(f"SDE class {sde.__class__.__name__} not yet supported.")
@@ -269,7 +269,11 @@ def get_score_fn(sde, model, conditional=False, train=False, continuous=False):
 #needs shape generalisation
 def get_conditional_score_fn(score_fn, target_domain): #for standard inverse problems. It should be modified for general inverse problems (different resolutions etc.).
   def conditional_score_fn(x, y, t):
-    return score_fn({'x':x, 'y':y}, t)[target_domain]
+    score = score_fn({'x':x, 'y':y}, t)
+    if isinstance(score, dict):
+      return score[target_domain]
+    else:
+      return score
 
   return conditional_score_fn
 
