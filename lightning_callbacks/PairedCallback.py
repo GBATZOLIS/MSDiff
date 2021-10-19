@@ -60,7 +60,7 @@ class PairedVisualizationCallback(Callback):
             else:
                 conditional_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=False)
 
-            self.visualise_paired_samples(y, conditional_samples, pl_module, i+1)
+            self.visualise_paired_samples(y, conditional_samples, x, pl_module, i+1)
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         y, x = batch
@@ -70,10 +70,14 @@ class PairedVisualizationCallback(Callback):
         #self.visualise_paired_samples(y, samples, pl_module, batch_idx, phase='test')
         self.visualise_evolution(evolution, pl_module, tag='test_joint_evolution_batch_%d' % batch_idx)
 
-    def visualise_paired_samples(self, y, x, pl_module, batch_idx, phase='train'):
+    def visualise_paired_samples(self, y, x, gt, pl_module, batch_idx, phase='train'):
         # log sampled images
-        y_norm, x_norm = normalise_per_image(y).cpu(), normalise_per_image(x).cpu()
-        concat_sample = torch.cat([y_norm, x_norm], dim=-1)
+        y_norm, x_norm, gt_norm = normalise_per_image(y).cpu(), normalise_per_image(x).cpu(), normalise_per_image(gt).cpu()
+        
+        if y_norm.size(1) == 1 and y_norm.size(1) < gt.size(1): #colorization
+            y_norm = y_norm.repeat(1, 3, 1, 1)
+
+        concat_sample = torch.cat([y_norm, x_norm, gt_norm], dim=-1)
         grid_images = make_grid(concat_sample, nrow=int(np.sqrt(concat_sample.size(0))), normalize=False)
         pl_module.logger.experiment.add_image('generated_images_%sbatch_%d' % (phase, batch_idx), grid_images, pl_module.current_epoch)
     
