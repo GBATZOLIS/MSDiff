@@ -68,7 +68,7 @@ def get_config():
   data.image_size = 128
   data.effective_image_size = data.image_size
   data.shape_x = [3, data.image_size, data.image_size]
-  data.shape_y = [3, data.image_size, data.image_size]
+  data.shape_y = [1, data.image_size, data.image_size]
   data.centered = False
   data.use_flip = True
   data.uniform_dequantization = False
