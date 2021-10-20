@@ -53,7 +53,6 @@ class LRHR_PKLDataset(data.Dataset):
         self.target_size = config.data.target_resolution #overall target size
         self.crop_size = config.data.image_size #target image size for this scale
         self.scale = config.data.scale
-        self.random_scale_list = [1]
 
         hr_file_path = get_exact_paths(config, phase)['GT']
         lr_file_path = get_exact_paths(config, phase)['LQ']
@@ -61,9 +60,7 @@ class LRHR_PKLDataset(data.Dataset):
         self.use_flip = config.data.use_flip
         self.use_rot = config.data.use_rot
         self.use_crop = config.data.use_crop
-        #self.center_crop_hr_size = opt.get("center_crop_hr_size", None)
-
-        #n_max = opt["n_max"] if "n_max" in opt.keys() else int(1e8)
+        self.upscale_lr = config.data.upscale_lr
 
         t = time.time()
         self.lr_images = self.load_pkls(lr_file_path, n_max=int(1e9))
@@ -117,6 +114,10 @@ class LRHR_PKLDataset(data.Dataset):
 
             hr = torch.Tensor(hr)
             lr = torch.Tensor(lr)
+
+            if self.upscale_lr:
+                resize_to_hr = Resize(self.crop_size, interpolation=InterpolationMode.NEAREST)
+                lr = resize_to_hr(lr)
         
         elif self.scale < hr.shape[1] // lr.shape[1]:
             if self.crop_size == self.scale * lr.shape[1]:
