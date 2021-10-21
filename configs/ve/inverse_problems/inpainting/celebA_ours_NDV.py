@@ -12,13 +12,13 @@ def get_config():
   training.conditioning_approach = 'ours_NDV'
   training.batch_size = 25
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 4
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
   #----- to be removed -----
   training.num_epochs = 10000
-  training.n_iters = 250000
+  training.n_iters = 500000
   training.snapshot_freq = 5000
   training.log_freq = 250
   training.eval_freq = 2500
@@ -82,7 +82,7 @@ def get_config():
   #SIGMA INFORMATION FOR THE VE SDE
   #model.reach_target_steps = training.n_iters
   model.sigma_max_x = np.sqrt(np.prod(data.shape_x))
-  model.sigma_max_y = 0.1
+  model.sigma_max_y = 1
   #model.sigma_max_y_target = 1
   model.sigma_min_x = 5e-3
   model.sigma_min_y = 5e-3
