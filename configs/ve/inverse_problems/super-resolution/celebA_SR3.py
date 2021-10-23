@@ -10,9 +10,9 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional'
   training.conditioning_approach = 'sr3'
-  training.batch_size = 25
+  training.batch_size = 20
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -56,7 +56,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
+  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
   data.dataset = 'celebA-HQ-160'
   data.task = 'super-resolution'
   data.scale = 8
