@@ -45,7 +45,8 @@ def train(config, log_path, checkpoint_path):
 
       trainer = pl.Trainer(gpus=config.training.gpus,
                           num_nodes = config.training.num_nodes,
-                          accelerator = DDPPlugin(find_unused_parameters=False) if config.training.accelerator=='ddp' else None,
+                          accelerator = config.training.accelerator,
+                          plugins = DDPPlugin(find_unused_parameters=False) if config.training.accelerator=='ddp' else None,
                           accumulate_grad_batches = config.training.accumulate_grad_batches,
                           gradient_clip_val = config.optim.grad_clip,
                           max_steps=config.training.n_iters, 
@@ -55,7 +56,8 @@ def train(config, log_path, checkpoint_path):
     else:  
       trainer = pl.Trainer(gpus=config.training.gpus,
                           num_nodes = config.training.num_nodes,
-                          accelerator = DDPPlugin(find_unused_parameters=False) if config.training.accelerator=='ddp' else None,
+                          accelerator = config.training.accelerator,
+                          plugins = DDPPlugin(find_unused_parameters=False) if config.training.accelerator=='ddp' else None,
                           accumulate_grad_batches = config.training.accumulate_grad_batches,
                           gradient_clip_val = config.optim.grad_clip,
                           max_steps=config.training.n_iters,
