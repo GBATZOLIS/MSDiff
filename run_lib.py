@@ -1,5 +1,6 @@
 from models import ddpm, ncsnv2, fcn, ddpm3D #needed for model registration
 import pytorch_lightning as pl
+from pytorch_lightning.plugins import DDPPlugin
 import numpy as np
 
 from torchvision.utils import make_grid
@@ -44,7 +45,8 @@ def train(config, log_path, checkpoint_path):
 
       trainer = pl.Trainer(gpus=config.training.gpus,
                           num_nodes = config.training.num_nodes,
-                          accelerator = config.training.accelerator,
+                          accelerator = 'gpu' if config.training.gpus>=1 else 'cpu',
+                          strategy = DDPPlugin(find_unused_parameters=False) if config.training.accelerator=='ddp' else None,
                           accumulate_grad_batches = config.training.accumulate_grad_batches,
                           gradient_clip_val = config.optim.grad_clip,
                           max_steps=config.training.n_iters, 
@@ -54,7 +56,8 @@ def train(config, log_path, checkpoint_path):
     else:  
       trainer = pl.Trainer(gpus=config.training.gpus,
                           num_nodes = config.training.num_nodes,
-                          accelerator = config.training.accelerator,
+                          accelerator = 'gpu' if config.training.gpus>=1 else 'cpu',
+                          strategy = DDPPlugin(find_unused_parameters=False) if config.training.accelerator=='ddp' else None,
                           accumulate_grad_batches = config.training.accumulate_grad_batches,
                           gradient_clip_val = config.optim.grad_clip,
                           max_steps=config.training.n_iters,
