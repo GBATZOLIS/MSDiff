@@ -95,7 +95,7 @@ def get_config():
   model.embedding_type = 'positional'
 
 
-  model.name = 'ddpm_paired'
+  model.name = 'ddpm_paired_SR3'
   model.scale_by_sigma = True
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
