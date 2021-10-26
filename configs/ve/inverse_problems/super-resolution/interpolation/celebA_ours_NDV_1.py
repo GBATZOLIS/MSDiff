@@ -103,7 +103,7 @@ def get_config():
   model.nf = 96
   model.ch_mult = (1, 1, 2, 2, 3)
   model.num_res_blocks = 2
-  model.attn_resolutions = (16,)
+  model.attn_resolutions = (16, 8, 4)
   model.resamp_with_conv = True
   model.conditional = True
   model.fir = True
