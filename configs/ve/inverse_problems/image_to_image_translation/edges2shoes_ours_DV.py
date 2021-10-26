@@ -77,7 +77,7 @@ def get_config():
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
-  model.reach_target_steps = training.n_iters
+  model.reach_target_steps = 300000
   model.sigma_max_x = np.sqrt(np.prod(data.shape_x))
   model.sigma_max_y = np.sqrt(np.prod(data.shape_y))
   model.sigma_max_y_target = 1
