@@ -103,8 +103,8 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
             self.dataset = data_config.dataset
             self.task = data_config.task
             self.samples_dir = os.path.join(self.base_dir, self.dataset, self.task, 'test_samples')
-            self.gt_x_dir = os.path.join(self.base_dir, self.dataset, self.task, 'test_y_gt')
-            self.gt_y_dir = os.path.join(self.base_dir, self.dataset, self.task, 'test_x_gt')
+            self.gt_x_dir = os.path.join(self.base_dir, self.dataset, self.task, 'test_x_gt')
+            self.gt_y_dir = os.path.join(self.base_dir, self.dataset, self.task, 'test_y_gt')
             
             Path(self.samples_dir).mkdir(parents=True, exist_ok=True)
             Path(self.gt_x_dir).mkdir(parents=True, exist_ok=True)
