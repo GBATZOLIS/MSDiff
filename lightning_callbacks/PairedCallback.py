@@ -176,8 +176,8 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
                 metric_vals['ssim'].append(eval_tools.calculate_mean_ssim(numpy_samples, numpy_gt))
                     
             if 'consistency' in self.evaluation_metrics:
-                lr_synthetic = torch.swapaxes(eval_tools.imresize(samples.cpu(), 1/pl_module.config.data.scale), axis0=1, axis1=-1).numpy()*255
-                lr_gt = torch.swapaxes(eval_tools.imresize(x.cpu(), 1/pl_module.config.data.scale), axis0=1, axis1=-1).numpy()*255
+                lr_synthetic = torch.swapaxes(eval_tools.resize(samples.cpu(), 1/pl_module.config.data.scale), axis0=1, axis1=-1).numpy()*255
+                lr_gt = torch.swapaxes(eval_tools.resize(x.cpu(), 1/pl_module.config.data.scale), axis0=1, axis1=-1).numpy()*255
                 metric_vals['consistency'].append(eval_tools.calculate_mean_psnr(lr_synthetic, lr_gt))
                     
             if 'diversity' in self.evaluation_metrics:

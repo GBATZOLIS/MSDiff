@@ -122,7 +122,18 @@ def tensor2img(tensor, out_type=np.uint8, min_max=(0, 1)):
 def save_img(img, img_path, mode='RGB'):
     cv2.imwrite(img_path, img)
 
-def imresize(img, scale, antialiasing=True):
+def resize(img, scale, antialiasing=True):
+    if len(img.size())==3:
+        return imresize(img, scale, antialiasing)
+    elif len(img.size())==4:
+        resized_imgs = []
+        for _ in range(img.size(0)):
+            resized_imgs.append(imresize(img, scale, antialiasing))
+        return torch.cat(resized_imgs, dim=0)
+    else:
+        raise NotImplementedError('img dimension not supported.')
+
+def imresize(img, scale, antialiasing):
     # Now the scale should be the same for H and W
     # input: img: CHW RGB [0,1]
     # output: CHW RGB [0,1] w/o round
