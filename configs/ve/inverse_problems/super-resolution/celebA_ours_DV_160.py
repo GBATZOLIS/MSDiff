@@ -52,11 +52,11 @@ def get_config():
   evaluate.corrector = 'default'
   evaluate.p_steps = 10 #'default'
   evaluate.c_steps = 'default'
-  evaluate.snr = [0.1, 0.15, 0.2]
+  evaluate.snr = [0.1, 0.125, 0.15, 0.175, 0.2]
   evaluate.denoise = True
   evaluate.num_draws = 1
   evaluate.save_samples = True  
-  evaluate.test_batch_limit = 1
+  evaluate.test_batch_limit = 5
   evaluate.base_log_dir = 'experiments' #use the suitable logging directory for the hpc.
 
   #old settings
