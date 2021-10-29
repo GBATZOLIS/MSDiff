@@ -162,8 +162,8 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
 
             if 'lpips' in self.evaluation_metrics:
                 lpips_val = pl_module.loss_fn_alex(2*x-1, 2*samples-1).cpu()
-                print('lpips_val.size(): ', lpips_val.size())
-                metric_vals['lpips'].append(lpips_val)
+                print('lpips_val.squeeze().size(): ', lpips_val.squeeze().size())
+                metric_vals['lpips'].append(lpips_val.squeeze())
                     
             #convert the torch tensors to numpy arrays for the remaining metric calculations
             numpy_samples = torch.swapaxes(samples.clone().cpu(), axis0=1, axis1=-1).numpy()*255
@@ -176,9 +176,9 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
                 metric_vals['ssim'].append(eval_tools.calculate_mean_ssim(numpy_samples, numpy_gt))
                     
             if 'consistency' in self.evaluation_metrics:
-                lr_synthetic = eval_tools.imresize(numpy_samples/255., 1/pl_module.config.data.scale)
-                lr_gt = eval_tools.imresize(numpy_gt/255., 1/pl_module.config.data.scale)
-                metric_vals['consistency'].append(eval_tools.calculate_mean_psnr(lr_synthetic*255., lr_gt*255.))
+                lr_synthetic = torch.swapaxes(eval_tools.imresize(samples.cpu(), 1/pl_module.config.data.scale), axis0=1, axis1=-1).numpy()*255
+                lr_gt = torch.swapaxes(eval_tools.imresize(x.cpu(), 1/pl_module.config.data.scale), axis0=1, axis1=-1).numpy()*255
+                metric_vals['consistency'].append(eval_tools.calculate_mean_psnr(lr_synthetic, lr_gt))
                     
             if 'diversity' in self.evaluation_metrics:
                 samples=samples*255.
