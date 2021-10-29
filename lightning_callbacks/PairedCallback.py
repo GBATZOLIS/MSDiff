@@ -137,7 +137,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
         self.test_batch_limit = eval_config.test_batch_limit
 
     def on_test_start(self, trainer, pl_module):
-        pl_module.loss_fn_alex = lpips.LPIPS(net='alex')
+        pl_module.loss_fn_alex = lpips.LPIPS(net='alex').to(pl_module.device)
 
     def generate_metric_vals(self, y, x, pl_module, snr):
         metric_vals = {}
