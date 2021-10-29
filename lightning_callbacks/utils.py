@@ -27,7 +27,8 @@ def get_callbacks(config):
     if config.eval.callback is not None:
       callbacks.append(get_callback_by_name(config.eval.callback)(show_evolution=False, 
                                                                   eval_config=config.eval, 
-                                                                  data_config=config.data))
+                                                                  data_config=config.data,
+                                                                  approach = config.training.conditioning_approach))
     else:
       callbacks.append(get_callback_by_name(config.training.visualization_callback)(show_evolution=config.training.show_evolution))
 

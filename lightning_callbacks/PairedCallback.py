@@ -87,7 +87,7 @@ class PairedVisualizationCallback(Callback):
 
 @utils.register_callback(name='test_paired')
 class TestPairedVisualizationCallback(PairedVisualizationCallback):
-    def __init__(self, show_evolution, eval_config, data_config):
+    def __init__(self, show_evolution, eval_config, data_config, approach):
         super().__init__(show_evolution)
         #settings related to the conditional sampling function.
         self.predictor = eval_config.predictor
@@ -100,12 +100,12 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
         self.save_samples = eval_config.save_samples
 
         if self.save_samples:
-            self.base_dir = data_config.base_dir
+            self.base_dir = eval_config.base_log_dir
             self.dataset = data_config.dataset
             self.task = data_config.task
-            self.samples_dir = os.path.join(self.base_dir, self.dataset, self.task, 'test_samples')
-            self.gt_x_dir = os.path.join(self.base_dir, self.dataset, self.task, 'test_x_gt')
-            self.gt_y_dir = os.path.join(self.base_dir, self.dataset, self.task, 'test_y_gt')
+            self.samples_dir = os.path.join(self.base_dir, self.task, self.dataset, approach, 'images', 'samples')
+            self.gt_x_dir = os.path.join(self.base_dir, self.task, self.dataset, approach, 'images', 'x_gt')
+            self.gt_y_dir = os.path.join(self.base_dir, self.task, self.dataset, approach, 'images','y_gt')
             
             Path(self.samples_dir).mkdir(parents=True, exist_ok=True)
             Path(self.gt_x_dir).mkdir(parents=True, exist_ok=True)

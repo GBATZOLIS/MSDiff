@@ -67,7 +67,8 @@ def train(config, log_path, checkpoint_path):
 
 def test(config, log_path, checkpoint_path):
     eval_log_path = os.path.join(config.eval.base_log_dir, config.data.task, config.data.dataset, config.training.conditioning_approach)
-    logger = pl.loggers.TensorBoardLogger(save_dir=eval_log_path, name='test_results')
+    Path(eval_log_path).mkdir(parents=True, exist_ok=True)
+    logger = pl.loggers.TensorBoardLogger(save_dir=eval_log_path, name='test_metrics')
 
     DataModule = create_lightning_datamodule(config)
     DataModule.setup()
