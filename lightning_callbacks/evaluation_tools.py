@@ -129,7 +129,7 @@ def resize(img, scale, antialiasing=True):
         resized_imgs = []
         for i in range(img.size(0)):
             resized_imgs.append(imresize(img[i], scale, antialiasing))
-        return torch.cat(resized_imgs, dim=0)
+        return torch.stack(resized_imgs)
     else:
         raise NotImplementedError('img dimension not supported.')
 
