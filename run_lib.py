@@ -85,7 +85,6 @@ def test(config, log_path, checkpoint_path):
 
     trainer = pl.Trainer(gpus=config.training.gpus,
                          num_nodes = config.training.num_nodes,
-                         accelerator = 'dp',
                          accumulate_grad_batches = config.training.accumulate_grad_batches,
                          gradient_clip_val = config.optim.grad_clip,
                          max_steps=config.training.n_iters, 
