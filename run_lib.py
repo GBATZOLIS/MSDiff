@@ -86,10 +86,9 @@ def test(config, log_path, checkpoint_path):
                           gradient_clip_val = config.optim.grad_clip,
                           max_steps=config.training.n_iters, 
                           callbacks=callbacks, 
-                          logger = logger,
-                          resume_from_checkpoint=checkpoint_path)
+                          logger = logger)
     
-    trainer.test(LightningModule, test_dataloaders = DataModule.test_dataloader())
+    trainer.test(test_dataloaders = DataModule.test_dataloader(), ckpt_path=checkpoint_path)
 
 
 def multi_scale_test(master_config, log_path):
