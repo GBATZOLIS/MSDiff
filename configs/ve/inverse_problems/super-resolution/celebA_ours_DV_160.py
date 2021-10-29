@@ -50,14 +50,14 @@ def get_config():
   evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'consistency', 'diversity']
   evaluate.predictor = 'default'
   evaluate.corrector = 'default'
-  evaluate.p_steps = 'default'
+  evaluate.p_steps = 10 #'default'
   evaluate.c_steps = 'default'
   evaluate.snr = [0.1, 0.15, 0.2]
   evaluate.denoise = True
   evaluate.num_draws = 1
   evaluate.save_samples = True  
   evaluate.test_batch_limit = 1
-  evaluate.base_log_dir = 'experiments' #use the suitable logging directory for the hpc.
+  evaluate.base_log_dir = 'evaluation' #use the suitable logging directory for the hpc.
 
   #old settings
   evaluate.begin_ckpt = 50

@@ -7,6 +7,7 @@ import lpips
 from . import evaluation_tools as eval_tools
 from pathlib import Path
 import os
+import matplotlib.pyplot as plt
 
 def normalise(c, value_range=None):
     x = c.clone()
@@ -212,8 +213,19 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
     
     def on_test_epoch_end(self, trainer, pl_module):
         for eval_metric in self.evaluation_metrics:
+            fig = plt.figure()
+            plt.title('%s' % eval_metric)
+            mean_vals, snrs = [], []
             for e_snr in self.snr:
-                pl_module.logger.experiment.add_scalar(eval_metric, np.mean(self.results[e_snr][eval_metric]), e_snr)
+                mean_vals.append(np.mean(self.results[e_snr][eval_metric]))
+                snrs.append(e_snr)
+                #pl_module.logger.experiment.add_scalar(eval_metric, np.mean(self.results[e_snr][eval_metric]), e_snr)
+            
+            plt.scatter(snrs, mean_vals)
+            plt.xlabel('snr')
+            plt.ylabel('%s' % eval_metric)
+
+            pl_module.logger.experiment.add_figure(eval_metric, fig)
 
 
 @utils.register_callback(name='paired3D')
