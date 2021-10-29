@@ -173,7 +173,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
                 metric_vals['psnr'] = eval_tools.calculate_mean_psnr(numpy_samples, numpy_gt)
                     
             if 'ssim' in self.evaluation_metrics:
-                metric_vals['ssim'].apend(eval_tools.calculate_mean_ssim(numpy_samples, numpy_gt))
+                metric_vals['ssim'].append(eval_tools.calculate_mean_ssim(numpy_samples, numpy_gt))
                     
             if 'consistency' in self.evaluation_metrics:
                 lr_synthetic = eval_tools.imresize(numpy_samples/255., 1/pl_module.config.data.scale)
