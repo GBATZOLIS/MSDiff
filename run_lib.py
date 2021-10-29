@@ -66,29 +66,31 @@ def train(config, log_path, checkpoint_path):
     trainer.fit(LightningModule, datamodule=DataModule)
 
 def test(config, log_path, checkpoint_path):
+    eval_log_path = os.path.join(config.eval.base_log_dir, config.data.task, config.data.dataset, config.training.conditioning_approach)
+    logger = pl.loggers.TensorBoardLogger(save_dir=eval_log_path, name='test_results')
+
     DataModule = create_lightning_datamodule(config)
     DataModule.setup()
 
     callbacks = get_callbacks(config)
-    LightningModule = create_lightning_module(config)
-
-    eval_log_path = os.path.join(config.eval.base_log_dir, config.data.task, config.data.dataset, config.training.conditioning_approach)
-    logger = pl.loggers.TensorBoardLogger(save_dir=eval_log_path, name='test_results')
 
     if checkpoint_path is not None or config.model.checkpoint_path is not None:
       if config.model.checkpoint_path is not None and checkpoint_path is None:
         checkpoint_path = config.model.checkpoint_path
+    else:
+      return 'Testing cannot be completed because no checkpoint has been provided.'
 
-      trainer = pl.Trainer(gpus=config.training.gpus,
-                          num_nodes = config.training.num_nodes,
-                          accelerator = config.training.accelerator,
-                          accumulate_grad_batches = config.training.accumulate_grad_batches,
-                          gradient_clip_val = config.optim.grad_clip,
-                          max_steps=config.training.n_iters, 
-                          callbacks=callbacks, 
-                          logger = logger)
+    LightningModule = create_lightning_module(config, checkpoint_path)
+    trainer = pl.Trainer(gpus=config.training.gpus,
+                         num_nodes = config.training.num_nodes,
+                         accelerator = config.training.accelerator,
+                         accumulate_grad_batches = config.training.accumulate_grad_batches,
+                         gradient_clip_val = config.optim.grad_clip,
+                         max_steps=config.training.n_iters, 
+                         callbacks=callbacks, 
+                         logger = logger)
     
-    trainer.test(test_dataloaders = DataModule.test_dataloader(), ckpt_path=checkpoint_path)
+    trainer.test(LightningModule, test_dataloaders = DataModule.test_dataloader())
 
 
 def multi_scale_test(master_config, log_path):
