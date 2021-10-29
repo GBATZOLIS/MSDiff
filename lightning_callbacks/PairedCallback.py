@@ -4,7 +4,7 @@ from pytorch_lightning.callbacks import Callback
 from torchvision.utils import make_grid, save_image
 import numpy as np
 import lpips
-from . import evalution_tools as eval_tools
+from . import evaluation_tools as eval_tools
 from pathlib import Path
 import os
 
