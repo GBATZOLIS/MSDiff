@@ -57,12 +57,12 @@ def get_config():
   evaluate.num_draws = 1
   evaluate.save_samples = True  
   evaluate.test_batch_limit = 5
-  evaluate.base_log_dir = 'experiments' #use the suitable logging directory for the hpc.
+  evaluate.base_log_dir = 'evaluation' #use the suitable logging directory for the hpc.
 
   #old settings
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 16
+  evaluate.batch_size = 32
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
