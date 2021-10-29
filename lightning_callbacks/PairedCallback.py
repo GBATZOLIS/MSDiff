@@ -1,9 +1,12 @@
 from . import utils
 import torch
 from pytorch_lightning.callbacks import Callback
-from torchvision.utils import make_grid
+from torchvision.utils import make_grid, save_image
 import numpy as np
-
+import lpips
+import utils
+from pathlib import Path
+import os
 
 def normalise(c, value_range=None):
     x = c.clone()
@@ -31,6 +34,7 @@ def create_video_grid(evolution):
     for i in range(evolution.size(0)):
         video_grid.append(make_grid(evolution[i], nrow=int(np.sqrt(evolution[i].size(0))), normalize=False))
     return torch.stack(video_grid)
+
 
 @utils.register_callback(name='paired')
 class PairedVisualizationCallback(Callback):
@@ -62,14 +66,6 @@ class PairedVisualizationCallback(Callback):
 
             self.visualise_paired_samples(y, conditional_samples, x, pl_module, i+1)
 
-    def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
-        y, x = batch
-        print('sde_y sigma_max: %.5f ' % pl_module.sde['y'].sigma_max)
-        samples, sampling_info = pl_module.sample(y.to(pl_module.device), show_evolution=True) #sample x conditioned on y
-        evolution = sampling_info['evolution']
-        #self.visualise_paired_samples(y, samples, pl_module, batch_idx, phase='test')
-        self.visualise_evolution(evolution, pl_module, tag='test_joint_evolution_batch_%d' % batch_idx)
-
     def visualise_paired_samples(self, y, x, gt, pl_module, batch_idx, phase='train'):
         # log sampled images
         y_norm, x_norm, gt_norm = normalise_per_image(y).cpu(), normalise_per_image(x).cpu(), normalise_per_image(gt).cpu()
@@ -87,6 +83,136 @@ class PairedVisualizationCallback(Callback):
         joint_evolution = torch.cat([norm_evolution_y, norm_evolution_x], dim=-1)
         video_grid = create_video_grid(joint_evolution)
         pl_module.logger.experiment.add_video(tag, video_grid.unsqueeze(0), fps=50)
+
+@utils.register_callback(name='test_paired')
+class TestPairedVisualizationCallback(PairedVisualizationCallback):
+    def __init__(self, show_evolution, eval_config, data_config):
+        super().__init__(show_evolution)
+        #settings related to the conditional sampling function.
+        self.predictor = eval_config.predictor
+        self.corrector = eval_config.corrector
+        self.p_steps = eval_config.p_steps
+        self.c_steps = eval_config.c_steps
+        self.denoise = eval_config.denoise
+        
+        #settings for determining the sampling process and saving the samples
+        self.save_samples = eval_config.save_samples
+
+        if self.save_samples:
+            self.base_dir = data_config.base_dir
+            self.dataset = data_config.dataset
+            self.task = data_config.task
+            self.samples_dir = os.path.join(self.base_dir, self.dataset, self.task, 'test_samples')
+            self.gt_x_dir = os.path.join(self.base_dir, self.dataset, self.task, 'test_y_gt')
+            self.gt_y_dir = os.path.join(self.base_dir, self.dataset, self.task, 'test_x_gt')
+            
+            Path(self.samples_dir).mkdir(parents=True, exist_ok=True)
+            Path(self.gt_x_dir).mkdir(parents=True, exist_ok=True)
+            Path(self.gt_y_dir).mkdir(parents=True, exist_ok=True)
+        
+        self.num_draws = eval_config.num_draws
+        self.evaluation_metrics = eval_config.evaluation_metrics
+        
+        if not isinstance(eval_config.snr, list):
+            self.snr = [eval_config.snr]
+        else:
+            self.snr = eval_config.snr #list of snr values to be tested.
+
+        self.results = {}
+        for e_snr in self.snr:
+            #create the save directories
+            if self.save_samples:
+                e_snr_path = os.path.join(self.samples_dir, 'snr_%.3f' % e_snr)
+                Path(e_snr_path).mkdir(parents=True, exist_ok=True)
+                for draw in range(self.num_draws):
+                    draw_e_snr_path = os.path.join(self.samples_dir, 'snr_%.3f' % e_snr, 'draw_%d' % (draw+1))
+                    Path(draw_e_snr_path).mkdir(parents=True, exist_ok=True)
+
+            self.results[e_snr] = {}
+            for eval_metric in self.evaluation_metrics:
+                self.results[e_snr][eval_metric]=[]
+
+        #auxiliary counters and limits
+        self.images_tested = 0
+        self.test_batch_limit = eval_config.test_batch_limit
+
+    def on_test_start(trainer, pl_module):
+        pl_module.loss_fn_alex = lpips.LPIPS(net='alex')
+
+    def generate_metric_vals(self, y, x, pl_module, snr):
+        metric_vals = {}
+        for eval_metric in self.evaluation_metrics:
+            metric_vals[eval_metric]=[]
+
+        for draw in range(self.num_draws):
+            #sample x conditioned on y
+            samples, _ = pl_module.sample(y, show_evolution=False, 
+                                predictor=self.predictor, corrector=self.corrector, 
+                                p_steps=self.p_steps, c_steps=self.c_steps, snr=snr, denoise=self.denoise) 
+                    
+            #some reverse diffused values might be slightly off - correct them. Bear in mind we podel p_epsilon not p_0...
+            samples = torch.clamp(samples, min=0, max=1)
+
+            #save the generated samples if self.save_samples is True
+            if self.save_samples:
+                samples_save_dir = os.path.join(self.samples_dir, 'snr_%.3f' % snr, 'draw_%d' % (draw+1))
+                for i in range(samples.size(0)):
+                    fp = os.path.join(samples_save_dir, '%d.png' % (self.images_tested+i+1))
+                    save_image(samples[i, :, :, :], fp)
+
+            if 'lpips' in self.evaluation_metrics:
+                lpips_val = pl_module.loss_fn_alex(2*x-1, 2*samples-1).cpu()
+                print('lpips_val.size(): ', lpips_val.size())
+                metric_vals['lpips'].append(lpips_val)
+                    
+            #convert the torch tensors to numpy arrays for the remaining metric calculations
+            numpy_samples = torch.swapaxes(samples.clone().cpu(), axis0=1, axis1=-1).numpy()*255
+            numpy_gt = torch.swapaxes(x.clone().cpu(), axis0=1, axis1=-1).numpy()*255
+
+            if 'psnr' in self.evaluation_metrics:
+                metric_vals['psnr'] = utils.calculate_mean_psnr(numpy_samples, numpy_gt)
+                    
+            if 'ssim' in self.evaluation_metrics:
+                metric_vals['ssim'].apend(utils.calculate_mean_ssim(numpy_samples, numpy_gt))
+                    
+            if 'consistency' in self.evaluation_metrics:
+                lr_synthetic = utils.imresize(numpy_samples/255., 1/pl_module.config.data.scale)
+                lr_gt = utils.imresize(numpy_gt/255., 1/pl_module.config.data.scale)
+                metric_vals['consistency'].append(utils.calculate_mean_psnr(lr_synthetic*255., lr_gt*255.))
+                    
+            if 'diversity' in self.evaluation_metrics:
+                samples=samples*255.
+                metric_vals['diversity'].append(samples.to('cpu'))
+        
+        return metric_vals
+
+    def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
+        if batch_idx >= self.test_batch_limit:
+            return 
+
+        y, x = batch
+
+        if self.save_samples:
+            for i in range(x.size(0)):
+                save_image(x[i, :, :, :], fp = os.path.join(self.gt_x_dir, '%d.png' % (self.images_tested+i+1)))
+                save_image(y[i, :, :, :], fp = os.path.join(self.gt_y_dir, '%d.png' % (self.images_tested+i+1)))
+
+        for e_snr in self.snr:
+            metric_vals = self.generate_metric_vals(y, x, pl_module, e_snr)
+                
+            for eval_metric in self.evaluation_metrics:
+                if eval_metric == 'diversity':
+                    self.results[e_snr][eval_metric].append(float(torch.cat(metric_vals['diversity'], 0).std([0]).mean().cpu()))
+                else:
+                    self.results[e_snr][eval_metric].append(np.mean(metric_vals[eval_metric]))
+        
+        self.images_tested += x.size(0)
+    
+    def on_test_epoch_end(self, trainer, pl_module):
+        for eval_metric in self.evaluation_metrics:
+            for e_snr in self.snr:
+                pl_module.logger.experiment.add_scalar(eval_metric, np.mean(self.results[e_snr][eval_metric]), e_snr)
+
 
 @utils.register_callback(name='paired3D')
 class PairedVisualizationCallback(Callback):

@@ -5,7 +5,7 @@ import torch
 from tqdm import tqdm
 from models import utils as mutils
 
-def get_conditional_sampling_fn(config, sde, shape, eps, predictor='default', corrector='default', p_steps='default', c_steps='default'):
+def get_conditional_sampling_fn(config, sde, shape, eps, predictor='default', corrector='default', p_steps='default', c_steps='default', snr='default', denoise='default'):
     if predictor == 'default':
       predictor = get_predictor(config.sampling.predictor.lower())
     else:
@@ -20,17 +20,21 @@ def get_conditional_sampling_fn(config, sde, shape, eps, predictor='default', co
       p_steps = config.model.num_scales
     if c_steps == 'default':
       c_steps = config.sampling.n_steps_each
+    if snr == 'default':
+      snr = config.sampling.snr
+    if denoise == 'default':
+      denoise = config.sampling.noise_removal
     
     sampling_fn = get_pc_conditional_sampler(sde=sde, 
                                  shape = shape,
                                  predictor=predictor, 
                                  corrector=corrector, 
-                                 snr=config.sampling.snr,
+                                 snr=snr,
                                  p_steps=p_steps,
                                  c_steps=c_steps, 
                                  probability_flow=config.sampling.probability_flow, 
                                  continuous=config.training.continuous,
-                                 denoise=config.sampling.noise_removal, 
+                                 denoise=denoise, 
                                  eps=eps)
     return sampling_fn
 

@@ -45,6 +45,21 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
+  #new settings
+  evaluate.callback = 'test_paired'
+  evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'consistency', 'diversity']
+  evaluate.predictor = 'default'
+  evaluate.corrector = 'default'
+  evaluate.p_steps = 'default'
+  evaluate.c_steps = 'default'
+  evaluate.snr = [0.1, 0.15, 0.2]
+  evaluate.denoise = True
+  evaluate.num_draws = 1
+  evaluate.save_samples = True  
+  evaluate.test_batch_limit = 1
+  evaluate.base_log_dir = 'experiments' #use the suitable logging directory for the hpc.
+
+  #old settings
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
   evaluate.batch_size = 16
