@@ -4,7 +4,7 @@ from pytorch_lightning.callbacks import Callback
 from torchvision.utils import make_grid, save_image
 import numpy as np
 import lpips
-import utils
+from . import evalution_tools as eval_tools
 from pathlib import Path
 import os
 
@@ -170,15 +170,15 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
             numpy_gt = torch.swapaxes(x.clone().cpu(), axis0=1, axis1=-1).numpy()*255
 
             if 'psnr' in self.evaluation_metrics:
-                metric_vals['psnr'] = utils.calculate_mean_psnr(numpy_samples, numpy_gt)
+                metric_vals['psnr'] = eval_tools.calculate_mean_psnr(numpy_samples, numpy_gt)
                     
             if 'ssim' in self.evaluation_metrics:
-                metric_vals['ssim'].apend(utils.calculate_mean_ssim(numpy_samples, numpy_gt))
+                metric_vals['ssim'].apend(eval_tools.calculate_mean_ssim(numpy_samples, numpy_gt))
                     
             if 'consistency' in self.evaluation_metrics:
-                lr_synthetic = utils.imresize(numpy_samples/255., 1/pl_module.config.data.scale)
-                lr_gt = utils.imresize(numpy_gt/255., 1/pl_module.config.data.scale)
-                metric_vals['consistency'].append(utils.calculate_mean_psnr(lr_synthetic*255., lr_gt*255.))
+                lr_synthetic = eval_tools.imresize(numpy_samples/255., 1/pl_module.config.data.scale)
+                lr_gt = eval_tools.imresize(numpy_gt/255., 1/pl_module.config.data.scale)
+                metric_vals['consistency'].append(eval_tools.calculate_mean_psnr(lr_synthetic*255., lr_gt*255.))
                     
             if 'diversity' in self.evaluation_metrics:
                 samples=samples*255.
