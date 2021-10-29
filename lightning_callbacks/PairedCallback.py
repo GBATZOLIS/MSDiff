@@ -163,7 +163,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
             if 'lpips' in self.evaluation_metrics:
                 lpips_val = pl_module.loss_fn_alex(2*x-1, 2*samples-1).cpu()
                 print('lpips_val.squeeze().size(): ', lpips_val.squeeze().size())
-                metric_vals['lpips'].append(lpips_val.squeeze())
+                metric_vals['lpips'].append(torch.mean(lpips_val.squeeze()).item())
                     
             #convert the torch tensors to numpy arrays for the remaining metric calculations
             numpy_samples = torch.swapaxes(samples.clone().cpu(), axis0=1, axis1=-1).numpy()*255
