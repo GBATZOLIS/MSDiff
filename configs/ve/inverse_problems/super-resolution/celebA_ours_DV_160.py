@@ -50,7 +50,7 @@ def get_config():
   evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'consistency', 'diversity']
   evaluate.predictor = 'default'
   evaluate.corrector = 'default'
-  evaluate.p_steps = 'default'
+  evaluate.p_steps = 10 #'default'
   evaluate.c_steps = 'default'
   evaluate.snr = [0.1, 0.15, 0.2]
   evaluate.denoise = True
