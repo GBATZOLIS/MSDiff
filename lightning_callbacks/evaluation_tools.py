@@ -127,8 +127,8 @@ def resize(img, scale, antialiasing=True):
         return imresize(img, scale, antialiasing)
     elif len(img.size())==4:
         resized_imgs = []
-        for _ in range(img.size(0)):
-            resized_imgs.append(imresize(img, scale, antialiasing))
+        for i in range(img.size(0)):
+            resized_imgs.append(imresize(img[i], scale, antialiasing))
         return torch.cat(resized_imgs, dim=0)
     else:
         raise NotImplementedError('img dimension not supported.')
