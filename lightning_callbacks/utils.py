@@ -24,7 +24,7 @@ def get_callback_by_name(name):
 def get_callbacks(config):
     callbacks=[get_callback_by_name('ema')()] #check if this works for testing as well.
 
-    if config.evaluate.callback is not None:
+    if config.eval.callback is not None:
       callbacks.append(get_callback_by_name(config.eval.callback)(show_evolution=False, 
                                                                       eval_config=config.eval, 
                                                                       data_config=config.data))
