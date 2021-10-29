@@ -254,3 +254,12 @@ def calculate_weights_indices(in_length, out_length, scale, kernel, kernel_width
     sym_len_e = indices.max() - in_length
     indices = indices + sym_len_s - 1
     return weights, indices, int(sym_len_s), int(sym_len_e)
+
+# matlab 'imresize' function, now only support 'bicubic'
+def cubic(x):
+    absx = torch.abs(x)
+    absx2 = absx**2
+    absx3 = absx**3
+    return (1.5 * absx3 - 2.5 * absx2 + 1) * (
+        (absx <= 1).type_as(absx)) + (-0.5 * absx3 + 2.5 * absx2 - 4 * absx + 2) * ((
+            (absx > 1) * (absx <= 2)).type_as(absx))
