@@ -73,7 +73,7 @@ def test(config, log_path, checkpoint_path):
     LightningModule = create_lightning_module(config)
 
     eval_log_path = os.path.join(config.eval.base_log_dir, config.data.task, config.data.dataset, config.training.conditioning_approach)
-    logger = pl.loggers.TensorBoardLogger(log_path=eval_log_path, name='test_results')
+    logger = pl.loggers.TensorBoardLogger(save_dir=eval_log_path, name='test_results')
 
     if checkpoint_path is not None or config.model.checkpoint_path is not None:
       if config.model.checkpoint_path is not None and checkpoint_path is None:
