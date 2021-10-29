@@ -81,6 +81,7 @@ def test(config, log_path, checkpoint_path):
       return 'Testing cannot be completed because no checkpoint has been provided.'
 
     LightningModule = create_lightning_module(config, checkpoint_path)
+    
     trainer = pl.Trainer(gpus=config.training.gpus,
                          num_nodes = config.training.num_nodes,
                          accelerator = config.training.accelerator,

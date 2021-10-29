@@ -22,8 +22,7 @@ def get_lightning_module_by_name(name):
   return _LIGHTNING_MODULES[name]
 
 def create_lightning_module(config, checkpoint_path=None):
-  if checkpoint_path==None:
-    lightning_module = get_lightning_module_by_name(config.training.lightning_module)(config)
-  else:
-    lightning_module = get_lightning_module_by_name(config.training.lightning_module).load_from_checkpoint(checkpoint_path, config)
+  lightning_module = get_lightning_module_by_name(config.training.lightning_module)(config)
+  if checkpoint_path:
+    lightning_module = lightning_module.load_from_checkpoint(checkpoint_path, config)
   return lightning_module
