@@ -95,6 +95,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
         self.p_steps = eval_config.p_steps
         self.c_steps = eval_config.c_steps
         self.denoise = eval_config.denoise
+        self.use_path = eval_config.use_path
         
         #settings for determining the sampling process and saving the samples
         self.save_samples = eval_config.save_samples
@@ -148,8 +149,9 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
         for draw in range(self.num_draws):
             #sample x conditioned on y
             samples, _ = pl_module.sample(y, show_evolution=False, 
-                                predictor=self.predictor, corrector=self.corrector, 
-                                p_steps=self.p_steps, c_steps=self.c_steps, snr=snr, denoise=self.denoise) 
+                                          predictor=self.predictor, corrector=self.corrector, 
+                                          p_steps=self.p_steps, c_steps=self.c_steps, snr=snr, 
+                                          denoise=self.denoise, use_path=self.use_path) 
                     
             #some reverse diffused values might be slightly off - correct them. Bear in mind we podel p_epsilon not p_0...
             samples = torch.clamp(samples, min=0, max=1)

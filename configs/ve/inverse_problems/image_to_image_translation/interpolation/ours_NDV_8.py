@@ -8,9 +8,9 @@ def get_config():
 
   # training
   config.training = training = ml_collections.ConfigDict()
-  config.training.lightning_module = 'conditional_decreasing_variance'
-  training.conditioning_approach = 'ours_DV'
-  training.batch_size = 16
+  config.training.lightning_module = 'conditional'
+  training.conditioning_approach = 'ours_NDV'
+  training.batch_size = 80
   training.num_nodes = 1
   training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
@@ -41,31 +41,13 @@ def get_config():
   sampling.noise_removal = True
   sampling.probability_flow = False
   sampling.snr = 0.15 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
-  sampling.use_path = False #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
-  #new settings
-  evaluate.callback = 'test_paired'
-  evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'consistency', 'diversity']
-  evaluate.predictor = 'default'
-  evaluate.corrector = 'default'
-  evaluate.p_steps = 'default'
-  evaluate.c_steps = 'default'
-  evaluate.snr = [0.1, 0.125, 0.15, 0.175, 0.2]
-  evaluate.denoise = True
-  evaluate.use_path = True #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
-  evaluate.num_draws = 1
-  evaluate.save_samples = True  
-  evaluate.test_batch_limit = 5
-  evaluate.base_log_dir = 'evaluation' #use the suitable logging directory for the hpc.
-  
-
-  #old settings
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 16
+  evaluate.batch_size = 64
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -74,25 +56,18 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
-  data.dataset = 'celebA-HQ-160'
-  data.task = 'super-resolution'
-  data.scale = 8
-  data.mask_coverage = 0.25
+  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
+  data.dataset = 'edges2shoes'
   data.use_data_mean = False
-  data.datamodule = 'LRHR_PKLDataset'
+  data.datamodule = 'paired'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
-  data.target_resolution = 160
-  data.image_size = 160
+  data.image_size = 64
   data.effective_image_size = data.image_size
   data.shape_x = [3, data.image_size, data.image_size]
   data.shape_y = [3, data.image_size, data.image_size]
   data.centered = False
-  data.use_flip = True
-  data.use_crop = False
-  data.use_rot = False
-  data.upscale_lr = True
+  data.random_flip = False
   data.uniform_dequantization = False
   data.num_channels = data.shape_x[0]+data.shape_y[0] #the number of channels the model sees as input.
 
@@ -102,10 +77,10 @@ def get_config():
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
-  model.reach_target_steps = 250000
+  #model.reach_target_steps = training.n_iters
   model.sigma_max_x = np.sqrt(np.prod(data.shape_x))
-  model.sigma_max_y = np.sqrt(np.prod(data.shape_y))
-  model.sigma_max_y_target = 0.5
+  model.sigma_max_y = 10**(1.5)
+  #model.sigma_max_y_target = 1
   model.sigma_min_x = 5e-3
   model.sigma_min_y = 5e-3
   model.sigma_min_y_target = 5e-3
@@ -123,9 +98,9 @@ def get_config():
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 96
-  model.ch_mult = (1, 1, 2, 2, 3, 3)
+  model.ch_mult = (1, 1, 2, 2, 3)
   model.num_res_blocks = 2
-  model.attn_resolutions = (20, 10, 5)
+  model.attn_resolutions = (16, 8, 4)
   model.resamp_with_conv = True
   model.conditional = True
   model.fir = True
