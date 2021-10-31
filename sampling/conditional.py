@@ -89,7 +89,6 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
               vec_t = torch.ones(x.shape[0]).to(model.device) * t
               vec_tplustau = torch.ones(x.shape[0]).to(model.device) * tau
               y_t_mean, y_t_std = sde['y'].compute_backward_kernel(y, y_tplustau, vec_t, vec_tplustau)
-              print(y_t_std.size())
               y_t_perturbed = y_t_mean + torch.randn_like(y) * y_t_std[(...,) + (None,) * len(y.shape[1:])]
               x, x_mean = update_fn(x=x, y=y_t_perturbed, t=vec_t, model=model)
               return x, x_mean, y_t_mean, y_t_std
