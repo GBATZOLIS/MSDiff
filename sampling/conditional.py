@@ -87,11 +87,11 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
           def conditional_update_fn(x, y, t, model, y_tplustau, tau):
             with torch.no_grad():
               vec_t = torch.ones(x.shape[0]).to(model.device) * t
-              vec_tplustau = torch.ones(x.shape[0]).to(model.device) * tau
-              y_t_mean, y_t_std = sde['y'].compute_backward_kernel(y, y_tplustau, vec_t, vec_tplustau)
+              vec_tau = torch.ones(x.shape[0]).to(model.device) * tau
+              y_t_mean, y_t_std = sde['y'].compute_backward_kernel(y, y_tplustau, vec_t, vec_tau)
               y_t_perturbed = y_t_mean + torch.randn_like(y) * y_t_std[(...,) + (None,) * len(y.shape[1:])]
               x, x_mean = update_fn(x=x, y=y_t_perturbed, t=vec_t, model=model)
-              return x, x_mean, y_t_mean, y_t_std
+              return x, x_mean, y_t_perturbed
         elif sampler_type == 'corrector':
           #y_t is the sample from P(y_t|y_{t+tau}, y0). We do not resample that. 
           #The mean and std that created y_t should be saved before. No need to return them with this function.
@@ -152,7 +152,7 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
         for i in tqdm(range(p_steps)):
           t = timesteps[i]
           
-          x, x_mean, y_perturbed, _ = predictor_conditional_update_fn(x, y, t, model, y_tplustau, tau)
+          x, x_mean, y_perturbed = predictor_conditional_update_fn(x, y, t, model, y_tplustau, tau)
 
           for _ in range(corrections_steps(i)):
             x, x_mean = corrector_conditional_update_fn(x, y_perturbed, t, model)
