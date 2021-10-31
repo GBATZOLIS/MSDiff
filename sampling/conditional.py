@@ -140,7 +140,8 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
       with torch.no_grad():
         # Initial sample
         x = c_sde.prior_sampling(shape).to(model.device)
-        y_tplustau = sde['y'].marginal_prob(y, torch.ones(x.shape[0]).to(model.device) * sde['y'].T)
+        y_tplustau_mean, y_tplustau_std  = sde['y'].marginal_prob(y, torch.ones(x.shape[0]).to(model.device) * sde['y'].T)
+        y_tplustau = y_tplustau_mean + torch.randn_like(y)*y_tplustau_std
 
         if show_evolution:
           evolution = {'x':[], 'y':[]}
