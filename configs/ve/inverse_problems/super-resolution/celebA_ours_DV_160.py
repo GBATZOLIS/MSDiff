@@ -50,7 +50,7 @@ def get_config():
   evaluate.callback = 'test_paired'
   evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'consistency', 'diversity']
   evaluate.predictor = 'default'
-  evaluate.corrector = 'none'
+  evaluate.corrector = 'conditional_none'
   evaluate.p_steps = 'default'
   evaluate.c_steps = 'default'
   evaluate.snr = [0.15]
