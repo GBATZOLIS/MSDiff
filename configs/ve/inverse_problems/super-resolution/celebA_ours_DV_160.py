@@ -55,7 +55,7 @@ def get_config():
   evaluate.c_steps = 'default'
   evaluate.snr = [0.15]
   evaluate.denoise = True
-  evaluate.use_path = False #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
+  evaluate.use_path = True #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
   evaluate.num_draws = 1
   evaluate.save_samples = True  
   evaluate.test_batch_limit = 5
