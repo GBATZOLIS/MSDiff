@@ -140,28 +140,28 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
       with torch.no_grad():
         # Initial sample
         x = c_sde.prior_sampling(shape).to(model.device)
-        y_tplustau_mean, y_tplustau_std  = sde['y'].marginal_prob(y, torch.ones(x.shape[0]).to(model.device) * sde['y'].T)
+
+        timesteps = torch.linspace(c_sde.T, eps, p_steps, device=model.device)
+        tau = timesteps[0]-timesteps[1]
+        y_tplustau_mean, y_tplustau_std  = sde['y'].marginal_prob(y, torch.ones(x.shape[0]).to(model.device) * (c_sde.T+tau))
         y_tplustau = y_tplustau_mean + torch.randn_like(y)*y_tplustau_std[(...,) + (None,) * len(y.shape[1:])]
 
         if show_evolution:
           evolution = {'x':[], 'y':[]}
 
-        timesteps = torch.linspace(c_sde.T, eps, p_steps, device=model.device)
-        tau = timesteps[0]-timesteps[1]
-
         for i in tqdm(range(p_steps)):
           t = timesteps[i]
           
-          x, x_mean, y_perturbed = predictor_conditional_update_fn(x, y, t, model, y_tplustau, tau)
+          x, x_mean, y_tplustau = predictor_conditional_update_fn(x, y, t, model, y_tplustau, tau)
 
           for _ in range(corrections_steps(i)):
-            x, x_mean = corrector_conditional_update_fn(x, y_perturbed, t, model)
+            x, x_mean = corrector_conditional_update_fn(x, y_tplustau, t, model)
           
           if show_evolution:
             evolution['x'].append(x.cpu())
-            evolution['y'].append(y_perturbed.cpu())
+            evolution['y'].append(y_tplustau.cpu())
 
-        print('torch.mean(torch.abs(y-y_perturbed)): %.8f' % torch.mean(torch.abs(y-y_perturbed)))
+        print('torch.mean(torch.abs(y-y_tplustau)): %.8f' % torch.mean(torch.abs(y-y_tplustau)))
 
         if show_evolution:
           #check the effect of denoising
