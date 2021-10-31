@@ -50,12 +50,12 @@ def get_config():
   evaluate.callback = 'test_paired'
   evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'consistency', 'diversity']
   evaluate.predictor = 'default'
-  evaluate.corrector = 'default'
-  evaluate.p_steps = 10 #'default'
+  evaluate.corrector = 'none'
+  evaluate.p_steps = 'default'
   evaluate.c_steps = 'default'
   evaluate.snr = [0.15]
   evaluate.denoise = True
-  evaluate.use_path = True #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
+  evaluate.use_path = False #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
   evaluate.num_draws = 1
   evaluate.save_samples = True  
   evaluate.test_batch_limit = 5
