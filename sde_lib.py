@@ -281,6 +281,7 @@ class VESDE(SDE):
 
     #backward scaling factor for the mean
     s_b_0 = (sigma_tplustau_square - sigma_t_square) / sigma_tplustau_square
+    print(s_b_0.size())
     s_b_tplustau = sigma_t_square / sigma_tplustau_square
 
     mean_backward = s_b_0[(...,) + (None,) * len(x0.shape[1:])] * x0 + s_b_tplustau[(...,) + (None,) * len(x0.shape[1:])] * x_tplustau
