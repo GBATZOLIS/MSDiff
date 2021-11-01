@@ -69,8 +69,8 @@ class PairedVisualizationCallback(Callback):
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         y, x = batch
-        samples, _ = pl_module.sample(y, show_evolution=False, use_path=True) 
-        
+        samples, _ = pl_module.sample(y, show_evolution=False, use_path=True, p_steps=2000) 
+
         self.visualise_paired_samples(y, samples, x, pl_module, batch_idx+1)
 
     def visualise_paired_samples(self, y, x, gt, pl_module, batch_idx, phase='train'):
