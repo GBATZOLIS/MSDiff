@@ -46,7 +46,7 @@ def get_config():
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
   #new settings
-  evaluate.callback = 'paired'
+  evaluate.callback = None #'test_paired'
   evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim','diversity']
   evaluate.predictor = 'default'
   evaluate.corrector = 'conditional_none'
