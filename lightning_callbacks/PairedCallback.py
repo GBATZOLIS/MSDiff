@@ -67,6 +67,14 @@ class PairedVisualizationCallback(Callback):
 
             self.visualise_paired_samples(y, conditional_samples, x, pl_module, i+1)
 
+    def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
+        y, x = batch
+        samples, _ = pl_module.sample(y, show_evolution=False, 
+                                          predictor=pl_module.config.eval.predictor, corrector=pl_module.config.eval.corrector, 
+                                          p_steps=pl_module.config.eval.p_steps, c_steps=pl_module.config.eval.c_steps, snr=pl_module.config.eval[0], 
+                                          denoise=pl_module.config.eval.denoise, use_path=pl_module.config.eval.use_path) 
+        self.visualise_paired_samples(y, samples, x, pl_module, batch_idx+1)
+
     def visualise_paired_samples(self, y, x, gt, pl_module, batch_idx, phase='train'):
         # log sampled images
         y_norm, x_norm, gt_norm = normalise_per_image(y).cpu(), normalise_per_image(x).cpu(), normalise_per_image(gt).cpu()
