@@ -86,8 +86,8 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
         if sampler_type == 'predictor':
           def conditional_update_fn(x, y, t, model, y_tplustau, tau):
             with torch.no_grad():
-              vec_t = torch.ones(x.shape[0]).to(model.device) * t
-              vec_tau = torch.ones(x.shape[0]).to(model.device) * tau
+              vec_t = torch.ones(x.shape[0]).type_as(y, device=model.device) * t
+              vec_tau = torch.ones(x.shape[0]).type_as(y, device=model.device) * tau
               y_t_mean, y_t_std = sde['y'].compute_backward_kernel(y, y_tplustau, vec_t, vec_tau)
               y_t_perturbed = y_t_mean + torch.randn_like(y) * y_t_std[(...,) + (None,) * len(y.shape[1:])]
               x, x_mean = update_fn(x=x, y=y_t_perturbed, t=vec_t, model=model)
@@ -96,14 +96,14 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
           #y_t is the sample from P(y_t|y_{t+tau}, y0). We do not resample that. 
           #The mean and std that created y_t should be saved before. No need to return them with this function.
           def conditional_update_fn(x, y_t, t, model):
-            vec_t = torch.ones(x.shape[0]).to(model.device) * t
+            vec_t = torch.ones(x.shape[0]).type_as(y_t, device=model.device) * t
             return update_fn(x=x, y=y_t, t=vec_t, model=model)
         else:
           return NotImplementedError('Sampler type %s is not supported. Available sampler type options: [predictor, corrector]' % sampler_type)
       else:
         def conditional_update_fn(x, y, t, model):
           with torch.no_grad():
-            vec_t = torch.ones(x.shape[0]).to(model.device) * t
+            vec_t = torch.ones(x.shape[0]).type_as(y, device=model.device) * t
             y_mean, y_std = sde['y'].marginal_prob(y, vec_t)
             y_perturbed = y_mean + torch.randn_like(y) * y_std[(...,) + (None,) * len(y.shape[1:])]
             x, x_mean = update_fn(x=x, y=y_perturbed, t=vec_t, model=model)
@@ -111,7 +111,7 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
     else:
       def conditional_update_fn(x, y, t, model):
         with torch.no_grad():
-          vec_t = torch.ones(x.shape[0]).to(model.device) * t
+          vec_t = torch.ones(x.shape[0]).type_as(y, device=model.device) * t
           x, x_mean = update_fn(x=x, y=y, t=vec_t, model=model)
         return x, x_mean, y, y
 
@@ -139,11 +139,13 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
 
       with torch.no_grad():
         # Initial sample
-        x = c_sde.prior_sampling(shape).to(model.device)
+        x = c_sde.prior_sampling(shape)
+        x = x.type_as(y, device=model.device)
 
         timesteps = torch.linspace(c_sde.T, eps, p_steps, device=model.device)
         tau = timesteps[0]-timesteps[1]
-        y_tplustau_mean, y_tplustau_std  = sde['y'].marginal_prob(y, torch.ones(x.shape[0]).to(model.device) * (c_sde.T+tau))
+        T = timesteps[0]
+        y_tplustau_mean, y_tplustau_std  = sde['y'].marginal_prob(y, torch.ones(x.shape[0]).type_as(y, device=model.device) * (T+tau))
         y_tplustau = y_tplustau_mean + torch.randn_like(y)*y_tplustau_std[(...,) + (None,) * len(y.shape[1:])]
 
         if show_evolution:
@@ -194,7 +196,7 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
 
       with torch.no_grad():
         # Initial sample
-        x = c_sde.prior_sampling(shape).to(model.device)
+        x = c_sde.prior_sampling(shape).type_as(y, model.device)
         if show_evolution:
           evolution = {'x':[], 'y':[]}
 
