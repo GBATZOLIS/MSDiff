@@ -47,7 +47,7 @@ def get_config():
   evaluate.workers = 4*training.gpus
   #new settings
   evaluate.callback = 'test_paired'
-  evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'consistency', 'diversity']
+  evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'diversity']
   evaluate.predictor = 'default'
   evaluate.corrector = 'default'
   evaluate.p_steps = 'default'
