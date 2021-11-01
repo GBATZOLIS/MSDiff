@@ -69,8 +69,7 @@ class PairedVisualizationCallback(Callback):
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         y, x = batch
-        samples, _ = pl_module.sample(y, show_evolution=False, use_path=True, p_steps=2000) 
-
+        samples, _ = pl_module.sample(y, show_evolution=False) 
         self.visualise_paired_samples(y, samples, x, pl_module, batch_idx+1)
 
     def visualise_paired_samples(self, y, x, gt, pl_module, batch_idx, phase='train'):
@@ -142,7 +141,8 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
 
         #auxiliary counters and limits
         self.images_tested = 0
-        self.test_batch_limit = eval_config.test_batch_limit
+        self.first_test_batch = eval_config.first_test_batch
+        self.last_test_batch = eval_config.last_test_batch
 
     def on_test_start(self, trainer, pl_module):
         pl_module.loss_fn_alex = lpips.LPIPS(net='alex').to(pl_module.device)
@@ -198,7 +198,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
         return metric_vals
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
-        if batch_idx >= self.test_batch_limit:
+        if batch_idx >= self.last_test_batch or batch_idx<=self.first_test_batch:
             return 
 
         y, x = batch
@@ -219,6 +219,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
         
         self.images_tested += x.size(0)
     
+    '''
     def on_test_epoch_end(self, trainer, pl_module):
         for eval_metric in self.evaluation_metrics:
             fig = plt.figure()
@@ -234,6 +235,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
             plt.ylabel('%s' % eval_metric)
 
             pl_module.logger.experiment.add_figure(eval_metric, fig)
+    '''
 
 
 @utils.register_callback(name='paired3D')

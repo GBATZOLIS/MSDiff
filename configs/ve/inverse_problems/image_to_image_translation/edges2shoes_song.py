@@ -41,13 +41,14 @@ def get_config():
   sampling.noise_removal = True
   sampling.probability_flow = False
   sampling.snr = 0.15 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
+  sampling.use_path = False #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
   #new settings
-  evaluate.callback = None #'test_paired'
-  evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim','diversity']
+  evaluate.callback = 'test_paired'
+  evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'diversity']
   evaluate.predictor = 'default'
   evaluate.corrector = 'default'
   evaluate.p_steps = 'default'
@@ -56,8 +57,9 @@ def get_config():
   evaluate.denoise = True
   evaluate.use_path = True #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
   evaluate.num_draws = 1
-  evaluate.save_samples = True  
-  evaluate.test_batch_limit = 1
+  evaluate.save_samples = True
+  evaluate.first_test_batch = -5
+  evaluate.last_test_batch = -1
   evaluate.base_log_dir = 'evaluation' #use the suitable logging directory for the hpc.
   
 

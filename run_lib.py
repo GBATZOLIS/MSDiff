@@ -73,7 +73,7 @@ def test(config, log_path, checkpoint_path):
     DataModule = create_lightning_datamodule(config)
     DataModule.setup()
 
-    callbacks = get_callbacks(config)
+    callbacks = get_callbacks(config, phase='test')
 
     if checkpoint_path is not None or config.model.checkpoint_path is not None:
       if config.model.checkpoint_path is not None and checkpoint_path is None:

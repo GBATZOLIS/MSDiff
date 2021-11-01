@@ -41,7 +41,8 @@ def get_config():
   sampling.noise_removal = True
   sampling.probability_flow = False
   sampling.snr = 0.15 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
-
+  sampling.use_path = False #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
+  
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus

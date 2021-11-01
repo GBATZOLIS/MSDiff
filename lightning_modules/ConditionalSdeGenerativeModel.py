@@ -67,6 +67,10 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
     
     def test_step(self, batch, batch_idx):
         print('Test batch %d' % batch_idx)
+        y, x = batch
+        print('y.size(): ', y.size())
+        samples, _ = self.sample(y) 
+        
         
     def sample(self, y, show_evolution=False, predictor='default', corrector='default', p_steps='default', c_steps='default', snr='default', denoise='default', use_path='default'):
         sampling_shape = [y.size(0)]+self.config.data.shape_x

@@ -21,10 +21,10 @@ def register_callback(cls=None, *, name=None):
 def get_callback_by_name(name):
     return _CALLBACKS[name]
 
-def get_callbacks(config):
+def get_callbacks(config, phase='train'):
     callbacks=[get_callback_by_name('ema')()] #check if this works for testing as well.
 
-    if config.eval.callback is not None:
+    if phase=='test':
       callbacks.append(get_callback_by_name(config.eval.callback)(show_evolution=False, 
                                                                   eval_config=config.eval, 
                                                                   data_config=config.data,
