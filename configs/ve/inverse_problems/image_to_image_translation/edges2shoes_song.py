@@ -75,6 +75,7 @@ def get_config():
   config.data = data = ml_collections.ConfigDict()
   data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
   data.dataset = 'edges2shoes'
+  data.task = 'image-to-image'
   data.use_data_mean = False
   data.datamodule = 'paired'
   data.create_dataset = False
