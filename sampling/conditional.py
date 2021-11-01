@@ -28,7 +28,7 @@ def get_conditional_sampling_fn(config, sde, shape, eps,
     if denoise == 'default':
       denoise = config.sampling.noise_removal
     if use_path =='default':
-      use_path = config.sampling.use_path
+      use_path = False
     
     sampling_fn = get_pc_conditional_sampler(sde=sde, 
                                             shape = shape,
