@@ -45,6 +45,23 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
+  #new settings
+  evaluate.callback = 'test_paired'
+  evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'consistency', 'diversity']
+  evaluate.predictor = 'default'
+  evaluate.corrector = 'default'
+  evaluate.p_steps = 'default'
+  evaluate.c_steps = 'default'
+  evaluate.snr = [0.15]
+  evaluate.denoise = True
+  evaluate.use_path = True #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
+  evaluate.num_draws = 1
+  evaluate.save_samples = True  
+  evaluate.test_batch_limit = 1
+  evaluate.base_log_dir = 'evaluation' #use the suitable logging directory for the hpc.
+  
+
+  #old settings
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
   evaluate.batch_size = 50
