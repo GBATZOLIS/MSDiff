@@ -69,6 +69,7 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
         print('Test batch %d' % batch_idx)
         y, x = batch
         print('y.size(): ', y.size())
+        print(y[0,:,30,30])
         samples, _ = self.sample(y) 
         
         
