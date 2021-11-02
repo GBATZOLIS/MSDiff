@@ -199,7 +199,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
         return metric_vals
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
-        if batch_idx >= self.last_test_batch or batch_idx<=self.first_test_batch:
+        if batch_idx >= self.last_test_batch or batch_idx<self.first_test_batch:
             return 
 
         y, x = batch

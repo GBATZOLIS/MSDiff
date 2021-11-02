@@ -58,8 +58,8 @@ def get_config():
   evaluate.use_path = True #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
   evaluate.num_draws = 1
   evaluate.save_samples = True
-  evaluate.first_test_batch = -5
-  evaluate.last_test_batch = -1
+  evaluate.first_test_batch = 0
+  evaluate.last_test_batch = 1
   evaluate.base_log_dir = 'evaluation' #use the suitable logging directory for the hpc.
   
 
