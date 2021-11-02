@@ -59,7 +59,7 @@ def get_config():
   evaluate.num_draws = 1
   evaluate.save_samples = True
   evaluate.first_test_batch = 0
-  evaluate.last_test_batch = 5
+  evaluate.last_test_batch = 50
   evaluate.base_log_dir = 'evaluation' #use the suitable logging directory for the hpc.
   
 
@@ -93,7 +93,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = None
+  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/checkpoints/image-to-image/edges2shoes/ours_DV/epoch=626-step=499999.ckpt'
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
