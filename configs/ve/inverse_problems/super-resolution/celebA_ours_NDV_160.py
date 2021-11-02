@@ -12,7 +12,7 @@ def get_config():
   training.conditioning_approach = 'ours_NDV'
   training.batch_size = 16
   training.num_nodes = 1
-  training.gpus = 2
+  training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
