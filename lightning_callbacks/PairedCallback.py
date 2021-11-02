@@ -8,6 +8,7 @@ from . import evaluation_tools as eval_tools
 from pathlib import Path
 import os
 import matplotlib.pyplot as plt
+import pickle
 
 def normalise(c, value_range=None):
     x = c.clone()
@@ -104,14 +105,15 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
         
         #settings for determining the sampling process and saving the samples
         self.save_samples = eval_config.save_samples
-
         if self.save_samples:
             self.base_dir = eval_config.base_log_dir
             self.dataset = data_config.dataset
             self.task = data_config.task
-            self.samples_dir = os.path.join(self.base_dir, self.task, self.dataset, approach, 'images', 'samples')
-            self.gt_x_dir = os.path.join(self.base_dir, self.task, self.dataset, approach, 'images', 'x_gt')
-            self.gt_y_dir = os.path.join(self.base_dir, self.task, self.dataset, approach, 'images','y_gt')
+            self.approach = approach
+
+            self.samples_dir = os.path.join(self.base_dir, self.task, self.dataset, self.approach, 'images', 'samples')
+            self.gt_x_dir = os.path.join(self.base_dir, self.task, self.dataset, self.approach, 'images', 'x_gt')
+            self.gt_y_dir = os.path.join(self.base_dir, self.task, self.dataset, self.approach, 'images','y_gt')
             
             Path(self.samples_dir).mkdir(parents=True, exist_ok=True)
             Path(self.gt_x_dir).mkdir(parents=True, exist_ok=True)
@@ -137,12 +139,18 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
 
             self.results[e_snr] = {}
             for eval_metric in self.evaluation_metrics:
+                if eval_metric == 'diversity' and self.num_draws == 1:
+                    continue
+
                 self.results[e_snr][eval_metric]=[]
 
         #auxiliary counters and limits
         self.images_tested = 0
         self.first_test_batch = eval_config.first_test_batch
         self.last_test_batch = eval_config.last_test_batch
+        
+        #file to save the results in the form of a dictionary that can be used to combine results later on.
+        self.save_results_file = os.path.join(self.base_dir, self.task, self.dataset, self.approach, 'test_metrics', '%s_%s.pkl' % (self.first_test_batch, self.last_test_batch))
 
     def on_test_start(self, trainer, pl_module):
         pl_module.loss_fn_alex = lpips.LPIPS(net='alex').to(pl_module.device)
@@ -150,12 +158,13 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
     def generate_metric_vals(self, y, x, pl_module, snr):
         metric_vals = {}
         for eval_metric in self.evaluation_metrics:
+            if eval_metric == 'diversity' and self.num_draws==1:
+                continue
+            
             metric_vals[eval_metric]=[]
 
         for draw in range(self.num_draws):
             #sample x conditioned on y
-            print(y.size())
-            print(y[0:10,:,30,30])
             samples, _ = pl_module.sample(y, show_evolution=False, 
                                           predictor=self.predictor, corrector=self.corrector, 
                                           p_steps=self.p_steps, c_steps=self.c_steps, snr=snr, 
@@ -173,7 +182,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
 
             if 'lpips' in self.evaluation_metrics:
                 lpips_val = pl_module.loss_fn_alex(2*x-1, 2*samples-1).cpu()
-                print('lpips_val.squeeze().size(): ', lpips_val.squeeze().size())
+                #print('lpips_val.squeeze().size(): ', lpips_val.squeeze().size())
                 metric_vals['lpips'].append(torch.mean(lpips_val.squeeze()).item())
                     
             #convert the torch tensors to numpy arrays for the remaining metric calculations
@@ -194,8 +203,9 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
                 metric_vals['consistency'].append(eval_tools.calculate_mean_psnr(lr_synthetic, lr_gt))
                     
             if 'diversity' in self.evaluation_metrics:
-                samples=samples*255.
-                metric_vals['diversity'].append(samples.to('cpu'))
+                if self.num_draws > 1:
+                    samples = samples*255.
+                    metric_vals['diversity'].append(samples.to('cpu'))
         
         return metric_vals
 
@@ -216,29 +226,39 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
                 
             for eval_metric in self.evaluation_metrics:
                 if eval_metric == 'diversity':
-                    self.results[e_snr][eval_metric].append(float(torch.cat(metric_vals['diversity'], 0).std([0]).mean().cpu()))
+                    if self.num_draws > 1:
+                        self.results[e_snr][eval_metric].append(torch.mean(torch.std(torch.stack(metric_vals['diversity']), dim=0)).item())
+                    else:
+                        continue
                 else:
                     self.results[e_snr][eval_metric].append(np.mean(metric_vals[eval_metric]))
         
         self.images_tested += x.size(0)
     
     def on_test_epoch_end(self, trainer, pl_module):
+        f = open(self.save_results_file,"wb")
+        pickle.dump(dict,f)
+        f.close()
+
         for eval_metric in self.evaluation_metrics:
+            if eval_metric == 'diversity' and self.num_draws==1:
+                continue
+
             fig = plt.figure()
             plt.title('%s' % eval_metric)
             mean_vals, snrs = [], []
             for e_snr in self.snr:
-                mean_vals.append(np.mean(self.results[e_snr][eval_metric]))
+                mean_val = np.mean(self.results[e_snr][eval_metric])
+                mean_vals.append(mean_val)
                 snrs.append(e_snr)
-                #pl_module.logger.experiment.add_scalar(eval_metric, np.mean(self.results[e_snr][eval_metric]), e_snr)
+
+                print('snr: %.3f - eval metric: %s --- mean value: %.5f' % (e_snr, eval_metric, mean_val))
             
             plt.scatter(snrs, mean_vals)
             plt.xlabel('snr')
             plt.ylabel('%s' % eval_metric)
 
             pl_module.logger.experiment.add_figure(eval_metric, fig)
-    
-
 
 @utils.register_callback(name='paired3D')
 class PairedVisualizationCallback(Callback):

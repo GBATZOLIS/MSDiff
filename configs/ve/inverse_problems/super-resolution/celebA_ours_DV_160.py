@@ -53,19 +53,21 @@ def get_config():
   evaluate.corrector = 'default'
   evaluate.p_steps = 5 #'default'
   evaluate.c_steps = 'default'
-  evaluate.snr = [0.15]
+  evaluate.snr = [0.1, 0.15]
   evaluate.denoise = True
-  evaluate.use_path = True #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
-  evaluate.num_draws = 1
+  evaluate.use_path = False #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
+  evaluate.num_draws = 4
   evaluate.save_samples = True  
-  evaluate.test_batch_limit = 10
+  evaluate.first_test_batch = 0
+  evaluate.last_test_batch = 5
   evaluate.base_log_dir = 'evaluation' #use the suitable logging directory for the hpc.
   
 
   #old settings
+  evaluate.batch_size = 25
+
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 16
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
