@@ -46,7 +46,7 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
-  
+
   #new settings
   evaluate.callback = 'test_paired'
   evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'consistency', 'diversity']
@@ -61,7 +61,7 @@ def get_config():
   evaluate.save_samples = True  
   evaluate.first_test_batch = 0
   evaluate.last_test_batch = 20
-  evaluate.base_log_dir = 'evaluation' #use the suitable logging directory for the hpc.
+  evaluate.base_log_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation' #use the suitable logging directory for the hpc.
   
 
   #old settings
@@ -101,7 +101,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = None
+  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/checkpoints/super-resolution/celebA-HQ-160/SR3/epoch=87-step=447654.ckpt'
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE

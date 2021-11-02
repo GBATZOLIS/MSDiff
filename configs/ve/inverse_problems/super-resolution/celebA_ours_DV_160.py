@@ -46,21 +46,22 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
+
   #new settings
   evaluate.callback = 'test_paired'
   evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'consistency', 'diversity']
   evaluate.predictor = 'default'
   evaluate.corrector = 'default'
-  evaluate.p_steps = 5 #'default'
+  evaluate.p_steps = 'default'
   evaluate.c_steps = 'default'
-  evaluate.snr = [0.1, 0.15]
+  evaluate.snr = [0.15]
   evaluate.denoise = True
   evaluate.use_path = False #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
-  evaluate.num_draws = 4
+  evaluate.num_draws = 1
   evaluate.save_samples = True  
   evaluate.first_test_batch = 0
-  evaluate.last_test_batch = 5
-  evaluate.base_log_dir = 'evaluation' #use the suitable logging directory for the hpc.
+  evaluate.last_test_batch = 20
+  evaluate.base_log_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation' #use the suitable logging directory for the hpc.
   
 
   #old settings
@@ -76,7 +77,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
+  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
   data.dataset = 'celebA-HQ-160'
   data.task = 'super-resolution'
   data.scale = 8
@@ -100,7 +101,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = None
+  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/checkpoints/super-resolution/celebA-HQ-160/ours_DV/epoch=87-step=447655.ckpt'
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
