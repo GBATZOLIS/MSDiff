@@ -154,6 +154,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
 
         for draw in range(self.num_draws):
             #sample x conditioned on y
+            print(y.size())
             print(y[0:10,:,30,30])
             samples, _ = pl_module.sample(y, show_evolution=False, 
                                           predictor=self.predictor, corrector=self.corrector, 
@@ -201,7 +202,8 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         if batch_idx >= self.last_test_batch or batch_idx<self.first_test_batch:
             return 
-
+            
+        print('batch_idx: ', batch_idx)
         y, x = batch
 
         if self.save_samples:
@@ -220,7 +222,6 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
         
         self.images_tested += x.size(0)
     
-    '''
     def on_test_epoch_end(self, trainer, pl_module):
         for eval_metric in self.evaluation_metrics:
             fig = plt.figure()
@@ -236,7 +237,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
             plt.ylabel('%s' % eval_metric)
 
             pl_module.logger.experiment.add_figure(eval_metric, fig)
-    '''
+    
 
 
 @utils.register_callback(name='paired3D')
