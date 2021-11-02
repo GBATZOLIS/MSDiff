@@ -154,6 +154,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
 
         for draw in range(self.num_draws):
             #sample x conditioned on y
+            print(y[0:10,:,30,30])
             samples, _ = pl_module.sample(y, show_evolution=False, 
                                           predictor=self.predictor, corrector=self.corrector, 
                                           p_steps=self.p_steps, c_steps=self.c_steps, snr=snr, 
