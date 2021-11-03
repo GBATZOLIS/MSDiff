@@ -242,6 +242,11 @@ class General_PKLDataset(data.Dataset):
         hr_file_path = get_exact_paths(config, phase)['GT']
         self.hr_images = self.load_pkls(hr_file_path, n_max=int(1e9))
 
+        if phase == 'test':
+            self.use_seed = config.eval.use_seed
+        else:
+            self.use_seed = False
+
     def load_pkls(self, path, n_max):
         assert os.path.isfile(path), path
         images = []
@@ -280,12 +285,16 @@ class General_PKLDataset(data.Dataset):
             return gray, hr
 
         elif self.task == 'inpainting':
+            if self.use_seed:
+                np.random.seed(item)
+
             masked_img = hr.clone()
             mask_size = int(np.sqrt(self.mask_coverage * hr.shape[1] * hr.shape[2]))
             size_x, size_y = masked_img.shape[1], masked_img.shape[2]
             start_x = np.random.randint(low=0, high=(size_x - mask_size) + 1) if size_x > mask_size else 0
             start_y = np.random.randint(low=0, high=(size_y - mask_size) + 1) if size_y > mask_size else 0
             masked_img[:, start_x:start_x + mask_size, start_y:start_y + mask_size] = 0.
+            
             return masked_img, hr
 
 
