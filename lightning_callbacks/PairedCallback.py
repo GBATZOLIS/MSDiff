@@ -119,7 +119,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
             Path(self.gt_x_dir).mkdir(parents=True, exist_ok=True)
             Path(self.gt_y_dir).mkdir(parents=True, exist_ok=True)
         
-        self.num_draws = eval_config.num_draws
+        self.draws = eval_config.draws
         self.evaluation_metrics = eval_config.evaluation_metrics
         
         if not isinstance(eval_config.snr, list):
@@ -133,13 +133,13 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
             if self.save_samples:
                 e_snr_path = os.path.join(self.samples_dir, 'snr_%.3f' % e_snr)
                 Path(e_snr_path).mkdir(parents=True, exist_ok=True)
-                for draw in range(self.num_draws):
-                    draw_e_snr_path = os.path.join(self.samples_dir, 'snr_%.3f' % e_snr, 'draw_%d' % (draw+1))
+                for draw in self.draws:
+                    draw_e_snr_path = os.path.join(self.samples_dir, 'snr_%.3f' % e_snr, 'draw_%d' % (draw))
                     Path(draw_e_snr_path).mkdir(parents=True, exist_ok=True)
 
             self.results[e_snr] = {}
             for eval_metric in self.evaluation_metrics:
-                if eval_metric == 'diversity' and self.num_draws == 1:
+                if eval_metric == 'diversity' and len(self.draws) == 1:
                     continue
 
                 self.results[e_snr][eval_metric]=[]
@@ -158,12 +158,12 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
     def generate_metric_vals(self, y, x, pl_module, snr):
         metric_vals = {}
         for eval_metric in self.evaluation_metrics:
-            if eval_metric == 'diversity' and self.num_draws==1:
+            if eval_metric == 'diversity' and len(self.draws) == 1:
                 continue
             
             metric_vals[eval_metric]=[]
 
-        for draw in range(self.num_draws):
+        for draw in self.draws:
             #sample x conditioned on y
             samples, _ = pl_module.sample(y, show_evolution=False, 
                                           predictor=self.predictor, corrector=self.corrector, 
@@ -175,7 +175,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
 
             #save the generated samples if self.save_samples is True
             if self.save_samples:
-                samples_save_dir = os.path.join(self.samples_dir, 'snr_%.3f' % snr, 'draw_%d' % (draw+1))
+                samples_save_dir = os.path.join(self.samples_dir, 'snr_%.3f' % snr, 'draw_%d' % (draw))
                 for i in range(samples.size(0)):
                     fp = os.path.join(samples_save_dir, '%d.png' % (self.images_tested+i+1))
                     save_image(samples[i, :, :, :], fp)
@@ -203,14 +203,14 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
                 metric_vals['consistency'].append(eval_tools.calculate_mean_psnr(lr_synthetic, lr_gt))
                     
             if 'diversity' in self.evaluation_metrics:
-                if self.num_draws > 1:
-                    samples = samples*255.
+                if len(self.draws) > 1:
+                    samples = samples * 255.
                     metric_vals['diversity'].append(samples.to('cpu'))
         
         return metric_vals
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
-        if batch_idx >= self.last_test_batch or batch_idx<self.first_test_batch:
+        if batch_idx >= self.last_test_batch or batch_idx < self.first_test_batch:
             return 
             
         print('batch_idx: ', batch_idx)
@@ -226,7 +226,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
                 
             for eval_metric in self.evaluation_metrics:
                 if eval_metric == 'diversity':
-                    if self.num_draws > 1:
+                    if len(self.draws) > 1:
                         self.results[e_snr][eval_metric].append(torch.mean(torch.std(torch.stack(metric_vals['diversity']), dim=0)).item())
                     else:
                         continue
@@ -236,12 +236,12 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
         self.images_tested += x.size(0)
     
     def on_test_epoch_end(self, trainer, pl_module):
-        f = open(self.save_results_file,"wb")
-        pickle.dump(dict,f)
+        f = open(self.save_results_file, "wb")
+        pickle.dump(self.results, f)
         f.close()
 
         for eval_metric in self.evaluation_metrics:
-            if eval_metric == 'diversity' and self.num_draws==1:
+            if eval_metric == 'diversity' and len(self.draws) == 1:
                 continue
 
             fig = plt.figure()

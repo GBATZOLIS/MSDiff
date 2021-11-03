@@ -9,7 +9,7 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional_decreasing_variance'
-  training.conditioning_approach = 'ours_DV'
+  training.conditioning_approach = 'ours_slowDV' #should be converted to ours_DV for training
   training.batch_size = 16
   training.num_nodes = 1
   training.gpus = 1
@@ -57,10 +57,10 @@ def get_config():
   evaluate.snr = [0.15]
   evaluate.denoise = True
   evaluate.use_path = False #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
-  evaluate.num_draws = 1
+  evaluate.draws = [1]
   evaluate.save_samples = True  
-  evaluate.first_test_batch = 2
-  evaluate.last_test_batch = 40
+  evaluate.first_test_batch = 0
+  evaluate.last_test_batch = 100
   evaluate.base_log_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation' #use the suitable logging directory for the hpc.
   
 
