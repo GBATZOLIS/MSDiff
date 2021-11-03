@@ -145,7 +145,7 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
                 self.results[e_snr][eval_metric]=[]
 
         #auxiliary counters and limits
-        self.images_tested = 0
+        self.images_tested = eval_config.batch_size * eval_config.first_test_batch
         self.first_test_batch = eval_config.first_test_batch
         self.last_test_batch = eval_config.last_test_batch
         
@@ -210,30 +210,28 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
         return metric_vals
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
-        if batch_idx >= self.last_test_batch or batch_idx < self.first_test_batch:
-            return 
-            
-        print('batch_idx: ', batch_idx)
-        y, x = batch
+        if batch_idx >= self.first_test_batch and batch_idx < self.last_test_batch:
+            print('batch_idx: ', batch_idx)
+            y, x = batch
 
-        if self.save_samples:
-            for i in range(x.size(0)):
-                save_image(x[i, :, :, :], fp = os.path.join(self.gt_x_dir, '%d.png' % (self.images_tested+i+1)))
-                save_image(y[i, :, :, :], fp = os.path.join(self.gt_y_dir, '%d.png' % (self.images_tested+i+1)))
+            if self.save_samples:
+                for i in range(x.size(0)):
+                    save_image(x[i, :, :, :], fp = os.path.join(self.gt_x_dir, '%d.png' % (self.images_tested+i+1)))
+                    save_image(y[i, :, :, :], fp = os.path.join(self.gt_y_dir, '%d.png' % (self.images_tested+i+1)))
 
-        for e_snr in self.snr:
-            metric_vals = self.generate_metric_vals(y, x, pl_module, e_snr)
-                
-            for eval_metric in self.evaluation_metrics:
-                if eval_metric == 'diversity':
-                    if len(self.draws) > 1:
-                        self.results[e_snr][eval_metric].append(torch.mean(torch.std(torch.stack(metric_vals['diversity']), dim=0)).item())
+            for e_snr in self.snr:
+                metric_vals = self.generate_metric_vals(y, x, pl_module, e_snr)
+                    
+                for eval_metric in self.evaluation_metrics:
+                    if eval_metric == 'diversity':
+                        if len(self.draws) > 1:
+                            self.results[e_snr][eval_metric].append(torch.mean(torch.std(torch.stack(metric_vals['diversity']), dim=0)).item())
+                        else:
+                            continue
                     else:
-                        continue
-                else:
-                    self.results[e_snr][eval_metric].append(np.mean(metric_vals[eval_metric]))
-        
-        self.images_tested += x.size(0)
+                        self.results[e_snr][eval_metric].append(np.mean(metric_vals[eval_metric]))
+            
+            self.images_tested += x.size(0)
     
     def on_test_epoch_end(self, trainer, pl_module):
         f = open(self.save_results_file, "wb")
