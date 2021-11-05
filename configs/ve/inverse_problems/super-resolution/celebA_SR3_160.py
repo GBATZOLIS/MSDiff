@@ -57,11 +57,11 @@ def get_config():
   evaluate.snr = [0.15]
   evaluate.denoise = True
   evaluate.use_path = False #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
-  evaluate.draws = [1]
+  evaluate.draws = [2, 3, 4, 5]
   evaluate.save_samples = True
-  evaluate.first_test_batch = 100
-  evaluate.last_test_batch = 200
-  evaluate.base_log_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation' #use the suitable logging directory for the hpc.
+  evaluate.first_test_batch = 0
+  evaluate.last_test_batch = 25
+  evaluate.base_log_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation_continued' #use the suitable logging directory for the hpc.
   
 
   #old settings
