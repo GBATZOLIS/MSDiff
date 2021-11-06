@@ -100,7 +100,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/checkpoints/super-resolution/celebA-HQ-160/ours_NDV/epoch=87-step=447655.ckpt'
+  model.checkpoint_path = None
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
