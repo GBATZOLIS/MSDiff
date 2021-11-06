@@ -11,6 +11,23 @@ import numpy as np
 import cv2
 import math
 
+def get_calculate_consistency_fn(task):
+    #apply the forward operator on gt and synthetic images and calculate the resulting deviation between the outputs.
+    if task == 'super-resolution':
+        def consistency_fn(samples, hr_gt, scale):
+            lr_fake = torch.swapaxes(resize(samples.cpu(), 1/scale), axis0=1, axis1=-1).numpy()*255
+            lr_gt = torch.swapaxes(resize(hr_gt.cpu(), 1/scale), axis0=1, axis1=-1).numpy()*255
+            return calculate_mean_psnr(lr_fake, lr_gt)
+    elif task == 'inpainting':
+        def consistency_fn(samples, gt, mask_coordinates):
+            return
+    elif task == 'image-to-image':
+        def consistency_fn(samples, gt):
+            return
+    else:
+        return NotImplementedError('The forward operator for task %s is not supported.' % task)
+    
+    return consistency_fn
 
 def calculate_psnr(img1, img2):
     # img1 and img2 have range [0, 255]
