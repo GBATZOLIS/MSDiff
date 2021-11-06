@@ -9,7 +9,7 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'conditional'
-  training.conditioning_approach = 'ours_NDV'
+  training.conditioning_approach = 'sr3'
   training.batch_size = 12
   training.num_nodes = 1
   training.gpus = 4
@@ -66,6 +66,7 @@ def get_config():
 
   #old settings
   evaluate.batch_size = training.batch_size
+
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
   evaluate.enable_sampling = True
@@ -104,10 +105,10 @@ def get_config():
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
-  #model.reach_target_steps = training.n_iters
+  model.reach_target_steps = 250000
   model.sigma_max_x = np.sqrt(np.prod(data.shape_x))
-  model.sigma_max_y = 0.3
-  #model.sigma_max_y_target = 1
+  model.sigma_max_y = np.sqrt(np.prod(data.shape_y))
+  model.sigma_max_y_target = 0.3
   model.sigma_min_x = 5e-3
   model.sigma_min_y = 5e-3
   model.sigma_min_y_target = 5e-3
@@ -119,7 +120,7 @@ def get_config():
   model.embedding_type = 'positional'
 
 
-  model.name = 'ddpm_paired'
+  model.name = 'ddpm_paired_SR3'
   model.scale_by_sigma = True
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
@@ -141,9 +142,8 @@ def get_config():
   model.init_scale = 0.
   model.fourier_scale = 16
   model.conv_size = 3
-  model.input_channels = data.num_channels
-  model.output_channels = data.num_channels
-
+  model.input_channels = data.shape_x[0]+data.shape_y[0]
+  model.output_channels = data.shape_x[0]
 
   # optimization
   config.optim = optim = ml_collections.ConfigDict()
