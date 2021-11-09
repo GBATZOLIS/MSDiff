@@ -25,6 +25,8 @@ def main(argv):
     run_lib.multi_scale_test(FLAGS.config, FLAGS.log_path)
   elif FLAGS.mode == 'compute_dataset_statistics':
     run_lib.compute_data_stats(FLAGS.config)
+  elif FLAGS.mode == 'evaluation_pipeline':
+    run_lib.evaluation_pipeline(FLAGS.config)
 
 if __name__ == "__main__":
   app.run(main)

@@ -19,11 +19,41 @@ def get_calculate_consistency_fn(task):
             lr_gt = torch.swapaxes(resize(hr_gt.cpu(), 1/scale), axis0=1, axis1=-1).numpy()*255
             return calculate_mean_psnr(lr_fake, lr_gt)
     elif task == 'inpainting':
-        def consistency_fn(samples, gt, mask_coordinates):
-            return
+        def consistency_fn(samples, gt, mask_info):
+            masked_samples = samples.clone().cpu()
+            masked_gt = gt.clone().cpu()
+            
+            for i in range(samples.size(0)):
+                start_x, start_y, mask_size = mask_info[i,0], mask_info[i,1], mask_info[i,2]
+                masked_samples[i,:,start_x:start_x + mask_size, start_y:start_y + mask_size] =  0.
+                masked_gt[i,:,start_x:start_x + mask_size, start_y:start_y + mask_size] =  0.
+
+            masked_samples = masked_samples.numpy()*255
+            masked_gt = masked_gt.numpy()*255
+            return calculate_mean_psnr(masked_samples, masked_gt)
+
     elif task == 'image-to-image':
         def consistency_fn(samples, gt):
-            return
+            def get_edge_detection_fn(sigma, low_threshold, high_threshold):
+                def edge_detection_fn(image):
+                    img_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                    img_blur = cv2.GaussianBlur(img_gray, ksize=(3,3), sigmaX=sigma, sigmaY=sigma)
+                    edge_image = cv2.Canny(image=img_blur, threshold1=low_threshold, threshold2=high_threshold, L2gradient=True)
+                    return edge_image
+                return edge_detection_fn
+            
+            edge_fn = get_edge_detection_fn(sigma=0.5, low_threshold=10, high_threshold=100)
+            
+            synthetic_edges = []
+            gt_edges = []
+            for i in range(samples.size(0)):
+                synthetic_edges.append(edge_fn(samples[i]))
+                gt_edges.append(edge_fn(gt[i]))
+            
+            synthetic_edges = np.stack(synthetic_edges)
+            gt_edges = np.stack(gt_edges)
+            return calculate_mean_psnr(synthetic_edges, gt_edges)
+
     else:
         return NotImplementedError('The forward operator for task %s is not supported.' % task)
     
@@ -280,3 +310,4 @@ def cubic(x):
     return (1.5 * absx3 - 2.5 * absx2 + 1) * (
         (absx <= 1).type_as(absx)) + (-0.5 * absx3 + 2.5 * absx2 - 4 * absx + 2) * ((
             (absx > 1) * (absx <= 2)).type_as(absx))
+
