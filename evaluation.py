@@ -60,6 +60,8 @@ class SynthesizedDataset(Dataset):
 
         self.sample_paths = {}
         base_sample_path = os.path.join(base_path, 'samples, snr_%.3f' % snr)
+        print(base_sample_path)
+        
         self.gt_paths = {'x':{}, 'y':{}}
         base_gt_path = os.path.join(base_path, 'gt')
         gt_draw_files = listdir_nothidden_filenames(base_gt_path)
