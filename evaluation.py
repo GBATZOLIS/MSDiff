@@ -59,7 +59,7 @@ class SynthesizedDataset(Dataset):
         self.task = task #use for determining the extra information (usually details related to the forward operator)
 
         self.sample_paths = {}
-        base_sample_path = os.path.join(base_path, 'samples, snr_%.3f' % snr)
+        base_sample_path = os.path.join(base_path, 'samples', 'snr_%.3f' % snr)
         print(base_sample_path)
         
         self.gt_paths = {'x':{}, 'y':{}}
