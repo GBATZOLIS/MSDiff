@@ -11,6 +11,7 @@ from lightning_callbacks.evaluation_tools import calculate_mean_psnr, calculate_
 import numpy as np
 import pickle 
 import torch
+from tqdm import tqdm
 
 #for the fid calculation
 from models.inception import InceptionV3
@@ -268,7 +269,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
                    'y':{},
                    'samples': {}}
 
-    for i, info in enumerate(dataloader):
+    for i, info in tqdm(enumerate(dataloader)):
         y, x = info['y'], info['x']
         samples = info['samples']
 
@@ -288,8 +289,8 @@ def run_evaluation_pipeline(task, base_path, snr, device):
         for draw in samples.keys():
             #FID
             #calculate the inception activation for the gt and synthetic samples.
-            activations['y'][draw] = activation_fn(activation_fn(y.to(device)))
-            activations['x'][draw] = activation_fn(activation_fn(x.to(device)))
+            activations['y'][draw] = activation_fn(activation_fn(y[draw].to(device)))
+            activations['x'][draw] = activation_fn(activation_fn(x[draw].to(device)))
             activations['samples'][draw] = activation_fn(samples[draw].to(device))
             
             #LPIPS
