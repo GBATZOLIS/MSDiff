@@ -289,6 +289,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
         for draw in samples.keys():
             #FID
             #calculate the inception activation for the gt and synthetic samples.
+            print(y[draw].size())
             activations['y'][draw] = activation_fn(activation_fn(y[draw].to(device)))
             activations['x'][draw] = activation_fn(activation_fn(x[draw].to(device)))
             activations['samples'][draw] = activation_fn(samples[draw].to(device))
