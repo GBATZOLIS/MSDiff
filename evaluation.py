@@ -10,6 +10,7 @@ import lpips
 from lightning_callbacks.evaluation_tools import calculate_mean_psnr, calculate_mean_ssim, get_calculate_consistency_fn
 import numpy as np
 import pickle 
+import torch
 
 #for the fid calculation
 from models.inception import InceptionV3
