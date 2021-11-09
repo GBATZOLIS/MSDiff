@@ -67,8 +67,8 @@ class SynthesizedDataset(Dataset):
 
         gt_draw_to_file_fn = get_gt_draw_to_file_fn(gt_draw_files)
 
-        draw_paths = listdir_nothidden_filenames(base_sample_path)
-        for draw_path in draw_paths:
+        self.draw_paths = listdir_nothidden_filenames(base_sample_path)
+        for draw_path in self.draw_paths:
             draw = int(draw_path.split('_')[1])
             self.sample_paths[draw] = sorted(listdir_nothidden_paths(os.path.join(base_sample_path, draw_path), 'png'))
             self.gt_paths['x'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'x_gt'), 'png'))
@@ -104,6 +104,10 @@ class SynthesizedDataset(Dataset):
 
         return info
     
+    def __len__(self):
+        first_draw = int(self.draw_paths[0].split('_')[1])
+        return len(self.sample_paths[first_draw])
+
 def get_activation_fn(model):
     def activation_fn(img):
         with torch.no_grad():
