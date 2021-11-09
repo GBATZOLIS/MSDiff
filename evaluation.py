@@ -310,7 +310,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             #PSNR, SSIM
             #convert the torch tensors to numpy arrays for the remaining metric calculations
             numpy_samples = torch.swapaxes(samples[draw].clone().cpu(), axis0=1, axis1=-1).numpy()*255
-            numpy_gt = torch.swapaxes(x.clone().cpu(), axis0=1, axis1=-1).numpy()*255
+            numpy_gt = torch.swapaxes(x[draw].clone().cpu(), axis0=1, axis1=-1).numpy()*255
             
             psnr_val = calculate_mean_psnr(numpy_samples, numpy_gt)
             psnr_values.append(psnr_val)
