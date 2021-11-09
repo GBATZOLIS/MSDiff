@@ -288,6 +288,9 @@ def run_evaluation_pipeline(task, base_path, snr, device):
         concat_samples = [] #use for calculating diversity
         
         for draw in samples.keys():
+            y[draw] = y[draw].to(device)
+            x[draw] = x[draw].to(device)
+            samples[draw] = samples[draw].to(device)
             #FID
             #calculate the inception activation for the gt and synthetic samples.
             print(y[draw].size())
