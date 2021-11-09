@@ -22,6 +22,7 @@ def get_gt_draw_to_file_fn(gt_draw_files): #some draws share the same ground tru
     draw_to_file_dict = {}
     for draw_file in gt_draw_files:
         if len(draw_file.split('_')) == 2:
+            print(draw_file)
             draw_to_file_dict[int(draw_file.split('_')[1])]=draw_file
         elif len(draw_file.split('_')) == 3:
             start = int(draw_file.split('_')[1])
@@ -48,6 +49,7 @@ class SynthesizedDataset(Dataset):
         self.gt_paths = {'x':{}, 'y':{}}
         base_gt_path = os.path.join(base_path, 'gt')
         gt_draw_files = os.listdir(base_gt_path)
+
         gt_draw_to_file_fn = get_gt_draw_to_file_fn(gt_draw_files)
 
         draw_paths = os.listdir(base_sample_path)
