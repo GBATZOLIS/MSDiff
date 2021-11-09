@@ -85,9 +85,11 @@ class SynthesizedDataset(Dataset):
         gt_x = {}
         samples = {}
         for draw in self.sample_paths.keys():
-            samples[draw] = ToTensor(Image.open(self.sample_paths[draw][index]).convert('RGB'))
-            gt_y[draw]= ToTensor(Image.open(self.gt_paths['y'][draw][index]).convert('RGB'))
-            gt_x[draw]= ToTensor(Image.open(self.gt_paths['x'][draw][index]).convert('RGB'))
+            samples[draw] = ToTensor()(Image.open(self.sample_paths[draw][index]).convert('RGB'))
+            gt_y[draw]= ToTensor()(Image.open(self.gt_paths['y'][draw][index]).convert('RGB'))
+            gt_x[draw]= ToTensor()(Image.open(self.gt_paths['x'][draw][index]).convert('RGB'))
+
+            print('gt_x[draw].min(): %.3f, gt_x[draw].max(): %.3f' % (gt_x[draw].min(), gt_x[draw].max()))
             
         info = {'y': gt_y,
                 'samples': samples,
