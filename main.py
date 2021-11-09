@@ -10,7 +10,7 @@ config_flags.DEFINE_config_file(
 flags.DEFINE_string("checkpoint_path", None, "Checkpoint directory.")
 flags.DEFINE_string("data_path", None, "Checkpoint directory.")
 flags.DEFINE_string("log_path", "./", "Checkpoint directory.")
-flags.DEFINE_enum("mode", "train", ["train", "test", "multi_scale_test", "compute_dataset_statistics"], "Running mode: train or test")
+flags.DEFINE_enum("mode", "train", ["train", "test", "multi_scale_test", "compute_dataset_statistics", 'evaluation_pipeline'], "Running mode: train or test")
 flags.DEFINE_string("eval_folder", "eval",
                     "The folder name for storing evaluation results")
 flags.mark_flags_as_required(["config", "mode", "log_path"])
