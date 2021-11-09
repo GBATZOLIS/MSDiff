@@ -142,6 +142,7 @@ class InceptionV3(nn.Module):
         x = inp
 
         if self.resize_input:
+            print(x.size())
             x = F.interpolate(x,
                               size=(299, 299),
                               mode='bilinear',
