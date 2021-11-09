@@ -15,8 +15,11 @@ import pickle
 from models.inception import InceptionV3
 from torch.nn.functional import adaptive_avg_pool2d
 
-def listdir_nothidden(path, filetype):
-    return glob.glob(os.path.join(path, '*.%s' % filetype))
+def listdir_nothidden(path, filetype=None):
+    if not filetype:
+        return glob.glob(os.path.join(path, '*'))
+    else:
+        return glob.glob(os.path.join(path, '*.%s' % filetype))
 
 def get_gt_draw_to_file_fn(gt_draw_files): #some draws share the same ground truths.
     draw_to_file_dict = {}
