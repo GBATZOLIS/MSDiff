@@ -291,9 +291,9 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             #FID
             #calculate the inception activation for the gt and synthetic samples.
             print(y[draw].size())
-            activations['y'][draw] = activation_fn(activation_fn(y[draw].to(device)))
-            activations['x'][draw] = activation_fn(activation_fn(x[draw].to(device)))
-            activations['samples'][draw] = activation_fn(samples[draw].to(device))
+            #activations['y'][draw] = activation_fn(activation_fn(y[draw].to(device)))
+            #activations['x'][draw] = activation_fn(activation_fn(x[draw].to(device)))
+            #activations['samples'][draw] = activation_fn(samples[draw].to(device))
             
             #LPIPS
             lpips_val = loss_fn_alex(2*x.clone()-1, 2*samples[draw].clone()-1).cpu().squeeze().item()
