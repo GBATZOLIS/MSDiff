@@ -296,7 +296,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             #activations['samples'][draw] = activation_fn(samples[draw].to(device))
             
             #LPIPS
-            lpips_val = loss_fn_alex(2*x.clone()-1, 2*samples[draw].clone()-1).cpu().squeeze().item()
+            lpips_val = loss_fn_alex(2*x[draw].clone()-1, 2*samples[draw].clone()-1).cpu().squeeze().item()
             if lpips_val in lpips_val_to_imgID.keys():
                 lpips_val_to_imgID[lpips_val].extend([(i+1, draw)])
             else:
