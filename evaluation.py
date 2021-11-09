@@ -97,7 +97,7 @@ class SynthesizedDataset(Dataset):
 
         if self.task == 'inpainting':
             mask_coverage = 0.25
-            a_sample = self.sample_paths[list(self.sample_paths.keys())[0]]
+            a_sample = samples[list(samples.keys())[0]]
             size_x, size_y = a_sample.shape[1], a_sample.shape[2]
             mask_size = int(np.sqrt(mask_coverage * size_x * size_y))
             start_x = np.random.randint(low=0, high=(size_x - mask_size) + 1) if size_x > mask_size else 0
