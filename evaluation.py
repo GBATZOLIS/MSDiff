@@ -15,11 +15,22 @@ import pickle
 from models.inception import InceptionV3
 from torch.nn.functional import adaptive_avg_pool2d
 
-def listdir_nothidden(path, filetype=None):
+def listdir_nothidden_paths(path, filetype=None):
     if not filetype:
         return glob.glob(os.path.join(path, '*'))
     else:
         return glob.glob(os.path.join(path, '*.%s' % filetype))
+
+
+def listdir_nothidden_filenames(path, filetype=None):
+    if not filetype:
+        paths = glob.glob(os.path.join(path, '*'))
+    else:
+        paths = glob.glob(os.path.join(path, '*.%s' % filetype))
+    
+    files = [os.path.basename(path) for path in paths]
+    return files
+
 
 def get_gt_draw_to_file_fn(gt_draw_files): #some draws share the same ground truths.
     draw_to_file_dict = {}
@@ -51,16 +62,17 @@ class SynthesizedDataset(Dataset):
         base_sample_path = os.path.join(base_path, 'samples, snr_%.3f' % snr)
         self.gt_paths = {'x':{}, 'y':{}}
         base_gt_path = os.path.join(base_path, 'gt')
-        gt_draw_files = os.listdir(base_gt_path)
+        gt_draw_files = listdir_nothidden_filenames(base_gt_path)
+        print(gt_draw_files)
 
         gt_draw_to_file_fn = get_gt_draw_to_file_fn(gt_draw_files)
 
-        draw_paths = os.listdir(base_sample_path)
+        draw_paths = listdir_nothidden_filenames(base_sample_path)
         for draw_path in draw_paths:
             draw = int(draw_path.split('_')[1])
-            self.sample_paths[draw] = sorted(listdir_nothidden(os.path.join(base_sample_path, draw_path), 'png'))
-            self.gt_paths['x'][draw] = sorted(listdir_nothidden(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'x_gt'), 'png'))
-            self.gt_paths['y'][draw] = sorted(listdir_nothidden(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'y_gt'), 'png'))
+            self.sample_paths[draw] = sorted(listdir_nothidden_paths(os.path.join(base_sample_path, draw_path), 'png'))
+            self.gt_paths['x'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'x_gt'), 'png'))
+            self.gt_paths['y'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'y_gt'), 'png'))
             
             print(self.sample_paths[draw][:5])
             print(self.gt_paths['x'][draw][:5])
