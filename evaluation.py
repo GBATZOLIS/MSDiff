@@ -117,8 +117,8 @@ class SynthesizedDataset(Dataset):
 def get_activation_fn(model):
     def activation_fn(img):
         with torch.no_grad():
-            print(model(img).size())
             pred = model(img)[0]
+            print(pred.size())
         
         # If model output is not scalar, apply global spatial average pooling.
         # This happens if you choose a dimensionality not equal 2048.
