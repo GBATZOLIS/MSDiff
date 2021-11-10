@@ -130,10 +130,10 @@ def get_fid_fn(distribution):
             sample_act_stats = {}
             target_fid = {}
             for draw in activations['samples'].keys():
-                sample_activations = torch.cat(activations['samples']['draw'], dim=0).numpy()
+                sample_activations = torch.cat(activations['samples'][draw], dim=0).numpy()
                 sample_act_stats[draw] = {'mu':np.mean(sample_activations, axis=0), 'sigma':np.cov(sample_activations, rowvar=False)}
                 
-                target_activations = torch.cat(activations['x']['draw'], dim=0).numpy()
+                target_activations = torch.cat(activations['x'][draw], dim=0).numpy()
                 target_act_stats[draw] = {'mu':np.mean(target_activations, axis=0), 'sigma':np.cov(target_activations, rowvar=False)}
                 
                 mu1, sigma1 = target_act_stats[draw]['mu'], target_act_stats[draw]['sigma']
