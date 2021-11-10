@@ -62,12 +62,12 @@ class SynthesizedDataset(Dataset):
 
         self.sample_paths = {}
         base_sample_path = os.path.join(base_path, 'samples', 'snr_%.3f' % snr)
-        print(base_sample_path)
+        #print(base_sample_path)
         
         self.gt_paths = {'x':{}, 'y':{}}
         base_gt_path = os.path.join(base_path, 'gt')
         gt_draw_files = listdir_nothidden_filenames(base_gt_path)
-        print(gt_draw_files)
+        #print(gt_draw_files)
 
         gt_draw_to_file_fn = get_gt_draw_to_file_fn(gt_draw_files)
 
@@ -78,9 +78,9 @@ class SynthesizedDataset(Dataset):
             self.gt_paths['x'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'x_gt'), 'png'))
             self.gt_paths['y'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'y_gt'), 'png'))
             
-            print(self.sample_paths[draw][:5])
-            print(self.gt_paths['x'][draw][:5])
-            print(self.gt_paths['y'][draw][:5])
+            #print(self.sample_paths[draw][:5])
+            #print(self.gt_paths['x'][draw][:5])
+            #print(self.gt_paths['y'][draw][:5])
 
     def __getitem__(self, index):        
         gt_y = {}
@@ -91,7 +91,7 @@ class SynthesizedDataset(Dataset):
             gt_y[draw]= ToTensor()(Image.open(self.gt_paths['y'][draw][index]).convert('RGB'))
             gt_x[draw]= ToTensor()(Image.open(self.gt_paths['x'][draw][index]).convert('RGB'))
 
-            print('gt_x[draw].min(): %.3f, gt_x[draw].max(): %.3f' % (gt_x[draw].min(), gt_x[draw].max()))
+            #print('gt_x[draw].min(): %.3f, gt_x[draw].max(): %.3f' % (gt_x[draw].min(), gt_x[draw].max()))
             
         info = {'y': gt_y,
                 'samples': samples,
@@ -294,13 +294,13 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             y[draw] = y[draw].to(device)
             x[draw] = x[draw].to(device)
             samples[draw] = samples[draw].to(device)
-            print(y[draw].size(), x[draw].size(), samples[draw].size())
+            #print(y[draw].size(), x[draw].size(), samples[draw].size())
 
             #FID
             #calculate the inception activation for the gt and synthetic samples.
             print(y[draw].size())
-            activations['y'][draw] = activation_fn(activation_fn(y[draw].to(device)))
-            activations['x'][draw] = activation_fn(activation_fn(x[draw].to(device)))
+            activations['y'][draw] = activation_fn(y[draw].to(device))
+            activations['x'][draw] = activation_fn(x[draw].to(device))
             activations['samples'][draw] = activation_fn(samples[draw].to(device))
             
             #LPIPS
