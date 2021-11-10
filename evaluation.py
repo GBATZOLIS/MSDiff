@@ -105,8 +105,8 @@ class SynthesizedDataset(Dataset):
         return info
     
     def __len__(self):
-        first_draw = int(self.draw_paths[0].split('_')[1])
-        return len(self.sample_paths[first_draw])
+        min_draws = min([len(self.sample_paths[draw]) for draw in self.sample_paths.keys()])
+        return min_draws
 
 def get_activation_fn(model):
     def activation_fn(img):
