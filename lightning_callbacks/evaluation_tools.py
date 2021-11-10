@@ -21,7 +21,6 @@ def get_calculate_consistency_fn(task):
     elif task == 'inpainting':
         def consistency_fn(samples, gt, mask_info):
             masked_samples = samples.clone().cpu()
-            print(samples.size(), gt.size(), mask_info.size())
             masked_gt = gt.clone().cpu()
             
             for i in range(samples.size(0)):
