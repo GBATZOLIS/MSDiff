@@ -356,18 +356,18 @@ def run_evaluation_pipeline(task, base_path, snr, device):
     target_fid_fn = get_fid_fn(distribution='target')
 
     print('Calculation of target FID')
-    target_fid_dict = target_fid_fn(activations)
+    #target_fid_dict = target_fid_fn(activations)
 
     print('Calculation of joint FID')
-    joint_fid_dict = joint_fid_fn(activations)
+    #joint_fid_dict = joint_fid_fn(activations)
 
-    target_fid = {}
-    target_fid_values = [target_fid_dict[draw] for draw in target_fid_dict.keys()]
-    target_fid['mean'], target_fid['std'] = np.mean(target_fid_values), np.std(target_fid_values)
+    #target_fid = {}
+    #target_fid_values = [target_fid_dict[draw] for draw in target_fid_dict.keys()]
+    #target_fid['mean'], target_fid['std'] = np.mean(target_fid_values), np.std(target_fid_values)
 
-    joint_fid = {}
-    joint_fid_values = [joint_fid_dict[draw] for draw in joint_fid_dict.keys()]
-    joint_fid['mean'], joint_fid['std'] = np.mean(joint_fid_values), np.std(joint_fid_values)
+    #joint_fid = {}
+    #joint_fid_values = [joint_fid_dict[draw] for draw in joint_fid_dict.keys()]
+    #joint_fid['mean'], joint_fid['std'] = np.mean(joint_fid_values), np.std(joint_fid_values)
 
     #Calculate the mean values (LPIPS, PSNR, SSIM, CONSISTENCY, DIVERSITY)
     mean_lpips = np.mean(mean_lpips_values)
@@ -387,10 +387,10 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             'ssim': mean_ssim,
             'consistency': mean_consistency,
             'diversity': mean_diversity,
-            'target_fid': target_fid['mean'],
-            'target_fid_std': target_fid['std'],
-            'joint_fid': joint_fid['mean'],
-            'joint_fid_std': joint_fid['std'],
+            #'target_fid': target_fid['mean'],
+            #'target_fid_std': target_fid['std'],
+            #'joint_fid': joint_fid['mean'],
+            #'joint_fid_std': joint_fid['std'],
             'best_lpips_samples': best_lpips_samples_id_info}
     
     for key in info.keys():
