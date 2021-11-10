@@ -46,7 +46,7 @@ def get_calculate_consistency_fn(task):
             
             synthetic_edges = []
             gt_edges = []
-            for i in range(samples.size(0)):
+            for i in range(samples.shape[0]):
                 synthetic_edges.append(edge_fn(samples[i]))
                 gt_edges.append(edge_fn(gt[i]))
             
