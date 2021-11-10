@@ -359,8 +359,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
     target_fid_dict = target_fid_fn(activations)
 
     print('Calculation of joint FID')
-    #joint_fid_dict = joint_fid_fn(activations)
-    joint_fid_dict = target_fid_dict
+    joint_fid_dict = joint_fid_fn(activations)
 
     target_fid = {}
     target_fid_values = [target_fid_dict[draw] for draw in target_fid_dict.keys()]
