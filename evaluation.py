@@ -131,7 +131,7 @@ def get_fid_fn(distribution):
             target_act_stats = {}
             sample_act_stats = {}
             target_fid = {}
-            for draw in activations['samples'].keys():
+            for draw in tqdm(activations['samples'].keys()):
                 sample_activations = torch.cat(activations['samples'][draw], dim=0).numpy()
                 sample_act_stats[draw] = {'mu':np.mean(sample_activations, axis=0), 'sigma':np.cov(sample_activations, rowvar=False)}
                 
@@ -164,7 +164,7 @@ def get_fid_fn(distribution):
                     activations_y_x[draw].append(concat_act_y_x)
             
             joint_fid = {}
-            for draw in activations['samples'].keys():
+            for draw in tqdm(activations['samples'].keys()):
                 activations_y_x_draw = torch.cat(activations_y_x[draw], dim=0).numpy()
                 gt_draw_stats = {'mu':np.mean(activations_y_x_draw, axis=0),
                                  'sigma':np.cov(activations_y_x_draw, rowvar=False)}
@@ -354,7 +354,10 @@ def run_evaluation_pipeline(task, base_path, snr, device):
     joint_fid_fn = get_fid_fn(distribution='joint')
     target_fid_fn = get_fid_fn(distribution='target')
 
+    print('Calculation of target FID')
     target_fid_dict = target_fid_fn(activations)
+
+    print('Calculation of joint FID')
     joint_fid_dict = joint_fid_fn(activations)
 
     target_fid = {}
