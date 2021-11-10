@@ -251,7 +251,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
     #set up the inception model
     dims = 2048
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
-    inception_model = InceptionV3([block_idx]).to(device)
+    inception_model = InceptionV3([block_idx], resize_input=False).to(device)
     inception_model.eval()
     activation_fn = get_activation_fn(inception_model)
 
@@ -295,7 +295,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             x[draw] = x[draw].to(device)
             samples[draw] = samples[draw].to(device)
             print(y[draw].size(), x[draw].size(), samples[draw].size())
-            break
+
             #FID
             #calculate the inception activation for the gt and synthetic samples.
             print(y[draw].size())
