@@ -105,7 +105,7 @@ class SynthesizedDataset(Dataset):
             start_x = np.random.randint(low=0, high=(size_x - mask_size) + 1) if size_x > mask_size else 0
             start_y = np.random.randint(low=0, high=(size_y - mask_size) + 1) if size_y > mask_size else 0
 
-            mask_info_tensor = torch.zeros([start_x, start_y, mask_size], dtype=torch.int32)
+            mask_info_tensor = torch.tensor([start_x, start_y, mask_size], dtype=torch.int32)
 
             info['mask_info']={}
             for draw in self.sample_paths.keys():   
