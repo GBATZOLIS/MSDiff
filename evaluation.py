@@ -106,7 +106,9 @@ class SynthesizedDataset(Dataset):
             start_y = np.random.randint(low=0, high=(size_y - mask_size) + 1) if size_y > mask_size else 0
 
             mask_info_tensor = torch.zeros([start_x, start_y, mask_size], dtype=torch.int32)
-            info['mask_info'] = mask_info_tensor
+
+            for draw in self.sample_paths.keys():   
+                info['mask_info'][draw] = mask_info_tensor
 
         return info
     
@@ -122,8 +124,8 @@ def get_activation_fn(model):
         
         # If model output is not scalar, apply global spatial average pooling.
         # This happens if you choose a dimensionality not equal 2048.
-        #if pred.size(2) != 1 or pred.size(3) != 1:
-        #    pred = adaptive_avg_pool2d(pred, output_size=(1, 1))
+        if pred.size(2) != 1 or pred.size(3) != 1:
+            pred = adaptive_avg_pool2d(pred, output_size=(1, 1))
 
         activation = pred.squeeze(3).squeeze(2).cpu()
         return activation
@@ -294,9 +296,9 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             #FID
             #calculate the inception activation for the gt and synthetic samples.
             print(y[draw].size())
-            #activations['y'][draw] = activation_fn(activation_fn(y[draw].to(device)))
-            #activations['x'][draw] = activation_fn(activation_fn(x[draw].to(device)))
-            #activations['samples'][draw] = activation_fn(samples[draw].to(device))
+            activations['y'][draw] = activation_fn(activation_fn(y[draw].to(device)))
+            activations['x'][draw] = activation_fn(activation_fn(x[draw].to(device)))
+            activations['samples'][draw] = activation_fn(samples[draw].to(device))
             
             #LPIPS
             lpips_val = loss_fn_alex(2*x[draw].clone()-1, 2*samples[draw].clone()-1).cpu().squeeze().item()
