@@ -38,6 +38,8 @@ def get_calculate_consistency_fn(task):
                 def edge_detection_fn(image):
                     img_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                     img_blur = cv2.GaussianBlur(img_gray, ksize=(3,3), sigmaX=sigma, sigmaY=sigma)
+                    print(img_blur)
+                    img_blur = img_blur.astype(np.uint8)
                     edge_image = cv2.Canny(image=img_blur, threshold1=low_threshold, threshold2=high_threshold, L2gradient=True)
                     return edge_image
                 return edge_detection_fn
