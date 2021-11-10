@@ -74,7 +74,7 @@ def calculate_psnr(img1, img2):
     return 20 * math.log10(255.0 / math.sqrt(mse))
 
 def calculate_mean_psnr(img1, img2):
-  assert img1.ndim == img2.ndim and img1.ndim==4, 'img1 dim is %d. Invalid' % img1.ndim
+  assert img1.ndim == img2.ndim and img1.ndim in [3, 4], 'img1 dim is %d. Invalid' % img1.ndim
 
   psnr_vals = []
   for i in range(img1.shape[0]):
