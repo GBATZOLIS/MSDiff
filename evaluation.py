@@ -251,7 +251,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
     #set up the inception model
     dims = 2048
     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
-    inception_model = InceptionV3([block_idx], resize_input=False).to(device)
+    inception_model = InceptionV3([block_idx], resize_input=True).to(device)
     inception_model.eval()
     activation_fn = get_activation_fn(inception_model)
 
