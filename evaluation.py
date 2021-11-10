@@ -12,6 +12,7 @@ import numpy as np
 import pickle 
 import torch
 from tqdm import tqdm
+from scipy import linalg
 
 #for the fid calculation
 from models.inception import InceptionV3
