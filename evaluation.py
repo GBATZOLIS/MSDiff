@@ -340,7 +340,6 @@ def run_evaluation_pipeline(task, base_path, snr, device):
         mean_ssim_value = np.mean(ssim_values)
         mean_consistency_value = np.mean(consistency_values)
         
-
         mean_lpips_values.append(mean_lpips_value)
         mean_psnr_values.append(mean_psnr_value)
         mean_ssim_values.append(mean_ssim_value)
