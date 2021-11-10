@@ -294,6 +294,8 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             y[draw] = y[draw].to(device)
             x[draw] = x[draw].to(device)
             samples[draw] = samples[draw].to(device)
+            print(y[draw].size(), x[draw].size(), samples[draw].size())
+            break
             #FID
             #calculate the inception activation for the gt and synthetic samples.
             print(y[draw].size())
@@ -326,7 +328,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
                 consistency_val = consistency_fn(samples[draw], x[draw], scale=8)
                 consistency_values.append(consistency_val)
             elif task == 'inpainting':
-                consistency_val = consistency_fn(samples[draw], x[draw], mask_info=info['mask_info'])
+                consistency_val = consistency_fn(samples[draw], x[draw], mask_info=info['mask_info']['draw'])
             elif task == 'image-to-image':
                 consistency_val = consistency_fn(numpy_samples, numpy_gt)
 
