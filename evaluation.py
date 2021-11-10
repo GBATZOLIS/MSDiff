@@ -13,6 +13,7 @@ import pickle
 import torch
 from tqdm import tqdm
 from scipy import linalg
+import copy
 
 #for the fid calculation
 from models.inception import InceptionV3
@@ -125,7 +126,8 @@ def get_activation_fn(model):
 
 def get_fid_fn(distribution):
     if distribution == 'target': #unconditional fid
-        def fid_fn(activations):
+        def fid_fn(acts):
+            activations = copy.deepcopy(acts)
             target_act_stats = {}
             sample_act_stats = {}
             target_fid = {}
@@ -140,10 +142,12 @@ def get_fid_fn(distribution):
                 mu2, sigma2 = sample_act_stats[draw]['mu'], sample_act_stats[draw]['sigma']
                 target_fid[draw] = calculate_frechet_distance(mu1, sigma1, mu2, sigma2)
             
+            del activations
             return target_fid
 
     elif distribution == 'joint': #joint fid
-        def fid_fn(activations):
+        def fid_fn(acts):
+            activations = copy.deepcopy(acts)
             activations_y_x = {}
             activations_y_samples = {}
             for draw in activations['samples'].keys():
@@ -173,6 +177,7 @@ def get_fid_fn(distribution):
                 mu2, sigma2 = sample_draw_stats['mu'], sample_draw_stats['sigma']
                 joint_fid[draw] = calculate_frechet_distance(mu1, sigma1, mu2, sigma2)
             
+            del activations
             return joint_fid
     
     return fid_fn
@@ -349,8 +354,8 @@ def run_evaluation_pipeline(task, base_path, snr, device):
     joint_fid_fn = get_fid_fn(distribution='joint')
     target_fid_fn = get_fid_fn(distribution='target')
 
-    joint_fid_dict = joint_fid_fn(activations)
     target_fid_dict = target_fid_fn(activations)
+    joint_fid_dict = joint_fid_fn(activations)
 
     target_fid = {}
     target_fid_values = [target_fid_dict[draw] for draw in target_fid_dict.keys()]
