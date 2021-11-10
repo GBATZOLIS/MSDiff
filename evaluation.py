@@ -38,14 +38,13 @@ def get_gt_draw_to_file_fn(gt_draw_files): #some draws share the same ground tru
     draw_to_file_dict = {}
     for draw_file in gt_draw_files:
         if len(draw_file.split('_')) == 2:
-            print(draw_file)
             draw_to_file_dict[int(draw_file.split('_')[1])]=draw_file
         elif len(draw_file.split('_')) == 3:
             start = int(draw_file.split('_')[1])
             end = int(draw_file.split('_')[2])
             for i in range(start, end+1):
                 draw_to_file_dict[i]=draw_file
-    #print(draw_to_file_dict)
+
     def draw_to_file_fn(draw : int):
         return draw_to_file_dict[draw]
     
@@ -62,12 +61,10 @@ class SynthesizedDataset(Dataset):
 
         self.sample_paths = {}
         base_sample_path = os.path.join(base_path, 'samples', 'snr_%.3f' % snr)
-        #print(base_sample_path)
         
         self.gt_paths = {'x':{}, 'y':{}}
         base_gt_path = os.path.join(base_path, 'gt')
         gt_draw_files = listdir_nothidden_filenames(base_gt_path)
-        #print(gt_draw_files)
 
         gt_draw_to_file_fn = get_gt_draw_to_file_fn(gt_draw_files)
 
@@ -77,10 +74,6 @@ class SynthesizedDataset(Dataset):
             self.sample_paths[draw] = sorted(listdir_nothidden_paths(os.path.join(base_sample_path, draw_path), 'png'))
             self.gt_paths['x'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'x_gt'), 'png'))
             self.gt_paths['y'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'y_gt'), 'png'))
-            
-            #print(self.sample_paths[draw][:5])
-            #print(self.gt_paths['x'][draw][:5])
-            #print(self.gt_paths['y'][draw][:5])
 
     def __getitem__(self, index):        
         gt_y = {}
@@ -90,8 +83,6 @@ class SynthesizedDataset(Dataset):
             samples[draw] = ToTensor()(Image.open(self.sample_paths[draw][index]).convert('RGB'))
             gt_y[draw]= ToTensor()(Image.open(self.gt_paths['y'][draw][index]).convert('RGB'))
             gt_x[draw]= ToTensor()(Image.open(self.gt_paths['x'][draw][index]).convert('RGB'))
-
-            #print('gt_x[draw].min(): %.3f, gt_x[draw].max(): %.3f' % (gt_x[draw].min(), gt_x[draw].max()))
             
         info = {'y': gt_y,
                 'samples': samples,
@@ -121,7 +112,6 @@ def get_activation_fn(model):
     def activation_fn(img):
         with torch.no_grad():
             pred = model(img)[0]
-            print(pred.size())
         
         # If model output is not scalar, apply global spatial average pooling.
         # This happens if you choose a dimensionality not equal 2048.
@@ -294,11 +284,9 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             y[draw] = y[draw].to(device)
             x[draw] = x[draw].to(device)
             samples[draw] = samples[draw].to(device)
-            #print(y[draw].size(), x[draw].size(), samples[draw].size())
 
             #FID
             #calculate the inception activation for the gt and synthetic samples.
-            #print(y[draw].size())
             activations['y'][draw] = activation_fn(y[draw].to(device))
             activations['x'][draw] = activation_fn(x[draw].to(device))
             activations['samples'][draw] = activation_fn(samples[draw].to(device))
