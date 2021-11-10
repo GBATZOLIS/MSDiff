@@ -38,9 +38,9 @@ def get_calculate_consistency_fn(task):
                 def edge_detection_fn(image):
                     img_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                     img_blur = cv2.GaussianBlur(img_gray, ksize=(3,3), sigmaX=sigma, sigmaY=sigma)
-                    print(img_blur)
+                    #print(img_blur)
                     img_blur = img_blur.astype(np.uint8)
-                    print(img_blur)
+                    #print(img_blur)
                     edge_image = cv2.Canny(image=img_blur, threshold1=low_threshold, threshold2=high_threshold, L2gradient=True)
                     return edge_image
                 return edge_detection_fn
@@ -49,14 +49,14 @@ def get_calculate_consistency_fn(task):
             
             synthetic_edges = []
             gt_edges = []
-            print(samples.shape, gt.shape)
+            #print(samples.shape, gt.shape)
             for i in range(samples.shape[0]):
                 synthetic_edges.append(edge_fn(samples[i]))
                 gt_edges.append(edge_fn(gt[i]))
             
             synthetic_edges = np.stack(synthetic_edges)
             gt_edges = np.stack(gt_edges)
-            print(gt_edges.shape)
+            #print(gt_edges.shape)
             return calculate_mean_psnr(synthetic_edges, gt_edges)
 
     else:
