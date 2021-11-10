@@ -125,16 +125,17 @@ def get_activation_fn(model):
 def get_fid_fn(distribution):
     if distribution == 'target': #unconditional fid
         def fid_fn(activations):
-            target_activations = torch.cat(activations['x'], dim=0).numpy()
-            target_act_stats = {'mu':np.mean(target_activations, axis=0), 'sigma':np.cov(target_activations, rowvar=False)}
-            
+            target_act_stats = {}
             sample_act_stats = {}
             target_fid = {}
             for draw in activations['samples'].keys():
                 sample_activations = torch.cat(activations['samples']['draw'], dim=0).numpy()
                 sample_act_stats[draw] = {'mu':np.mean(sample_activations, axis=0), 'sigma':np.cov(sample_activations, rowvar=False)}
                 
-                mu1, sigma1 = target_act_stats['mu'], target_act_stats['sigma']
+                target_activations = torch.cat(activations['x']['draw'], dim=0).numpy()
+                target_act_stats[draw] = {'mu':np.mean(target_activations, axis=0), 'sigma':np.cov(target_activations, rowvar=False)}
+                
+                mu1, sigma1 = target_act_stats[draw]['mu'], target_act_stats[draw]['sigma']
                 mu2, sigma2 = sample_act_stats[draw]['mu'], sample_act_stats[draw]['sigma']
                 target_fid[draw] = calculate_frechet_distance(mu1, sigma1, mu2, sigma2)
             
@@ -142,32 +143,33 @@ def get_fid_fn(distribution):
 
     elif distribution == 'joint': #joint fid
         def fid_fn(activations):
-            
-            activations_y_x = []
+            activations_y_x = {}
             activations_y_samples = {}
             for draw in activations['samples'].keys():
+                activations_y_x[draw]=[]
                 activations_y_samples[draw]=[]
 
-            for i, act_y in enumerate(activations['y']):
-                act_x = activations['x'][i]
-                concat_act_y_x = torch.cat((act_y, act_x), dim=-1)
-                activations_y_x.append(concat_act_y_x)
-
+            num_images = len(activations['samples'][list(activations['samples'].keys())[0]])
+            for i in range(num_images):
                 for draw in activations['samples'].keys():
-                    concat_act_y_sample = torch.cat((act_y, activations['samples'][draw][i]), dim=-1)
+                    concat_act_y_sample = torch.cat((activations['y'][draw][i], activations['samples'][draw][i]), dim=-1)
                     activations_y_samples[draw].append(concat_act_y_sample)
-            
-            activations_y_x = torch.cat(activations_y_x, dim=0).numpy()
-            activations_y_x_stats = {'mu':np.mean(activations_y_x, axis=0), 'sigma':np.cov(activations_y_x, rowvar=False)}
-            mu1, sigma1 = activations_y_x_stats['mu'], activations_y_x_stats['sigma']
 
+                    concat_act_y_x = torch.cat((activations['y'][draw][i], activations['x'][draw][i]), dim=-1)
+                    activations_y_x[draw].append(concat_act_y_x)
+            
             joint_fid = {}
             for draw in activations['samples'].keys():
+                activations_y_x_draw = torch.cat(activations_y_x[draw], dim=0).numpy()
+                gt_draw_stats = {'mu':np.mean(activations_y_x_draw, axis=0),
+                                 'sigma':np.cov(activations_y_x_draw, rowvar=False)}
+
                 activations_y_samples_draw = torch.cat(activations_y_samples[draw], dim=0).numpy()
-                draw_stats = {'mu':np.mean(activations_y_samples_draw, axis=0), 
-                              'sigma':np.cov(activations_y_samples_draw, rowvar=False)}
+                sample_draw_stats = {'mu':np.mean(activations_y_samples_draw, axis=0), 
+                                     'sigma':np.cov(activations_y_samples_draw, rowvar=False)}
                 
-                mu2, sigma2 = draw_stats['mu'], draw_stats['sigma']
+                mu1, sigma1 = gt_draw_stats['mu'], gt_draw_stats['sigma']
+                mu2, sigma2 = sample_draw_stats['mu'], sample_draw_stats['sigma']
                 joint_fid[draw] = calculate_frechet_distance(mu1, sigma1, mu2, sigma2)
             
             return joint_fid
@@ -264,6 +266,8 @@ def run_evaluation_pipeline(task, base_path, snr, device):
                    'samples': {}}
 
     for i, info in tqdm(enumerate(dataloader)):
+        if i>10:
+            break
         y, x = info['y'], info['x']
         samples = info['samples']
 
