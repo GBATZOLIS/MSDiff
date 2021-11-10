@@ -107,6 +107,7 @@ class SynthesizedDataset(Dataset):
 
             mask_info_tensor = torch.zeros([start_x, start_y, mask_size], dtype=torch.int32)
 
+            info['mask_info']={}
             for draw in self.sample_paths.keys():   
                 info['mask_info'][draw] = mask_info_tensor
 
