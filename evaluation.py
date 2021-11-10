@@ -45,7 +45,7 @@ def get_gt_draw_to_file_fn(gt_draw_files): #some draws share the same ground tru
             end = int(draw_file.split('_')[2])
             for i in range(start, end+1):
                 draw_to_file_dict[i]=draw_file
-    print(draw_to_file_dict)
+    #print(draw_to_file_dict)
     def draw_to_file_fn(draw : int):
         return draw_to_file_dict[draw]
     
@@ -298,7 +298,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
 
             #FID
             #calculate the inception activation for the gt and synthetic samples.
-            print(y[draw].size())
+            #print(y[draw].size())
             activations['y'][draw] = activation_fn(y[draw].to(device))
             activations['x'][draw] = activation_fn(x[draw].to(device))
             activations['samples'][draw] = activation_fn(samples[draw].to(device))
