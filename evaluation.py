@@ -274,6 +274,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
     for i, info in tqdm(enumerate(dataloader)):
         if i>10:
             break
+
         y, x = info['y'], info['x']
         samples = info['samples']
 
@@ -351,6 +352,8 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             diversity = torch.mean(torch.std(torch.stack(concat_samples), dim=0)).item()
             diversities.append(diversity)
 
+    '''
+
     #Calculate mean joint and target FID scores.
     joint_fid_fn = get_fid_fn(distribution='joint')
     target_fid_fn = get_fid_fn(distribution='target')
@@ -378,9 +381,9 @@ def run_evaluation_pipeline(task, base_path, snr, device):
 
     #get the id info of the best samples based on LPIPS.
     lpips_values = sorted(all_lpips_values) #increasing order
-    best_lpips_samples_id_info = []
-    for lpips_val in lpips_values[:20]:
-        best_lpips_samples_id_info.extend(lpips_val_to_imgID[lpips_val])
+    best_lpips_samples_id_info = {}
+    for lpips_val in lpips_values[:25]:
+        best_lpips_samples_id_info[lpips_val] = lpips_val_to_imgID[lpips_val]
 
     info = {'lpips':mean_lpips,
             'psnr': mean_psnr,
@@ -400,9 +403,11 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             print('------')
             print('%s' % key)
             print('------')
-            for ID in info[key]:
-                print(ID)
+            for lpips in sorted(info[key]):
+                print(lpips, best_lpips_samples_id_info[lpips]) #ID, LPIPS
 
     f = open(os.path.join(base_path, 'evaluation_info.pkl'), "wb")
     pickle.dump(info, f)
     f.close()
+
+    '''
