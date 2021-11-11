@@ -272,9 +272,6 @@ def run_evaluation_pipeline(task, base_path, snr, device):
                    'samples': {}}
 
     for i, info in tqdm(enumerate(dataloader)):
-        if i>10:
-            break
-
         y, x = info['y'], info['x']
         samples = info['samples']
 
@@ -352,7 +349,6 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             diversity = torch.mean(torch.std(torch.stack(concat_samples), dim=0)).item()
             diversities.append(diversity)
 
-    '''
 
     #Calculate mean joint and target FID scores.
     joint_fid_fn = get_fid_fn(distribution='joint')
@@ -409,5 +405,3 @@ def run_evaluation_pipeline(task, base_path, snr, device):
     f = open(os.path.join(base_path, 'evaluation_info.pkl'), "wb")
     pickle.dump(info, f)
     f.close()
-
-    '''
