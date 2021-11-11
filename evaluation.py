@@ -73,7 +73,9 @@ class SynthesizedDataset(Dataset):
         self.draw_paths = listdir_nothidden_filenames(base_sample_path)
         for draw_path in self.draw_paths:
             draw = int(draw_path.split('_')[1])
-            if draw != 1:
+            if draw == 1 and len(self.draw_paths)>1:
+                continue
+            else:
                 self.sample_paths[draw] = sorted(listdir_nothidden_paths(os.path.join(base_sample_path, draw_path), 'png'))
                 self.gt_paths['x'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'x_gt'), 'png'))
                 self.gt_paths['y'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'y_gt'), 'png'))
