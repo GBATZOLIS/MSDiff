@@ -359,16 +359,18 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             diversity = torch.mean(torch.std(torch.stack(concat_samples), dim=0)).item()
             diversities.append(diversity)
 
-    '''
+    
     #Calculate mean joint and target FID scores.
     joint_fid_fn = get_fid_fn(distribution='joint')
     target_fid_fn = get_fid_fn(distribution='target')
 
     print('Calculation of target FID')
     target_fid_dict = target_fid_fn(activations)
+    per_draw_info['UFID'] = target_fid_dict
 
     print('Calculation of joint FID')
     joint_fid_dict = joint_fid_fn(activations)
+    per_draw_info['JFID'] = joint_fid_dict
 
     target_fid = {}
     target_fid_values = [target_fid_dict[draw] for draw in target_fid_dict.keys()]
@@ -411,13 +413,16 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             print('------')
             for lpips_val in sorted(info[key]):
                 print(lpips_val, best_lpips_samples_id_info[lpips_val]) #ID, LPIPS
-    '''
+    
 
     print('----Per draw metrics----')
     for metric in per_draw_info.keys():
         print('Metric: %s' % metric)
         for draw in per_draw_info[metric].keys():
-            print('%d: %.4f' % (draw, np.mean(per_draw_info[metric][draw])))
+            if isinstance(per_draw_info[metric][draw], list):
+                print('%d: %.4f' % (draw, np.mean(per_draw_info[metric][draw])))
+            else:
+                print('%d: %.4f' % (draw, per_draw_info[metric][draw]))
 
     f = open(os.path.join(base_path, 'evaluation_info.pkl'), "wb")
     pickle.dump(info, f)
