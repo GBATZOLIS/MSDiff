@@ -399,8 +399,8 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             print('------')
             print('%s' % key)
             print('------')
-            for lpips in sorted(info[key]):
-                print(lpips, best_lpips_samples_id_info[lpips]) #ID, LPIPS
+            for lpips_val in sorted(info[key]):
+                print(lpips_val, best_lpips_samples_id_info[lpips_val]) #ID, LPIPS
 
     f = open(os.path.join(base_path, 'evaluation_info.pkl'), "wb")
     pickle.dump(info, f)
