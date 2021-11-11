@@ -61,7 +61,7 @@ def get_config():
   evaluate.save_samples = True
   evaluate.first_test_batch = 50
   evaluate.last_test_batch = 75
-  evaluate.base_log_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation_continued' #use the suitable logging directory for the hpc.
+  evaluate.base_log_dir = '/home/gb511/evaluation' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation_continued' #use the suitable logging directory for the hpc.
   
 
   #old settings
@@ -77,7 +77,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
+  data.base_dir =  'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
   data.dataset = 'celebA-HQ-160'
   data.task = 'super-resolution'
   data.scale = 8
@@ -101,7 +101,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/checkpoints/super-resolution/celebA-HQ-160/song/epoch=87-step=447655.ckpt'
+  model.checkpoint_path = '/home/gb511/saved_checkpoints/checkpoints/super-resolution/celebA-HQ-160/song/epoch=87-step=447655.ckpt'
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
