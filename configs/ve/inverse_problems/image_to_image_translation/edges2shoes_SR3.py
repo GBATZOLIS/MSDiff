@@ -60,7 +60,7 @@ def get_config():
   evaluate.save_samples = True
   evaluate.first_test_batch = 0
   evaluate.last_test_batch = 50
-  evaluate.base_log_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation' #use the suitable logging directory for the hpc.
+  evaluate.base_log_dir = '/home/gb511/evaluation' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation' #use the suitable logging directory for the hpc.
   
 
   #old settings
@@ -75,7 +75,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
+  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
   data.dataset = 'edges2shoes'
   data.task = 'image-to-image'
   data.use_data_mean = False
@@ -93,7 +93,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/checkpoints/image-to-image/edges2shoes/SR3/epoch=626-step=499999.ckpt'
+  model.checkpoint_path = '/home/gb511/saved_checkpoints/checkpoints/image-to-image/edges2shoes/SR3/epoch=626-step=499999.ckpt'
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
