@@ -261,6 +261,8 @@ def run_evaluation_pipeline(task, base_path, snr, device):
 
     lpips_val_to_imgID = {}
     all_lpips_values = []
+
+    per_draw_info = {'lpips':{}, 'psnr':{}, 'ssim': {}, 'consistency':{}}
     
     mean_lpips_values = []
     mean_psnr_values = []
@@ -272,7 +274,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
                    'samples': {}}
 
     for i, info in tqdm(enumerate(dataloader)):
-        if i >= 2500:
+        if i >= 50:
             break
         y, x = info['y'], info['x']
         samples = info['samples']
@@ -282,6 +284,8 @@ def run_evaluation_pipeline(task, base_path, snr, device):
                 activations['samples'][draw]=[]
                 activations['x'][draw]=[]
                 activations['y'][draw]=[]
+                for key in per_draw_info.keys():
+                    per_draw_info[key][draw]=[]
 
         lpips_values = []
         psnr_values = []
@@ -307,6 +311,8 @@ def run_evaluation_pipeline(task, base_path, snr, device):
                 lpips_val_to_imgID[lpips_val].extend([(i+1, draw)])
             else:
                 lpips_val_to_imgID[lpips_val]=[(i+1, draw)]
+
+            per_draw_info['lpips'][draw].append(lpips_val)
             lpips_values.append(lpips_val)
             all_lpips_values.append(lpips_val)
             
@@ -317,20 +323,22 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             
             psnr_val = calculate_mean_psnr(numpy_samples, numpy_gt)
             psnr_values.append(psnr_val)
+            per_draw_info['psnr'][draw].append(psnr_val)
 
             ssim_val = calculate_mean_ssim(numpy_samples, numpy_gt)
             ssim_values.append(ssim_val)
+            per_draw_info['ssim'][draw].append(ssim_val)
             
             #CONSISTENCY
             if task == 'super-resolution':
                 consistency_val = consistency_fn(samples[draw], x[draw], scale=8)
-                consistency_values.append(consistency_val)
             elif task == 'inpainting':
                 consistency_val = consistency_fn(samples[draw], x[draw], mask_info=info['mask_info'][draw])
-                consistency_values.append(consistency_val)
             elif task == 'image-to-image':
                 consistency_val = consistency_fn(numpy_samples, numpy_gt)
-                consistency_values.append(consistency_val)
+            
+            consistency_values.append(consistency_val)
+            per_draw_info['consistency'][draw].append(consistency_val)
 
             #DIVERSITY
             if len(samples.keys())>1:
@@ -351,7 +359,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             diversity = torch.mean(torch.std(torch.stack(concat_samples), dim=0)).item()
             diversities.append(diversity)
 
-
+    '''
     #Calculate mean joint and target FID scores.
     joint_fid_fn = get_fid_fn(distribution='joint')
     target_fid_fn = get_fid_fn(distribution='target')
@@ -403,6 +411,13 @@ def run_evaluation_pipeline(task, base_path, snr, device):
             print('------')
             for lpips_val in sorted(info[key]):
                 print(lpips_val, best_lpips_samples_id_info[lpips_val]) #ID, LPIPS
+    '''
+
+    print('----Per draw metrics----')
+    for metric in per_draw_info.keys():
+        print('Metric: %s' % metric)
+        for draw in per_draw_info[metric].keys():
+            print('%d: %.4f' % (draw, np.mean(per_draw_info[metric][draw])))
 
     f = open(os.path.join(base_path, 'evaluation_info.pkl'), "wb")
     pickle.dump(info, f)
