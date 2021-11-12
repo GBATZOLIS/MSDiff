@@ -52,6 +52,18 @@ def get_gt_draw_to_file_fn(gt_draw_files): #some draws share the same ground tru
     
     return draw_to_file_fn
 
+def sort_files_based_on_basename(path_list):
+    basename_to_path = {}
+    for path in path_list:
+        basename = int(os.path.basename(path).split('.')[0])
+        basename_to_path[basename] = path
+    
+    sorted_paths = []
+    for basename in sorted(list(basename_to_path.keys())):
+        sorted_paths.append(basename_to_path[basename])
+    
+    return sorted_paths
+
 class SynthesizedDataset(Dataset):
     """A template dataset class for you to implement custom datasets."""
     def __init__(self, task, base_path, snr):
@@ -73,9 +85,17 @@ class SynthesizedDataset(Dataset):
         self.draw_paths = listdir_nothidden_filenames(base_sample_path)
         for draw_path in self.draw_paths:
             draw = int(draw_path.split('_')[1])
-            self.sample_paths[draw] = sorted(listdir_nothidden_paths(os.path.join(base_sample_path, draw_path), 'png'))
-            self.gt_paths['x'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'x_gt'), 'png'))
-            self.gt_paths['y'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'y_gt'), 'png'))
+            self.sample_paths[draw] = sort_files_based_on_basename(listdir_nothidden_paths(os.path.join(base_sample_path, draw_path), 'png'))
+            self.gt_paths['x'][draw] = sort_files_based_on_basename(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'x_gt'), 'png'))
+            self.gt_paths['y'][draw] = sort_files_based_on_basename(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'y_gt'), 'png'))
+
+            #make sure sorting works properly:
+            for index in range(len(self.sample_paths[draw].keys())):
+                path_sample = self.sample_paths[draw][index]
+                path_y = self.gt_paths['y'][draw][index]
+                path_x = self.gt_paths['x'][draw][index]
+                assert os.path.basename(path_x)==os.path.basename(path_y) and os.path.basename(path_x)==os.path.basename(path_sample), '%s - %s - %s' % (path_sample, path_y, path_x)
+
 
     def __getitem__(self, index):        
         gt_y = {}
