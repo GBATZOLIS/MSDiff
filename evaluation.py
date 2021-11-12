@@ -82,6 +82,11 @@ class SynthesizedDataset(Dataset):
         gt_x = {}
         samples = {}
         for draw in self.sample_paths.keys():
+            path_sample = self.sample_paths[draw][index]
+            path_y = self.gt_paths['y'][draw][index]
+            path_x = self.gt_paths['x'][draw][index]
+            assert os.path.basename(path_x)==os.path.basename(path_y) and os.path.basename(path_x)==os.path.basename(path_sample), '%s - %s - %s' % (path_sample, path_y, path_x)
+
             samples[draw] = ToTensor()(Image.open(self.sample_paths[draw][index]).convert('RGB'))
             gt_y[draw]= ToTensor()(Image.open(self.gt_paths['y'][draw][index]).convert('RGB'))
             gt_x[draw]= ToTensor()(Image.open(self.gt_paths['x'][draw][index]).convert('RGB'))
@@ -274,8 +279,6 @@ def run_evaluation_pipeline(task, base_path, snr, device):
                    'samples': {}}
 
     for i, info in tqdm(enumerate(dataloader)):
-        if i >= 1000:
-            break
         y, x = info['y'], info['x']
         samples = info['samples']
 
