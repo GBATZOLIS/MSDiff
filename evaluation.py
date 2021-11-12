@@ -73,12 +73,9 @@ class SynthesizedDataset(Dataset):
         self.draw_paths = listdir_nothidden_filenames(base_sample_path)
         for draw_path in self.draw_paths:
             draw = int(draw_path.split('_')[1])
-            if draw == 1 and len(self.draw_paths) > 1:
-                continue
-            else:
-                self.sample_paths[draw] = sorted(listdir_nothidden_paths(os.path.join(base_sample_path, draw_path), 'png'))
-                self.gt_paths['x'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'x_gt'), 'png'))
-                self.gt_paths['y'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'y_gt'), 'png'))
+            self.sample_paths[draw] = sorted(listdir_nothidden_paths(os.path.join(base_sample_path, draw_path), 'png'))
+            self.gt_paths['x'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'x_gt'), 'png'))
+            self.gt_paths['y'][draw] = sorted(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'y_gt'), 'png'))
 
     def __getitem__(self, index):        
         gt_y = {}
@@ -421,7 +418,8 @@ def run_evaluation_pipeline(task, base_path, snr, device):
         print('Metric: %s' % metric)
         for draw in per_draw_info[metric].keys():
             if isinstance(per_draw_info[metric][draw], list):
-                print('%d: %.4f' % (draw, np.mean(per_draw_info[metric][draw])))
+                for stop in [500,1000,1500,2000]:
+                    print('stop:%d - draw:%d - value:%.4f' % (stop, draw, np.mean(per_draw_info[metric][draw][:stop])))
             else:
                 print('%d: %.4f' % (draw, per_draw_info[metric][draw]))
 
