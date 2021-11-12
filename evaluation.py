@@ -420,8 +420,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
         print('Metric: %s' % metric)
         for draw in per_draw_info[metric].keys():
             if isinstance(per_draw_info[metric][draw], list):
-                for stop in [500,1000,1500,2000]:
-                    print('stop:%d - draw:%d - value:%.4f' % (stop, draw, np.mean(per_draw_info[metric][draw][:stop])))
+                print('stop:%d - draw:%d - value:%.4f' % (stop, draw, np.mean(per_draw_info[metric][draw][:stop])))
             else:
                 print('%d: %.4f' % (draw, per_draw_info[metric][draw]))
 
