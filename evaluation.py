@@ -90,7 +90,7 @@ class SynthesizedDataset(Dataset):
             self.gt_paths['y'][draw] = sort_files_based_on_basename(listdir_nothidden_paths(os.path.join(base_gt_path, gt_draw_to_file_fn(draw), 'y_gt'), 'png'))
 
             #make sure sorting works properly:
-            for index in range(len(self.sample_paths[draw].keys())):
+            for index in range(len(self.sample_paths[draw])):
                 path_sample = self.sample_paths[draw][index]
                 path_y = self.gt_paths['y'][draw][index]
                 path_x = self.gt_paths['x'][draw][index]
