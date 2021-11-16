@@ -100,7 +100,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/SDE_replicas/ablation/super-resolution/ours_NDV/lightning_logs/version_13/checkpoints/epoch=144-step=491839.ckpt'
+  model.checkpoint_path = '/home/gb511/SDE_replicas/ablation/super-resolution/ours_NDV/lightning_logs/version_14/checkpoints/epoch=147-step=499999.ckpt'
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
