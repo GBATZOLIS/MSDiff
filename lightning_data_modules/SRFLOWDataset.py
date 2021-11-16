@@ -57,8 +57,8 @@ class LRHR_PKLDataset(data.Dataset):
         hr_file_path = get_exact_paths(config, phase)['GT']
         lr_file_path = get_exact_paths(config, phase)['LQ']
 
-        self.use_flip = config.data.use_flip
-        self.use_rot = config.data.use_rot
+        self.use_flip = config.data.use_flip if phase == 'train' else False
+        self.use_rot = config.data.use_rot if phase == 'train' else False
         self.use_crop = config.data.use_crop
         self.upscale_lr = config.data.upscale_lr
 
