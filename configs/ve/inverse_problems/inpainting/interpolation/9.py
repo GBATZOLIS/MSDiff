@@ -57,11 +57,11 @@ def get_config():
   evaluate.snr = [0.15]
   evaluate.denoise = True
   evaluate.use_path = False #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
-  evaluate.draws = [1, 2, 3, 4, 5]
+  evaluate.draws = [1]
   evaluate.save_samples = True  
   evaluate.first_test_batch = 0
-  evaluate.last_test_batch = 50
-  evaluate.base_log_dir = '/home/gb511/evaluation' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation' #use the suitable logging directory for the hpc.
+  evaluate.last_test_batch = 25
+  evaluate.base_log_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation/interpolation' #'/home/gb511/evaluation' 
   evaluate.use_seed = True
 
   #old settings
@@ -96,7 +96,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = None
+  model.checkpoint_path = '/home/gb511/SDE_replicas/interpolation/inpainting/9/lightning_logs/version_1/checkpoints/epoch=219-step=356998.ckpt'
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
