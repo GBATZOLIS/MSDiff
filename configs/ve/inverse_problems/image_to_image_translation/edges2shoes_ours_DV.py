@@ -46,6 +46,7 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
+
   #new settings
   evaluate.callback = 'test_paired'
   evaluate.evaluation_metrics = ['lpips', 'psnr', 'ssim', 'diversity']
@@ -56,17 +57,17 @@ def get_config():
   evaluate.snr = [0.15]
   evaluate.denoise = True
   evaluate.use_path = False #new. We use a specific path of the forward diffusion of the condition instead of getting new samples from the perturbation kernel p(y_t|y_0) each time.
-  evaluate.draws = [1]
+  evaluate.draws = [1, 2, 3, 4, 5]
   evaluate.save_samples = True
-  evaluate.first_test_batch = 50
-  evaluate.last_test_batch = 100
-  evaluate.base_log_dir = '/home/gb511/evaluation' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation' #use the suitable logging directory for the hpc.
+  evaluate.first_test_batch = 0
+  evaluate.last_test_batch = 10
+  evaluate.base_log_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation' #'/home/gb511/evaluation'
   
 
   #old settings
   evaluate.begin_ckpt = 50
   evaluate.end_ckpt = 96
-  evaluate.batch_size = 50
+  evaluate.batch_size = 250
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -75,7 +76,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
+  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
   data.dataset = 'edges2shoes'
   data.task = 'image-to-image'
   data.use_data_mean = False
@@ -93,7 +94,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/saved_checkpoints/checkpoints/image-to-image/edges2shoes/ours_DV/epoch=626-step=499999.ckpt'
+  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/checkpoints/image-to-image/edges2shoes/ours_DV/epoch=626-step=499999.ckpt' #'/home/gb511/saved_checkpoints/checkpoints/image-to-image/edges2shoes/ours_DV/epoch=626-step=499999.ckpt'
   model.num_scales = 1000
 
   #SIGMA INFORMATION FOR THE VE SDE
