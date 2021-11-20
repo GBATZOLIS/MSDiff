@@ -434,14 +434,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
     for key in info.keys():
         if key != 'best_lpips_samples':
             print('%s: %.5f' % (key, info[key]))
-        else:
-            print('------')
-            print('%s' % key)
-            print('------')
-            for lpips_val in sorted(info[key]):
-                print(lpips_val, best_lpips_samples_id_info[lpips_val]) #ID, LPIPS
     
-
     print('----Per draw metrics----')
     for metric in per_draw_info.keys():
         print('Metric: %s' % metric)
