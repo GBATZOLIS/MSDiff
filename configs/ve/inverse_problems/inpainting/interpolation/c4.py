@@ -61,7 +61,7 @@ def get_config():
   evaluate.save_samples = True  
   evaluate.first_test_batch = 0
   evaluate.last_test_batch = 25
-  evaluate.base_log_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation/interpolation' #'/home/gb511/evaluation' 
+  evaluate.base_log_dir ='/home/gb511/evaluation/interpolation'  #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/evaluation/interpolation' 
   evaluate.use_seed = True
 
   #old settings
@@ -76,7 +76,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
+  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
   data.dataset = 'celebA-HQ-160'
   data.task = 'inpainting'
   data.scale = 8
