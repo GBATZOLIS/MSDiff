@@ -303,6 +303,9 @@ def run_evaluation_pipeline(task, base_path, snr, device):
                    'samples': {}}
 
     for i, info in tqdm(enumerate(dataloader)):
+        if i>=950:
+            break
+
         y, x = info['y'], info['x']
         samples = info['samples']
 
