@@ -22,3 +22,17 @@ VS-CMDE: configs/ve/inverse_problems/super_resolution/celebA_ours_DV_160.py \
 CMDE: configs/ve/inverse_problems/super_resolution/celebA_ours_NDV_160.py \
 CDiffE: configs/ve/inverse_problems/super_resolution/celebA_song_160.py \
 CDE: configs/ve/inverse_problems/super_resolution/celebA_SR3_160.py
+
+For inpainting: 
+
+VS-CMDE: configs/ve/inverse_problems/inpainting/celebA_ours_DV.py \
+CMDE: configs/ve/inverse_problems/inpainting/celebA_ours_NDV.py \
+CDiffE: configs/ve/inverse_problems/inpainting/celebA_song.py \
+CDE: configs/ve/inverse_problems/inpainting/celebA_SR3.py
+
+For edge to photo translation: 
+
+VS-CMDE: configs/ve/inverse_problems/image_to_image_translation/edges2shoes_ours_DV.py \
+CMDE: configs/ve/inverse_problems/image_to_image_translation/edges2shoes_ours_NDV.py \
+CDiffE: configs/ve/inverse_problems/image_to_image_translation/edges2shoes_song.py \
+CDE: configs/ve/inverse_problems/image_to_image_translation/edges2shoes_SR3.py
