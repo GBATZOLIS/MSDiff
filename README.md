@@ -1,6 +1,6 @@
 # Conditional Image Generation with Score-Based Diffusion Models
 
-This repository is an extension of the code base provided by Yang Song for the paper [Score-Based Generative Modeling through Stochastic Differential Equations](https://openreview.net/forum?id=PxTIG12RRHS).
+This repository is an extension of the code base provided by Yang Song for the paper [Score-Based Generative Modeling through Stochastic Differential Equations](https://openreview.net/forum?id=PxTIG12RRHS). The code depends on pytorch and pytorch-lightning.
 
 We have extended the code to support multi speed/sde diffusion. Multi speed diffusion opens the avenue for further research in conditional generation, learning in multiple scales and represenation learning using the score-based diffusion framework.
 
