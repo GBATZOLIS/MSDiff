@@ -12,8 +12,7 @@ All the information for every experiment is stored in configurational python fil
 
 python -m main.py --mode train or test --config path_to_config
 
-We have included all the configuration files for all the experiments presented in the paper:
-All of the configuration files are under the folder: configs/ve/inverse_problems
+We have included all the configurations for all the experiments presented in this paper under the folder: configs/ve/inverse_problems.
 
 For super-resolution: 
 
