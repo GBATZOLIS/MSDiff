@@ -18,7 +18,7 @@ All of the configuration files are under the folder: configs/ve/inverse_problems
 
 For super-resolution: 
 
-VS-CMDE: configs/ve/inverse_problems/super_resolution/celebA_ours_DV_160.py \\
-CMDE: configs/ve/inverse_problems/super_resolution/celebA_ours_NDV_160.py \\
-CDiffE: configs/ve/inverse_problems/super_resolution/celebA_song_160.py \\
+VS-CMDE: configs/ve/inverse_problems/super_resolution/celebA_ours_DV_160.py \
+CMDE: configs/ve/inverse_problems/super_resolution/celebA_ours_NDV_160.py \
+CDiffE: configs/ve/inverse_problems/super_resolution/celebA_song_160.py \
 CDE: configs/ve/inverse_problems/super_resolution/celebA_SR3_160.py
