@@ -8,8 +8,7 @@ In this paper, we use multi speed diffusion to derive the CMDE and VS-CMDE estim
 
 Instructions: 
 
-All the information for every experiment is stored in configurational python files. We used the ml_collections python library for constructing the configurational files.
-Once you have re-written the relevant sections of the configuration file you can simply train or test the written configuration using the following command:
+All the information for every experiment is stored in configurational python files. We used the ml_collections python library for constructing the configurational files. Once you have re-written the relevant sections of the configuration you can simply train or test the configuration using the following command:
 
 python -m main.py --mode train or test --config path_to_config
 
