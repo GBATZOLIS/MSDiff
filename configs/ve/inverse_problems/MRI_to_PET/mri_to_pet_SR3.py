@@ -100,7 +100,7 @@ def get_config():
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
-  model.nf = 64
+  model.nf = 32
   model.ch_mult = (1, 1, 2)
   model.num_res_blocks = 2
   model.attn_resolutions = () #(24, 12, 6) -> attention is not supported for ddpm3D yet.
