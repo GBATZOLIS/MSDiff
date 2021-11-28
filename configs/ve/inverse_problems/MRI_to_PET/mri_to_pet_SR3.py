@@ -12,7 +12,7 @@ def get_config():
   training.conditioning_approach = 'sr3'
   training.batch_size = 1
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 0
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
