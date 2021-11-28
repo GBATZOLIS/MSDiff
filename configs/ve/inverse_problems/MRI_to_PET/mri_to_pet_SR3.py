@@ -101,7 +101,7 @@ def get_config():
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 64
-  model.ch_mult = (1, 1, 2, 2)
+  model.ch_mult = (1, 1, 2)
   model.num_res_blocks = 2
   model.attn_resolutions = () #(24, 12, 6) -> attention is not supported for ddpm3D yet.
   model.resamp_with_conv = False #code modifications needed in the downsample and upsample functions to make this True.
