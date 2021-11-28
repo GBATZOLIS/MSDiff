@@ -181,3 +181,15 @@ class DDPM3D_paired(DDPM3D):
     output = super().forward(concat, labels)
     return {'x': output[:,:x_channels,::], \
             'y':output[:,x_channels:,::]}
+
+@utils.register_model(name='ddpm3D_paired_SR3')
+class DDPM3D_paired_SR3(DDPM3D):
+  def __init__(self, config, *args, **kwargs):
+        super().__init__(config)
+  
+  def forward(self, input_dict, labels):
+    x, y = input_dict['x'], input_dict['y']
+    x_channels = x.size(1)
+    concat = torch.cat((x, y), dim=1)
+    score_x = super().forward(concat, labels)
+    return score_x
