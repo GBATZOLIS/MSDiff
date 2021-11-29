@@ -38,7 +38,15 @@ def train(config, log_path, checkpoint_path):
     callbacks = get_callbacks(config)
     LightningModule = create_lightning_module(config)
 
-    logger = pl.loggers.TensorBoardLogger(log_path, name='lightning_logs')
+    if config.experiment_name is None:
+      experiment_name = 'lightning_logs'
+    else:
+      experiment_name = config.experiment_name
+    
+    if log_path is None and config.base_log_path is not None:
+      log_path = config.base_log_path
+
+    logger = pl.loggers.TensorBoardLogger(log_path, name=experiment_name)
 
     if checkpoint_path is not None or config.model.checkpoint_path is not None:
       if config.model.checkpoint_path is not None and checkpoint_path is None:

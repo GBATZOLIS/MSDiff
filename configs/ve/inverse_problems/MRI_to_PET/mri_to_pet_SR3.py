@@ -6,6 +6,10 @@ import numpy as np
 def get_config():
   config = ml_collections.ConfigDict()
 
+  #logging
+  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/mri_to_pet/experiments'
+  config.experiment_name = 'DUALGLOW_data_CDE'
+
   # training
   config.training = training = ml_collections.ConfigDict()
   training.lightning_module = 'conditional'
