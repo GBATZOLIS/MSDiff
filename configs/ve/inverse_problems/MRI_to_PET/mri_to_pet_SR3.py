@@ -107,8 +107,8 @@ def get_config():
   model.resamp_with_conv = False #code modifications needed in the downsample and upsample functions to make this True.
   model.conditional = True
   model.conv_size = 3
-  model.input_channels = data.num_channels
-  model.output_channels = data.num_channels
+  model.input_channels = data.shape_x[0] + data.shape_y[0]
+  model.output_channels = data.shape_x[0]
 
   # optimization
   config.optim = optim = ml_collections.ConfigDict()
