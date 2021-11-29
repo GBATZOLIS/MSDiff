@@ -63,10 +63,11 @@ class DDPM3D(pl.LightningModule):
       nn.init.zeros_(modules[1].bias)
 
     self.centered = config.data.centered
-    channels = config.data.num_channels
+    input_channels = config.model.input_channels
+    output_channels = config.model.output_channels
 
     # ddpm_conv3x3
-    modules.append(conv3x3(channels, nf, dim=3))
+    modules.append(conv3x3(input_channels, nf, dim=3))
     hs_c = [nf]
     in_ch = nf
     for i_level in range(num_resolutions):
@@ -100,7 +101,7 @@ class DDPM3D(pl.LightningModule):
 
     assert not hs_c
     modules.append(nn.GroupNorm(num_channels=in_ch, num_groups=32, eps=1e-6))
-    modules.append(conv3x3(in_ch, channels, init_scale=0., dim=3))
+    modules.append(conv3x3(in_ch, output_channels, init_scale=0., dim=3))
     self.all_modules = nn.ModuleList(modules)
 
   def forward(self, x, labels):
