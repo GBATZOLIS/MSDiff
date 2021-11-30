@@ -188,10 +188,10 @@ def get_score_fn(sde, model, conditional=False, train=False, continuous=False):
         raise NotImplementedError('This combination of SDEs is not supported for conditional SDEs yet.')
     else:
       """COVERS THE SR3 CONDITIONAL SCORE ESTIMATOR"""
-      if isinstance(sde, sde_lib.VPSDE) or isinstance(sde, sde_lib.subVPSDE):
+      if isinstance(sde, sde_lib.cVPSDE): # or isinstance(sde, sde_lib.csubVPSDE):
         def score_fn(x, t):
           # Scale neural network output by standard deviation and flip sign
-          if continuous or isinstance(sde, sde_lib.subVPSDE):
+          if continuous:
             # For VP-trained models, t=0 corresponds to the lowest noise level
             # The maximum value of time embedding is assumed to 999 for
             # continuously-trained models.
