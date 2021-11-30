@@ -274,7 +274,7 @@ class PairedVisualizationCallback(Callback):
         else:
             raise NotImplementedError('x dimensionality is not supported.')
 
-    def generate_paired_video(self, pl_module, Y, I, cond_samples, dim, batch_idx):
+    def generate_paired_video(self, pl_module, Y, I, cond_samples, dim, batch_idx, sampling_scheme):
         #dim: the sliced dimension (choices: 1,2,3)
         B = Y.size(0)
 
@@ -317,25 +317,35 @@ class PairedVisualizationCallback(Callback):
             video_grid.append(grid_cut)
 
         video_grid = torch.stack(video_grid, dim=0).unsqueeze(0)
-        #print(video_grid.size())
 
-        str_title = 'paired_video_epoch_%d_batch_%d_dim_%d' % (pl_module.current_epoch, batch_idx, dim)
+        str_title = 'paired_video_epoch_%d_batch_%d_dim_%d_sampling_%s' % (pl_module.current_epoch, batch_idx, dim, sampling_scheme)
         pl_module.logger.experiment.add_video(str_title, video_grid, pl_module.current_epoch)
 
-    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        current_epoch = pl_module.current_epoch
-        if batch_idx!=2 or current_epoch == 0 or current_epoch % 50 != 0:
-            return
-        
-        y, x = batch        
-        cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution)
-        val_rec_loss = torch.mean(torch.abs(x.to(pl_module.device)-cond_samples))
-        pl_module.logger.experiment.add_scalar('val_rec_loss_epoch_%d_batch_%d' % (current_epoch, batch_idx), val_rec_loss)
-
+    def visualise3D(self, y, cond_samples, x, pl_module, batch_idx, sampling_scheme):
         x = self.convert_to_3D(x).cpu()
         cond_samples = self.convert_to_3D(cond_samples).unsqueeze(0).cpu()
         y = self.convert_to_3D(y).cpu()
-        
-
         for dim in [1, 2, 3]:
-            self.generate_paired_video(pl_module, y, x, cond_samples, dim, batch_idx)
+            self.generate_paired_video(pl_module, y, x, cond_samples, dim, batch_idx, sampling_scheme)
+
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        current_epoch = pl_module.current_epoch
+        
+        if batch_idx!=2 or current_epoch == 0 or current_epoch % 50 != 0:
+            return
+        
+        y, x = batch
+
+        #sample using the predictor - corrector sampling procedure     
+        cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution)
+        val_rec_loss = torch.mean(torch.abs(x.to(pl_module.device)-cond_samples))
+        pl_module.logger.experiment.add_scalar('val_rec_loss_batch_%d_pc' % batch_idx, val_rec_loss)
+        self.visualise3D(y, cond_samples, x, pl_module, batch_idx, sampling_scheme='pc')
+
+        #sample using the predictor-only sampling procedure
+        cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution, corrector='conditional_none')
+        val_rec_loss = torch.mean(torch.abs(x.to(pl_module.device)-cond_samples))
+        pl_module.logger.experiment.add_scalar('val_rec_loss_batch_%d_p' % batch_idx, val_rec_loss)
+        self.visualise3D(y, cond_samples, x, pl_module, batch_idx, sampling_scheme='p')
+
+        

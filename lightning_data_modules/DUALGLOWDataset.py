@@ -10,6 +10,7 @@ from tqdm import tqdm
 from . import utils
 import pytorch_lightning as pl
 from glob import glob 
+import scipy
 
 def listdir_nothidden_filenames(path, filetype=None):
     if not filetype:
@@ -39,12 +40,21 @@ class DUALGLOW_Dataset(Dataset):
 
     def __getitem__(self, index):
         mri = self.data[index]['img_mri']
-        mri = torch.tensor(mri, dtype=torch.float32).unsqueeze(0)
-
         pet = self.data[index]['img_pet']
-        pet = torch.tensor(pet, dtype=torch.float32).unsqueeze(0)
 
-        
+        #------rotation-------
+        angle = [0, 90, 180, 270][np.random.randint(4)]
+        axes_combo = [(0, 1), (1, 2), (0, 2)][np.random.randint(3)]
+
+        if angle != 0:
+            rotated_mri = scipy.ndimage.rotate(mri, angle=angle, axes=axes_combo)
+            rotated_pet = scipy.ndimage.rotate(pet, angle=angle, axes=axes_combo)
+
+        assert rotated_mri.shape == mri.shape and rotated_pet.shape == pet.shape, 'rotated shaped do not match initial shapes'
+        #---------------------
+
+        mri = torch.tensor(rotated_mri, dtype=torch.float32).unsqueeze(0)
+        pet = torch.tensor(rotated_pet, dtype=torch.float32).unsqueeze(0)
 
         return mri, pet
         
