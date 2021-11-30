@@ -49,6 +49,9 @@ class DUALGLOW_Dataset(Dataset):
         if angle != 0:
             rotated_mri = scipy.ndimage.rotate(mri, angle=angle, axes=axes_combo)
             rotated_pet = scipy.ndimage.rotate(pet, angle=angle, axes=axes_combo)
+        else:
+            rotated_mri=mri
+            rotated_pet=pet
 
         assert rotated_mri.shape == mri.shape and rotated_pet.shape == pet.shape, 'rotated shaped do not match initial shapes'
         #---------------------
