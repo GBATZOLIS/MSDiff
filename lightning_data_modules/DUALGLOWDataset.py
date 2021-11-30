@@ -42,6 +42,7 @@ class DUALGLOW_Dataset(Dataset):
         mri = self.data[index]['img_mri']
         pet = self.data[index]['img_pet']
 
+        '''
         #------rotation-------
         angle = [0, 90, 180, 270][np.random.randint(4)]
         axes_combo = [(0, 1), (1, 2), (0, 2)][np.random.randint(3)]
@@ -55,9 +56,10 @@ class DUALGLOW_Dataset(Dataset):
 
         assert rotated_mri.shape == mri.shape and rotated_pet.shape == pet.shape, 'rotated shaped do not match initial shapes'
         #---------------------
+        '''
 
-        mri = torch.tensor(rotated_mri, dtype=torch.float32).unsqueeze(0)
-        pet = torch.tensor(rotated_pet, dtype=torch.float32).unsqueeze(0)
+        mri = torch.tensor(mri, dtype=torch.float32).unsqueeze(0)
+        pet = torch.tensor(pet, dtype=torch.float32).unsqueeze(0)
 
         return mri, pet
         
