@@ -62,7 +62,7 @@ def get_config():
   data.datamodule = 'unpaired_PKLDataset'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
-  data.image_size = 128
+  data.image_size = 64
   data.effective_image_size = data.image_size
   data.shape = [3, data.image_size, data.image_size]
   data.centered = False
@@ -88,7 +88,7 @@ def get_config():
   model.ema_rate = 0.9999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
-  model.nf = 128
+  model.nf = 64
   model.ch_mult = (1, 1, 2, 2)
   model.num_res_blocks = 2
   model.attn_resolutions = (16,)

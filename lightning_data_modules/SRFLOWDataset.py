@@ -50,7 +50,7 @@ def get_exact_paths(config, phase):
 class PKLDataset(data.Dataset):
     def __init__(self, config, phase):
         super(PKLDataset, self).__init__()
-        self.crop_size = config.data.image_size #target image size for this scale
+        self.image_size = config.data.image_size #target image size for this scale
         hr_file_path = get_exact_paths(config, phase)['GT']
         self.images = self.load_pkls(hr_file_path, n_max=int(1e9))
 
@@ -71,6 +71,8 @@ class PKLDataset(data.Dataset):
         img = self.images[item]
         img = img / 255.0
         img = torch.Tensor(img)
+        resize = Resize(self.image_size, interpolation=InterpolationMode.BICUBIC)
+        img = resize(img)
         return img
 
 
