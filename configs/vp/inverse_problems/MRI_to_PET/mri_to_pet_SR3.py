@@ -16,7 +16,7 @@ def get_config():
   training.conditioning_approach = 'sr3'
   training.batch_size = 12
   training.num_nodes = 1
-  training.gpus = 0
+  training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -59,7 +59,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
+  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
   data.dataset = 'ADNI'
   data.use_data_mean = False
   data.datamodule = 'DUAL-GLOW'
