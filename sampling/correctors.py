@@ -52,9 +52,7 @@ class Corrector(abc.ABC):
 class LangevinCorrector(Corrector):
   def __init__(self, sde, score_fn, snr, n_steps):
     super().__init__(sde, score_fn, snr, n_steps)
-    if not isinstance(sde, sde_lib.VPSDE) \
-        and not isinstance(sde, sde_lib.VESDE) \
-        and not isinstance(sde, sde_lib.subVPSDE):
+    if not isinstance(sde, (sde_lib.VPSDE, sde_lib.VESDE, sde_lib.subVPSDE)):
       raise NotImplementedError(f"SDE class {sde.__class__.__name__} not yet supported.")
 
   def update_fn(self, x, t):
@@ -84,9 +82,7 @@ class LangevinCorrector(Corrector):
 class conditionalLangevinCorrector(Corrector):
   def __init__(self, sde, score_fn, snr, n_steps):
     super().__init__(sde, score_fn, snr, n_steps)
-    if not isinstance(sde, sde_lib.VPSDE) \
-        and not isinstance(sde, sde_lib.VESDE) and not isinstance(sde, sde_lib.cVESDE) \
-        and not isinstance(sde, sde_lib.subVPSDE):
+    if not isinstance(sde, (sde_lib.cVESDE, sde_lib.cVPSDE)):
       raise NotImplementedError(f"SDE class {sde.__class__.__name__} not yet supported.")
 
   def update_fn(self, x, y, t):
@@ -94,7 +90,7 @@ class conditionalLangevinCorrector(Corrector):
     score_fn = self.score_fn
     n_steps = self.n_steps
     target_snr = self.snr
-    if isinstance(sde, sde_lib.VPSDE) or isinstance(sde, sde_lib.subVPSDE):
+    if isinstance(sde, sde_lib.cVPSDE):
       timestep = (t * (sde.N - 1) / sde.T).long()
       alpha = sde.alphas.to(t.device)[timestep]
     else:
@@ -120,9 +116,7 @@ class AnnealedLangevinDynamics(Corrector):
 
   def __init__(self, sde, score_fn, snr, n_steps):
     super().__init__(sde, score_fn, snr, n_steps)
-    if not isinstance(sde, sde_lib.VPSDE) \
-        and not isinstance(sde, sde_lib.VESDE) \
-        and not isinstance(sde, sde_lib.subVPSDE):
+    if not isinstance(sde, (sde_lib.VPSDE, sde_lib.VESDE, sde_lib.subVPSDE)):
       raise NotImplementedError(f"SDE class {sde.__class__.__name__} not yet supported.")
 
   def update_fn(self, x, t):
