@@ -15,7 +15,7 @@ def get_config():
   config.training.lightning_module = 'base'
   training.batch_size = 128
   training.num_nodes = 1
-  training.gpus = 0
+  training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -62,7 +62,7 @@ def get_config():
   data.datamodule = 'unpaired_PKLDataset'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
-  data.image_size = 64
+  data.image_size = 128
   data.effective_image_size = data.image_size
   data.shape = [3, data.image_size, data.image_size]
   data.centered = False
@@ -88,7 +88,7 @@ def get_config():
   model.ema_rate = 0.9999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
-  model.nf = 64
+  model.nf = 128
   model.ch_mult = (1, 1, 2, 2)
   model.num_res_blocks = 2
   model.attn_resolutions = (16,)
