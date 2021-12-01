@@ -189,6 +189,8 @@ def get_general_sde_loss_fn(sde, train, conditional=False, reduce_mean=True, con
         z = torch.randn_like(x)
         mean, std = sde.marginal_prob(x, t)
         perturbed_x = mean + std[(...,) + (None,) * len(x.shape[1:])] * z
+        print(perturbed_x.size())
+        print(y.size())
         perturbed_data = {'x':perturbed_x, 'y':y}
 
         score = score_fn(perturbed_data, t)
