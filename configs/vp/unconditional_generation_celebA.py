@@ -7,13 +7,13 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path = 'experiments' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/mri_to_pet/experiments'
+  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion'
   config.experiment_name = 'vp_celebA'
 
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'base'
-  training.batch_size = 128
+  training.batch_size = 64
   training.num_nodes = 1
   training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
@@ -47,7 +47,7 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
-  evaluate.batch_size = 128
+  evaluate.batch_size = 64
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
