@@ -9,21 +9,14 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'base'
-  training.batch_size = 54
+  training.batch_size = 128
   training.num_nodes = 1
   training.gpus = 2
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
-  training.workers = 4
+  training.workers = 4*training.gpus
   training.num_epochs = 10000
-  training.n_iters = 2400001
-
-  #----- to be removed -----
-  training.snapshot_freq = 5000
-  training.log_freq = 250
-  training.eval_freq = 2500
-  #------              --------
-  
+  training.n_iters = 2400001  
   training.visualization_callback = 'base'
   training.show_evolution = False
   
@@ -37,12 +30,11 @@ def get_config():
   training.reduce_mean = True 
   training.sde = 'vpsde'
   
-
   # sampling
   config.sampling = sampling = ml_collections.ConfigDict()
   sampling.method = 'pc'
-  sampling.predictor = 'reverse_diffusion'
-  sampling.corrector = 'langevin'
+  sampling.predictor = 'euler_maruyama'
+  sampling.corrector = 'none'
   sampling.n_steps_each = 1
   sampling.noise_removal = True
   sampling.probability_flow = False
@@ -50,8 +42,8 @@ def get_config():
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
-  evaluate.workers = 4
-  evaluate.batch_size = training.batch_size//2
+  evaluate.workers = 4*training.gpus
+  evaluate.batch_size = 128
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -94,7 +86,7 @@ def get_config():
   model.nonlinearity = 'swish'
   model.nf = 128
   model.ch_mult = (1, 1, 2, 2)
-  model.num_res_blocks = 3
+  model.num_res_blocks = 2
   model.attn_resolutions = (16,)
   model.resamp_with_conv = True
   model.conditional = True
