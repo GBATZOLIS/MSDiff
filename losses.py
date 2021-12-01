@@ -184,12 +184,14 @@ def get_general_sde_loss_fn(sde, train, conditional=False, reduce_mean=True, con
       #SR3 estimator
       def loss_fn(model, batch):
         y, x = batch
+        print('x.size(): ', x.size())
         score_fn = mutils.get_score_fn(sde, model, conditional=conditional, train=train, continuous=continuous)
         t = torch.rand(x.shape[0]).type_as(x) * (sde.T - eps) + eps
         z = torch.randn_like(x)
         mean, std = sde.marginal_prob(x, t)
+        print('mean.size(): ', mean.size())
         perturbed_x = mean + std[(...,) + (None,) * len(x.shape[1:])] * z
-        print(perturbed_x.size())
+        print('perturbed_x.size(): ', perturbed_x.size())
         print(y.size())
         perturbed_data = {'x':perturbed_x, 'y':y}
 
