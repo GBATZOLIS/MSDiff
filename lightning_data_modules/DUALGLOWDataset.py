@@ -52,8 +52,8 @@ class DUALGLOW_Dataset(Dataset):
                 if np.random.randint(2) == 0:
                     flipped_dims.append(dim)
             
-            mri = np.flip(mri, dims=flipped_dims)
-            pet = np.flip(pet, dims=flipped_dims)
+            mri = np.flip(mri, tuple(flipped_dims))
+            pet = np.flip(pet, tuple(flipped_dims))
 
             if np.random.randint(2) == 0:
                 angle = np.random.randint(0, 360)
