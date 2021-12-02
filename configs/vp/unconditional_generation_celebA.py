@@ -24,9 +24,6 @@ def get_config():
   training.visualization_callback = 'base'
   training.show_evolution = False
   
-  ## store additional checkpoints for preemption in cloud computing environments
-  training.snapshot_freq_for_preemption = 5000 #to be removed
-
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
   training.likelihood_weighting = True
@@ -37,7 +34,7 @@ def get_config():
   # sampling
   config.sampling = sampling = ml_collections.ConfigDict()
   sampling.method = 'pc'
-  sampling.predictor = 'euler_maruyama'
+  sampling.predictor = 'ancestral_sampling'
   sampling.corrector = 'none'
   sampling.n_steps_each = 1
   sampling.noise_removal = True
@@ -74,38 +71,27 @@ def get_config():
   # model
   config.model = model = ml_collections.ConfigDict()
   model.checkpoint_path = None
-  model.num_scales = 1000
+  model.num_scales = 2000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
   model.beta_min = 0.1
   model.beta_max = 20.
-  model.dropout = 0.1
+  model.dropout = 0.
   model.embedding_type = 'fourier'
 
    # model architecture
-  model.name = 'ncsnpp'
+  model.name = 'ddpm'
   model.scale_by_sigma = False
+  model.num_scales = 1000
   model.ema_rate = 0.9999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 128
-  model.ch_mult = (1, 1, 2, 2)
+  model.ch_mult = (1, 1, 2, 2, 4)
   model.num_res_blocks = 2
   model.attn_resolutions = (16,)
   model.resamp_with_conv = True
   model.conditional = True
-  model.fir = False
-  model.fir_kernel = [1, 3, 3, 1]
-  model.skip_rescale = True
-  model.resblock_type = 'biggan'
-  model.progressive = 'none'
-  model.progressive_input = 'none'
-  model.progressive_combine = 'sum'
-  model.attention_type = 'ddpm'
-  model.init_scale = 0.
-  model.embedding_type = 'positional'
-  model.fourier_scale = 16
-  model.conv_size = 3
 
   # optimization
   config.optim = optim = ml_collections.ConfigDict()
