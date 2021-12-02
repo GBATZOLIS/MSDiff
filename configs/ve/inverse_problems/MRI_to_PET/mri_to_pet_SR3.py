@@ -8,7 +8,7 @@ def get_config():
 
   #logging
   config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/mri_to_pet'
-  config.experiment_name = 've_da++'
+  config.experiment_name = 've_da'
 
   # training
   config.training = training = ml_collections.ConfigDict()
@@ -105,7 +105,7 @@ def get_config():
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
-  model.nf = 96
+  model.nf = 64
   model.ch_mult = (1, 1, 2, 2)
   model.num_res_blocks = 2
   model.attn_resolutions = () #(24, 12, 6) -> attention is not supported for ddpm3D yet.
@@ -123,7 +123,7 @@ def get_config():
   optim.lr = 2e-4
   optim.beta1 = 0.9
   optim.eps = 1e-8
-  optim.warmup = 5000 #set it to 0 if you do not want to use warm up.
+  optim.warmup = 0 #set it to 0 if you do not want to use warm up.
   optim.grad_clip = 1 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.
 
   config.seed = 42

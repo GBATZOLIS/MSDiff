@@ -36,16 +36,15 @@ class DUALGLOW_Dataset(Dataset):
     """A template dataset class for you to implement custom datasets."""
     def __init__(self,  config, phase):
         # get the image paths of your dataset;
+        self.phase = phase
         self.data = load_data(os.path.join(config.data.base_dir, config.data.dataset, phase))
-        print('Datapoints: %d' % len(self.data))
-
         self.use_data_augmentation = config.data.use_data_augmentation
 
     def __getitem__(self, index):
         mri = self.data[index]['img_mri']
         pet = self.data[index]['img_pet']
 
-        if self.use_data_augmentation:
+        if self.use_data_augmentation and self.phase=='train':
             available_dims = np.arange(0, len(mri.shape))
             flipped_dims = []
             for dim in available_dims:
