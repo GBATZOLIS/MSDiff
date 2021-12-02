@@ -1,6 +1,7 @@
 import abc
 import torch
 import sde_lib
+import numpy as np
 
 _PREDICTORS = {}
 
