@@ -55,6 +55,7 @@ class DUALGLOW_Dataset(Dataset):
             mri = np.flip(mri, tuple(flipped_dims)).copy()
             pet = np.flip(pet, tuple(flipped_dims)).copy()
 
+            '''
             if np.random.randint(2) == 0:
                 angle = np.random.randint(0, 360)
                 axes_combo = (0, 2)
@@ -63,6 +64,7 @@ class DUALGLOW_Dataset(Dataset):
                 assert rotated_mri.shape == mri.shape and rotated_pet.shape == pet.shape, 'rotated shapes do not match initial shapes'
                 mri = rotated_mri
                 pet = rotated_pet
+            '''
         
         mri = torch.tensor(mri, dtype=torch.float32).unsqueeze(0)
         pet = torch.tensor(pet, dtype=torch.float32).unsqueeze(0)
