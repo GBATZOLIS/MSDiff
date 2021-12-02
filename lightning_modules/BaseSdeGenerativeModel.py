@@ -65,6 +65,9 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         return loss
     
     def sample(self, show_evolution=False, num_samples=None):
+        if num_samples is None:
+            num_samples = self.config.evaluate.batch_size
+
         sampling_shape = [num_samples] + self.config.data.shape
         sampling_fn = get_sampling_fn(self.config, self.sde, sampling_shape, self.sampling_eps)
         return sampling_fn(self.score_model, show_evolution=show_evolution)
