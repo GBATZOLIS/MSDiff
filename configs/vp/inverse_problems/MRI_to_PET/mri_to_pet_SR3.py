@@ -7,7 +7,7 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path = None #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/mri_to_pet'
+  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/mri_to_pet'
   config.experiment_name = 'vp_da++'
 
   # training
@@ -59,7 +59,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
+  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
   data.dataset = 'ADNI'
   data.use_data_mean = False
   data.datamodule = 'DUAL-GLOW'
