@@ -31,6 +31,7 @@ def load_data(path):
     
     return data
 
+
 class DUALGLOW_Dataset(Dataset):
     """A template dataset class for you to implement custom datasets."""
     def __init__(self,  config, phase):
@@ -38,26 +39,31 @@ class DUALGLOW_Dataset(Dataset):
         self.data = load_data(os.path.join(config.data.base_dir, config.data.dataset, phase))
         print('Datapoints: %d' % len(self.data))
 
+        self.use_data_augmentation = config.data.use_data_augmentation
+
     def __getitem__(self, index):
         mri = self.data[index]['img_mri']
         pet = self.data[index]['img_pet']
 
-        '''
-        #------rotation-------
-        angle = [0, 90, 180, 270][np.random.randint(4)]
-        axes_combo = [(0, 1), (1, 2), (0, 2)][np.random.randint(3)]
+        if self.use_data_augmentation:
+            available_dims = np.arange(0, len(mri.shape))
+            flipped_dims = []
+            for dim in available_dims:
+                if np.random.randint(2) == 0:
+                    flipped_dims.append(dim)
+            
+            mri = np.flip(mri, dims=flipped_dims)
+            pet = np.flip(pet, dims=flipped_dims)
 
-        if angle != 0:
-            rotated_mri = scipy.ndimage.rotate(mri, angle=angle, axes=axes_combo)
-            rotated_pet = scipy.ndimage.rotate(pet, angle=angle, axes=axes_combo)
-        else:
-            rotated_mri=mri
-            rotated_pet=pet
-
-        assert rotated_mri.shape == mri.shape and rotated_pet.shape == pet.shape, 'rotated shaped do not match initial shapes'
-        #---------------------
-        '''
-
+            if np.random.randint(2) == 0:
+                angle = np.random.randint(0, 360)
+                axes_combo = (0, 2)
+                rotated_mri = scipy.ndimage.rotate(mri, angle=angle, axes=axes_combo, reshape=False)
+                rotated_pet = scipy.ndimage.rotate(pet, angle=angle, axes=axes_combo, reshape=False)
+                assert rotated_mri.shape == mri.shape and rotated_pet.shape == pet.shape, 'rotated shapes do not match initial shapes'
+                mri = rotated_mri
+                pet = rotated_pet
+        
         mri = torch.tensor(mri, dtype=torch.float32).unsqueeze(0)
         pet = torch.tensor(pet, dtype=torch.float32).unsqueeze(0)
 

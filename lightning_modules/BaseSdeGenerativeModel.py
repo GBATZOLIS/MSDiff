@@ -19,9 +19,6 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         # Initialize the score model
         self.config = config
         self.score_model = mutils.create_model(config)
-        
-        # Placeholder to store samples
-        self.samples = None
 
     def configure_sde(self, config):
         # Setup SDEs
@@ -57,11 +54,6 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         
         return loss_fn
 
-    def configure_default_sampling_shape(self, config):
-        #Sampling settings
-        self.data_shape = config.data.shape
-        self.default_sampling_shape = [config.training.batch_size] +  self.data_shape
-
     def training_step(self, batch, batch_idx):
         loss = self.train_loss_fn(self.score_model, batch)
         self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
@@ -73,13 +65,8 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         return loss
     
     def sample(self, show_evolution=False, num_samples=None):
-        # Construct the sampling function
-        if num_samples is None:
-            sampling_shape = self.default_sampling_shape
-        else:
-            sampling_shape = [num_samples] +  self.config.data_shape
+        sampling_shape = [num_samples] + self.config.data.shape
         sampling_fn = get_sampling_fn(self.config, self.sde, sampling_shape, self.sampling_eps)
-
         return sampling_fn(self.score_model, show_evolution=show_evolution)
 
     def configure_optimizers(self):

@@ -7,8 +7,8 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path = None #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/mri_to_pet/experiments'
-  config.experiment_name = 'DUALGLOW_data_CDE'
+  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/mri_to_pet'
+  config.experiment_name = 'vp_da++'
 
   # training
   config.training = training = ml_collections.ConfigDict()
@@ -70,6 +70,7 @@ def get_config():
   data.range_x = [0,1] 
   data.range_y = [0,1] 
   
+  data.use_data_augmentation = True
   data.centered = False
   data.random_flip = False
   data.uniform_dequantization = False
@@ -104,7 +105,7 @@ def get_config():
   model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
-  model.nf = 64
+  model.nf = 96
   model.ch_mult = (1, 1, 2, 2)
   model.num_res_blocks = 2
   model.attn_resolutions = () #(24, 12, 6) -> attention is not supported for ddpm3D yet.
@@ -122,7 +123,7 @@ def get_config():
   optim.lr = 2e-4
   optim.beta1 = 0.9
   optim.eps = 1e-8
-  optim.warmup = 0 #set it to 0 if you do not want to use warm up.
+  optim.warmup = 5000 #set it to 0 if you do not want to use warm up.
   optim.grad_clip = 1 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.
 
   config.seed = 42
