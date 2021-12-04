@@ -6,30 +6,24 @@ import numpy as np
 def get_config():
   config = ml_collections.ConfigDict()
 
+  #logging
+  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion'
+  config.experiment_name = 've_celebA'
+
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'base'
-  training.batch_size = 54
+  training.batch_size = 64
   training.num_nodes = 1
-  training.gpus = 2
+  training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
-  training.workers = 4
+  training.workers = 4*training.gpus
   training.num_epochs = 10000
   training.n_iters = 2400001
-
-  #----- to be removed -----
-  training.snapshot_freq = 5000
-  training.log_freq = 250
-  training.eval_freq = 2500
-  #------              --------
-  
   training.visualization_callback = 'base'
   training.show_evolution = False
   
-  ## store additional checkpoints for preemption in cloud computing environments
-  training.snapshot_freq_for_preemption = 5000 #to be removed
-
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
   training.likelihood_weighting = True
@@ -46,12 +40,12 @@ def get_config():
   sampling.n_steps_each = 1
   sampling.noise_removal = True
   sampling.probability_flow = False
-  sampling.snr = 0.16 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
+  sampling.snr = 0.15 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
-  evaluate.workers = 4
-  evaluate.batch_size = training.batch_size//2
+  evaluate.workers = 4*training.gpus
+  evaluate.batch_size = 64
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -60,10 +54,10 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = 'datasets'
-  data.dataset = 'celebA'
+  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
+  data.dataset = 'celebA-HQ-160'
   data.use_data_mean = False
-  data.datamodule = 'image'
+  data.datamodule = 'unpaired_PKLDataset'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
   data.image_size = 64
