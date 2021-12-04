@@ -204,10 +204,11 @@ def get_pc_conditional_sampler(sde, shape, predictor, corrector, snr, p_steps,
         for i in tqdm(range(p_steps)):
           t = timesteps[i]
           #vec_t = torch.ones(shape[0], device=model.device) * t
-          x, x_mean, y_perturbed, y_mean = predictor_conditional_update_fn(x, y, t, model)
 
           for _ in range(corrections_steps(i)):
             x, x_mean, y_perturbed, y_mean = corrector_conditional_update_fn(x, y, t, model)
+
+          x, x_mean, y_perturbed, y_mean = predictor_conditional_update_fn(x, y, t, model)
           
           if show_evolution:
             evolution['x'].append(x.cpu())

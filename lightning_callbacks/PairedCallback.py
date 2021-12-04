@@ -337,13 +337,13 @@ class PairedVisualizationCallback(Callback):
         y, x = batch
 
         #sample using the predictor - corrector sampling procedure     
-        cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution)
+        cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution, p_steps=2000)
         val_rec_loss = torch.mean(torch.abs(x.to(pl_module.device)-cond_samples))
         pl_module.logger.experiment.add_scalar('val_rec_loss_batch_%d_pc' % batch_idx, val_rec_loss, pl_module.current_epoch)
         self.visualise3D(y, cond_samples, x, pl_module, batch_idx, sampling_scheme='pc')
 
         #sample using the predictor-only sampling procedure
-        cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution, corrector='conditional_none')
+        cond_samples, _ = pl_module.sample(y.to(pl_module.device), show_evolution=self.show_evolution, p_steps=2000, corrector='conditional_none')
         val_rec_loss = torch.mean(torch.abs(x.to(pl_module.device)-cond_samples))
         pl_module.logger.experiment.add_scalar('val_rec_loss_batch_%d_p' % batch_idx, val_rec_loss, pl_module.current_epoch)
         self.visualise3D(y, cond_samples, x, pl_module, batch_idx, sampling_scheme='p')

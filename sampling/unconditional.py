@@ -10,7 +10,10 @@ from scipy import integrate
 import sde_lib
 from models import utils as mutils
 
-def get_sampling_fn(config, sde, shape, eps):
+def get_sampling_fn(config, sde, shape, eps,
+                    predictor='default', corrector='default', p_steps='default', 
+                    c_steps='default', snr='default', denoise='default'):
+
   """Create a sampling function.
   Args:
     config: A `ml_collections.ConfigDict` object that contains all configuration information.
@@ -22,31 +25,55 @@ def get_sampling_fn(config, sde, shape, eps):
       trailing dimensions matching `shape`.
   """
 
+  if predictor == 'default':
+    predictor = get_predictor(config.sampling.predictor.lower())
+  else:
+    predictor = get_predictor(predictor.lower())
+
+  if corrector == 'default':
+    corrector = get_corrector(config.sampling.corrector.lower())
+  else:
+    corrector = get_corrector(corrector.lower())
+
+  if p_steps == 'default':
+    p_steps = config.model.num_scales
+
+  if c_steps == 'default':
+    c_steps = config.sampling.n_steps_each
+
+  if snr == 'default':
+    snr = config.sampling.snr
+
+  if denoise == 'default':
+    denoise = config.sampling.noise_removal
+
   sampler_name = config.sampling.method
+
   # Probability flow ODE sampling with black-box ODE solvers
   if sampler_name.lower() == 'ode':
     sampling_fn = get_ode_sampler(sde=sde,
                                   shape=shape,
-                                  denoise=config.sampling.noise_removal,
+                                  denoise=denoise,
                                   eps=eps)
+
   # Predictor-Corrector sampling. Predictor-only and Corrector-only samplers are special cases.
   elif sampler_name.lower() == 'pc':
-    predictor = get_predictor(config.sampling.predictor.lower())
-    corrector = get_corrector(config.sampling.corrector.lower())
     sampling_fn = get_pc_sampler(sde=sde,
                                  shape=shape,
                                  predictor=predictor,
                                  corrector=corrector,
-                                 snr=config.sampling.snr,
-                                 n_steps=config.sampling.n_steps_each,
+                                 snr=snr,
+                                 p_steps=p_steps,
+                                 c_steps=c_steps, 
                                  probability_flow=config.sampling.probability_flow,
                                  continuous=config.training.continuous,
-                                 denoise=config.sampling.noise_removal,
+                                 denoise=denoise,
                                  eps=eps)
   else:
     raise ValueError(f"Sampler name {sampler_name} unknown.")
 
   return sampling_fn
+
 
 def get_inpainting_fn(config, sde, eps, n_steps_each=1):
   '''create the inpainting function'''
@@ -130,9 +157,11 @@ def get_ode_sampler(sde, shape,
 
   return ode_sampler
 
-def get_pc_sampler(sde, shape, predictor, corrector, snr,
-                   n_steps=1, probability_flow=False, continuous=False,
+
+def get_pc_sampler(sde, shape, predictor, corrector, snr, 
+                   p_steps, c_steps, probability_flow=False, continuous=False,
                    denoise=True, eps=1e-3):
+
   """Create a Predictor-Corrector (PC) sampler.
   Args:
     sde: An `sde_lib.SDE` object representing the forward SDE.
@@ -160,7 +189,7 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
                                           corrector=corrector,
                                           continuous=continuous,
                                           snr=snr,
-                                          n_steps=n_steps)
+                                          n_steps=c_steps)
 
   def pc_sampler(model, show_evolution=False):
     """ The PC sampler funciton.
@@ -175,9 +204,9 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
     with torch.no_grad():
       # Initial sample
       x = sde.prior_sampling(shape).to(model.device).type(torch.float32)
-      timesteps = torch.linspace(sde.T, eps, sde.N, device=model.device)
+      timesteps = torch.linspace(sde.T, eps, p_steps, device=model.device)
 
-      for i in tqdm(range(sde.N)):
+      for i in tqdm(range(p_steps)):
         t = timesteps[i]
         vec_t = torch.ones(shape[0], device=t.device) * t
         x, x_mean = corrector_update_fn(x, vec_t, model=model)
@@ -190,10 +219,10 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
 
       if show_evolution:
         sampling_info = {'evolution': torch.stack(evolution), 
-                        'times':timesteps, 'steps':sde.N * (n_steps + 1)}
+                        'times':timesteps, 'steps': p_steps * (c_steps + 1)}
         return samples, sampling_info
       else:
-        sampling_info = {'times':timesteps, 'steps':sde.N * (n_steps + 1)}
+        sampling_info = {'times':timesteps, 'steps': p_steps * (c_steps + 1)}
         return samples, sampling_info
 
   return pc_sampler

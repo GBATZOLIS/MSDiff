@@ -64,7 +64,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         self.log('eval_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
     
-    def sample(self, show_evolution=False, num_samples=None):
+    def sample(self, show_evolution=False, num_samples=None, predictor='default', corrector='default', p_steps='default', c_steps='default', snr='default', denoise='default'):
         if num_samples is None:
             num_samples = self.config.eval.batch_size
 
