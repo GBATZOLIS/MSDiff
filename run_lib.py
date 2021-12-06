@@ -1,4 +1,4 @@
-from models import ddpm, ncsnv2, fcn, ddpm3D #needed for model registration
+from models import ddpm, ncsnv2, fcn, ddpm3D, ncsnpp #needed for model registration
 import pytorch_lightning as pl
 #from pytorch_lightning.plugins import DDPPlugin
 import numpy as np
@@ -9,7 +9,7 @@ from lightning_callbacks import callbacks, HaarMultiScaleCallback, PairedCallbac
 from lightning_callbacks.HaarMultiScaleCallback import normalise_per_image, permute_channels, normalise, normalise_per_band, create_supergrid
 from lightning_callbacks.utils import get_callbacks
 
-from lightning_data_modules import HaarDecomposedDataset, ImageDatasets, PairedDataset, SyntheticDataset, SRDataset, SRFLOWDataset #needed for datamodule registration
+from lightning_data_modules import HaarDecomposedDataset, ImageDatasets, PairedDataset, SyntheticDataset, SRDataset, SRFLOWDataset, DUALGLOWDataset #needed for datamodule registration
 from lightning_data_modules.utils import create_lightning_datamodule
 
 from lightning_modules import BaseSdeGenerativeModel, HaarMultiScaleSdeGenerativeModel, ConditionalSdeGenerativeModel #need for lightning module registration
@@ -38,7 +38,15 @@ def train(config, log_path, checkpoint_path):
     callbacks = get_callbacks(config)
     LightningModule = create_lightning_module(config)
 
-    logger = pl.loggers.TensorBoardLogger(log_path, name='lightning_logs')
+    if config.experiment_name is None:
+      experiment_name = 'lightning_logs'
+    else:
+      experiment_name = config.experiment_name
+    
+    if config.base_log_path is not None:
+      log_path = config.base_log_path
+
+    logger = pl.loggers.TensorBoardLogger(log_path, name=experiment_name)
 
     if checkpoint_path is not None or config.model.checkpoint_path is not None:
       if config.model.checkpoint_path is not None and checkpoint_path is None:

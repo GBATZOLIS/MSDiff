@@ -16,7 +16,8 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
 
     def configure_sde(self, config):
         if config.training.sde.lower() == 'vpsde':
-            self.sde = sde_lib.VPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
+            assert config.training.conditioning_approach == 'sr3', 'We support only CDE with VP sde currently.'
+            self.sde = sde_lib.cVPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
             self.sampling_eps = 1e-3
         elif config.training.sde.lower() == 'subvpsde':
             self.sde = sde_lib.subVPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)

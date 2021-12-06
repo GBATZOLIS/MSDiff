@@ -47,6 +47,35 @@ def get_exact_paths(config, phase):
 
     return {'LQ':full_path_LQ, 'GT':full_path_GT}
 
+class PKLDataset(data.Dataset):
+    def __init__(self, config, phase):
+        super(PKLDataset, self).__init__()
+        self.image_size = config.data.image_size #target image size for this scale
+        hr_file_path = get_exact_paths(config, phase)['GT']
+        self.images = self.load_pkls(hr_file_path, n_max=int(1e9))
+
+    def load_pkls(self, path, n_max):
+        assert os.path.isfile(path), path
+        images = []
+        with open(path, "rb") as f:
+            images += pickle.load(f)
+        assert len(images) > 0, path
+        images = images[:n_max]
+        images = [np.transpose(image, [2, 0, 1]) for image in images]
+        return images
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, item):
+        img = self.images[item]
+        img = img / 255.0
+        img = torch.Tensor(img)
+        resize = Resize(self.image_size, interpolation=InterpolationMode.BICUBIC)
+        img = resize(img)
+        return img
+
+
 class LRHR_PKLDataset(data.Dataset):
     def __init__(self, config, phase):
         super(LRHR_PKLDataset, self).__init__()
@@ -451,6 +480,34 @@ class PairedDataModule(pl.LightningDataModule):
         self.train_dataset = General_PKLDataset(self.config, phase='train')
         self.val_dataset = General_PKLDataset(self.config, phase='val')
         self.test_dataset = General_PKLDataset(self.config, phase='test')
+
+    def train_dataloader(self):
+        return DataLoader(self.train_dataset, batch_size = self.train_batch, shuffle=True, num_workers=self.train_workers) 
+  
+    def val_dataloader(self):
+        return DataLoader(self.val_dataset, batch_size = self.val_batch, shuffle=False, num_workers=self.val_workers) 
+  
+    def test_dataloader(self): 
+        return DataLoader(self.test_dataset, batch_size = self.test_batch, shuffle=False, num_workers=self.test_workers) 
+
+@utils.register_lightning_datamodule(name='unpaired_PKLDataset')
+class UnpairedDataModule(pl.LightningDataModule):
+    def __init__(self, config):
+        super().__init__()
+        #DataLoader arguments
+        self.config = config
+        self.train_workers = config.training.workers
+        self.val_workers = config.eval.workers
+        self.test_workers = config.eval.workers
+
+        self.train_batch = config.training.batch_size
+        self.val_batch = config.eval.batch_size
+        self.test_batch = config.eval.batch_size
+
+    def setup(self, stage=None): 
+        self.train_dataset = PKLDataset(self.config, phase='train')
+        self.val_dataset = PKLDataset(self.config, phase='val')
+        self.test_dataset = PKLDataset(self.config, phase='test')
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size = self.train_batch, shuffle=True, num_workers=self.train_workers) 

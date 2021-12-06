@@ -1,6 +1,7 @@
 import abc
 import torch
 import sde_lib
+import numpy as np
 
 _PREDICTORS = {}
 
@@ -107,7 +108,7 @@ class AncestralSamplingPredictor(Predictor):
 
   def __init__(self, sde, score_fn, probability_flow=False):
     super().__init__(sde, score_fn, probability_flow)
-    if not isinstance(sde, sde_lib.VPSDE) and not isinstance(sde, sde_lib.VESDE):
+    if not isinstance(sde, (sde_lib.VPSDE, sde_lib.VESDE)):
       raise NotImplementedError(f"SDE class {sde.__class__.__name__} not yet supported.")
     assert not probability_flow, "Probability flow not supported by ancestral sampling"
 
@@ -145,8 +146,7 @@ class conditionalAncestralSamplingPredictor(Predictor):
 
   def __init__(self, sde, score_fn, probability_flow=False):
     super().__init__(sde, score_fn, probability_flow)
-    if not isinstance(sde, sde_lib.VPSDE) and not isinstance(sde, sde_lib.VESDE) \
-      and not isinstance(sde, sde_lib.cVESDE):
+    if not isinstance(sde, (sde_lib.cVESDE, sde_lib.cVPSDE)):
       raise NotImplementedError(f"SDE class {sde.__class__.__name__} not yet supported.")
     assert not probability_flow, "Probability flow not supported by ancestral sampling"
 

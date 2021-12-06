@@ -8,7 +8,7 @@ def get_config():
 
   #logging
   config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion'
-  config.experiment_name = 'vp_celebA'
+  config.experiment_name = 've_celebAHQ_128'
 
   # training
   config.training = training = ml_collections.ConfigDict()
@@ -20,7 +20,7 @@ def get_config():
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
   training.num_epochs = 10000
-  training.n_iters = 2400001  
+  training.n_iters = 2400001
   training.visualization_callback = 'base'
   training.show_evolution = False
   
@@ -29,13 +29,14 @@ def get_config():
   training.likelihood_weighting = True
   training.continuous = True
   training.reduce_mean = True 
-  training.sde = 'vpsde'
+  training.sde = 'vesde'
   
+
   # sampling
   config.sampling = sampling = ml_collections.ConfigDict()
   sampling.method = 'pc'
-  sampling.predictor = 'ancestral_sampling'
-  sampling.corrector = 'none'
+  sampling.predictor = 'reverse_diffusion'
+  sampling.corrector = 'langevin'
   sampling.n_steps_each = 1
   sampling.noise_removal = True
   sampling.probability_flow = False
@@ -53,7 +54,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
+  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
   data.dataset = 'celebA-HQ-160'
   data.use_data_mean = False
   data.datamodule = 'unpaired_PKLDataset'
@@ -71,19 +72,17 @@ def get_config():
   # model
   config.model = model = ml_collections.ConfigDict()
   model.checkpoint_path = None
-  model.num_scales = 2000
+  model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
   model.beta_min = 0.1
   model.beta_max = 20.
-  model.dropout = 0.
+  model.dropout = 0.1
   model.embedding_type = 'fourier'
 
    # model architecture
-  model.name = 'ddpm'
-  model.scale_by_sigma = False
-  model.num_scales = 1000
-  model.ema_rate = 0.9999
+  model.name = 'ncsnpp'
+  model.ema_rate = 0.999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 128
@@ -92,6 +91,17 @@ def get_config():
   model.attn_resolutions = (16,)
   model.resamp_with_conv = True
   model.conditional = True
+  model.fir = True
+  model.fir_kernel = [1, 3, 3, 1]
+  model.skip_rescale = True
+  model.resblock_type = 'biggan'
+  model.progressive = 'output_skip'
+  model.progressive_input = 'input_skip'
+  model.progressive_combine = 'sum'
+  model.attention_type = 'ddpm'
+  model.init_scale = 0.
+  model.fourier_scale = 16
+  model.conv_size = 3
 
   # optimization
   config.optim = optim = ml_collections.ConfigDict()
