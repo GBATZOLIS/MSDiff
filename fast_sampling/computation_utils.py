@@ -10,16 +10,16 @@ from lightning_modules.utils import create_lightning_module
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-def compute_expectations(timestamps, score_fn, sde, dataloader):
+def compute_expectations(timestamps, score_fn, sde, dataloader, device):
     expectations = {}
     for timestamp in timestamps:
         expectations[timestamp]={}
-        results = compute_sliced_expectations(timestamp, score_fn, sde, dataloader)
+        results = compute_sliced_expectations(timestamp, score_fn, sde, dataloader, device)
         expectations[timestamp]['x_2'] = results['x_2']
         expectations[timestamp]['score_x_2'] = results['score_x_2']
     return expectations
 
-def compute_sliced_expectations(timestamp, score_fn, sde, dataloader):
+def compute_sliced_expectations(timestamp, score_fn, sde, dataloader, device):
     num_datapoints = 0
     exp_x_2 = 0.
     exp_norm_grad_log_density = 0.
@@ -32,7 +32,7 @@ def compute_sliced_expectations(timestamp, score_fn, sde, dataloader):
         num_datapoints += x.size(0)
         exp_x_2 += torch.sum(torch.square(x))
 
-        score_x = score_fn(x.to('cuda'), t.to('cuda'))
+        score_x = score_fn(x.to(device), t.to(device))
         exp_norm_grad_log_density += torch.sum(torch.square(score_x)).to('cpu')
 
     exp_x_2 /= num_datapoints
@@ -48,7 +48,8 @@ def find_timestamps_geq(t, timestamps):
     return timestamps[i:]
 
 def get_KL_divergence_fn(model, dataloader, shape, sde, eps, 
-                         discretisation_steps, save_dir, load_expections=False):
+                         discretisation_steps, save_dir, device, 
+                         load_expections=False):
 
     ##get the function that approximates the KL divergence from time t to time T, i.e., KL(p_t||p_T)
     
@@ -79,7 +80,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
         with open(os.path.join(save_dir, 'expectations.pkl'), 'rb') as f:
             expectations = pickle.load(f)
     else:
-        expectations = compute_expectations(timestamps, score_fn, sde, dataloader)
+        expectations = compute_expectations(timestamps, score_fn, sde, dataloader, device)
 
         #save the expectations. It is computationally expensive to re-compute them.
         with open(os.path.join(save_dir, 'expectations.pkl'), 'wb') as f:
@@ -117,9 +118,10 @@ def fast_sampling_scheme(config, save_dir):
     lmodule.eval()
     lmodule.configure_sde(config)
 
+    device = 'cpu'
 
     dsteps = 1000
-    model = lmodule.score_model
+    model = lmodule.score_model.to(device)
     sde = lmodule.sde
     eps = lmodule.sampling_eps
 
@@ -130,6 +132,7 @@ def fast_sampling_scheme(config, save_dir):
                               eps=eps,
                               discretisation_steps=dsteps,
                               save_dir = save_dir,
+                              device=device,
                               load_expections=False)
     
     timestamps = torch.linspace(start=eps, end=sde.T, steps=dsteps)
