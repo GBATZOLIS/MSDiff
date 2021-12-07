@@ -105,6 +105,19 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
         
     return KL
 
+def calculate_mean(dataloader):
+    mean=None
+    total_num_images=0
+    for batch in dataloader:
+        if mean is None:
+            mean = torch.zeros_like(batch[0])
+
+        num_images = batch.size(0)
+        mean += torch.sum(batch, axis=0)
+    
+    mean /= total_num_images
+    return mean
+
 def fast_sampling_scheme(config, save_dir):
     if config.base_log_path is not None:
         save_dir = os.path.join(config.base_log_path, config.experiment_name, 'KL')
