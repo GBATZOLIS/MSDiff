@@ -23,7 +23,11 @@ def compute_sliced_expectations(timestamp, score_fn, sde, dataloader, device):
     num_datapoints = 0
     exp_x_2 = 0.
     exp_norm_grad_log_density = 0.
+    dims=None
     for batch in tqdm(dataloader):
+        if dims is None:
+            dims = np.prod(batch.shape[1:])
+
         t = timestamp.repeat(batch.size(0)) 
         z = torch.randn_like(batch)
         mean, std = sde.marginal_prob(batch, t)
@@ -33,10 +37,10 @@ def compute_sliced_expectations(timestamp, score_fn, sde, dataloader, device):
         exp_x_2 += torch.sum(torch.square(x))
 
         score_x = score_fn(x.to(device), t.to(device))
-        exp_norm_grad_log_density += torch.sum(torch.square(score_x)).to('cpu')
+        exp_norm_grad_log_density += torch.sum(torch.square(score_x.to('cpu')))
 
-    exp_x_2 /= num_datapoints
-    exp_norm_grad_log_density /= num_datapoints
+    exp_x_2 /= num_datapoints*dims
+    exp_norm_grad_log_density /= num_datapoints*dims
 
     return {'x_2': exp_x_2, 'score_x_2': exp_norm_grad_log_density, 't': timestamp}
 
@@ -112,8 +116,9 @@ def calculate_mean(dataloader):
         if mean is None:
             mean = torch.zeros_like(batch[0])
 
+        mean += torch.sum(batch, dim=0)
         num_images = batch.size(0)
-        mean += torch.sum(batch, axis=0)
+        total_num_images +=num_images
     
     mean /= total_num_images
     return mean
@@ -134,8 +139,10 @@ def fast_sampling_scheme(config, save_dir):
     lmodule.eval()
     lmodule.configure_sde(config)
 
-    device = 'cuda'
+    mu_0 = calculate_mean(train_dataloader)
+    print(mu_0[0,:,:])
 
+    device = 'cuda'
     dsteps = 1000
     model = lmodule.score_model.to(device)
     sde = lmodule.sde
