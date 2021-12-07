@@ -106,6 +106,9 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
     return KL
 
 def fast_sampling_scheme(config, save_dir):
+    if config.base_log_path is not None:
+        save_dir = os.path.join(config.base_log_path, config.experiment_name, 'KL')
+
     Path(save_dir).mkdir(parents=True, exist_ok=True)
 
     assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
