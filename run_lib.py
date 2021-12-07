@@ -29,6 +29,10 @@ import os
 import matplotlib.pyplot as plt
 
 from tqdm import tqdm
+from fast_sampling.computation_utils import fast_sampling_scheme
+
+def compute_fast_sampling_scheme(config, save_dir):
+  fast_sampling_scheme(config, save_dir)
 
 def train(config, log_path, checkpoint_path):
     if config.data.create_dataset:

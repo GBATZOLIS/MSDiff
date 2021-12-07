@@ -27,6 +27,8 @@ def main(argv):
     run_lib.compute_data_stats(FLAGS.config)
   elif FLAGS.mode == 'evaluation_pipeline':
     run_lib.evaluation_pipeline(FLAGS.config)
+  elif FLAGS.mode == 'compute_fast_sampling_scheme':
+    run_lib.compute_fast_sampling_scheme(FLAGS.config, FLAGS.log_path)
 
 if __name__ == "__main__":
   app.run(main)
