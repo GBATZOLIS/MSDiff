@@ -111,7 +111,7 @@ def fast_sampling_scheme(config, save_dir):
 
     DataModule = create_lightning_datamodule(config)
     DataModule.setup()
-    train_daloader = DataModule.train_daloader()
+    train_dataloader = DataModule.train_dataloader()
 
     lmodule = create_lightning_module(config, config.model.checkpoint_path)
     lmodule.eval()
@@ -124,7 +124,7 @@ def fast_sampling_scheme(config, save_dir):
     eps = lmodule.sampling_eps
 
     KL = get_KL_divergence_fn(model=model, 
-                              dataloader=train_daloader,
+                              dataloader=train_dataloader,
                               shape=config.data.shape, 
                               sde=sde,
                               eps=eps,
