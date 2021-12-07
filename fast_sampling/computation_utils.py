@@ -118,7 +118,7 @@ def fast_sampling_scheme(config, save_dir):
     lmodule.eval()
     lmodule.configure_sde(config)
 
-    device = 'cpu'
+    device = 'cuda:0'
 
     dsteps = 1000
     model = lmodule.score_model.to(device)
