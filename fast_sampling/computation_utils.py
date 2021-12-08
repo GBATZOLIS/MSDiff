@@ -112,7 +112,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
         assert t in timestamps, 't is not in timestamps. Interpolation is not supported yet for x_2 expectation.'
         T=sde.T
         if isinstance(sde, sde_lib.VESDE):
-            _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(t, dtype=torch.float32))
+            _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(T, dtype=torch.float32))
             _, sigma_T = sde.marginal_prob(torch.zeros(1), torch.tensor(T, dtype=torch.float32))
 
             sigma_t, sigma_T = sigma_t.item(), sigma_T.item()
