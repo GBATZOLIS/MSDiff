@@ -36,6 +36,7 @@ def compute_sliced_expectations(timestamp, score_fn, sde, dataloader, device):
         num_datapoints += x.size(0)
         exp_x_2 += torch.sum(torch.square(x))
 
+        print(x.size(), t.size())
         score_x = score_fn(x.to(device), t.to(device))
         exp_norm_grad_log_density += torch.sum(torch.square(score_x.to('cpu')))
 
