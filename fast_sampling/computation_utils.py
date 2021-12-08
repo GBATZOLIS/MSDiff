@@ -54,7 +54,7 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
     exp_x_2 /= num_datapoints
     exp_norm_grad_log_density /= num_datapoints
 
-    return {'x_2': exp_x_2, 'score_x_2': exp_norm_grad_log_density, 't': timestamp}
+    return {'x_2': exp_x_2.item(), 'score_x_2': exp_norm_grad_log_density.item(), 't': timestamp}
 
 def find_timestamps_geq(t, timestamps):
     #return timestamps greater or equal to time t (we assumed that timestamps are ordered increasingly)
@@ -73,7 +73,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
         integrant_discrete_values = {}
         for timestamp in timestamps:
             _, g = sde.sde(torch.zeros(1), torch.tensor(timestamp, dtype=torch.float32))
-            integrant_discrete_values[timestamp] = g**2 * expectations[timestamp]['score_x_2']
+            integrant_discrete_values[timestamp] = (g**2).item() * expectations[timestamp]['score_x_2']
         return integrant_discrete_values
     
     def get_integral_calculator(integrant_discrete_values, timestamps):
@@ -83,7 +83,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
             else:
                 integrated_timestamps = find_timestamps_geq(t, timestamps)
                 M = len(integrated_timestamps)
-                int_sum = torch.sum([integrant_discrete_values[t] for t in integrated_timestamps])
+                int_sum = np.sum([integrant_discrete_values[t] for t in integrated_timestamps])
                 return (T-t)/M * int_sum
 
         return integral
@@ -108,14 +108,16 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
 
     def KL(t):
         assert t.item() in timestamps, 't is not in timestamps. Interpolation is not supported yet for x_2 expectation.'
+        T=torch.tensor(sde.T)
         if isinstance(sde, sde_lib.VESDE):
-            sigma_t = sde.marginal_prob(torch.zeros(1), t)
-            sigma_T = sde.marginal_prob(torch.zeros(1), torch.tensor(sde.T))
+            _, sigma_t = sde.marginal_prob(torch.zeros(1), t)
+            _, sigma_T = sde.marginal_prob(torch.zeros(1), T)
+            sigma_t, sigma_T = sigma_t.item(), sigma_T.item()
 
-            A = dims/2*torch.log(2*np.pi*sigma_t**2)+1/2*sigma_t**(-2)*expectations[t]['x_2']
-            A -= dims/2*torch.log(2*np.pi*sigma_T**2)+dims/2
+            A = dims/2*np.log(2*np.pi*sigma_t**2)+1/2*sigma_t**(-2)*expectations[t]['x_2']
+            A -= dims/2*np.log(2*np.pi*sigma_T**2)+dims/2
 
-        A += 1/2*integral_fn(t, sde.T) #this is common for both VE and VP sdes. The other terms are incorporated in the previous if statement.
+        A += 1/2*integral_fn(t, T) #this is common for both VE and VP sdes. The other terms are incorporated in the previous if statement.
 
         return A
         
