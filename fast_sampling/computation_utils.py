@@ -21,7 +21,7 @@ def compute_expectations(timestamps, model, sde, dataloader, device):
 
 def compute_sliced_expectations(timestamp, model, sde, dataloader, device):
     score_fn = mutils.get_score_fn(sde, model, train=False, continuous=True)
-    
+
     num_datapoints = 0
     exp_x_2 = 0.
     exp_norm_grad_log_density = 0.
@@ -39,11 +39,14 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, device):
         exp_x_2 += torch.sum(torch.square(x))
 
         print(x.size(), t.size())
-        score_x = score_fn(x.to(device), t.to(device))
+        
+        with torch.no_grad():
+            score_x = score_fn(x.to(device), t.to(device))
+
         exp_norm_grad_log_density += torch.sum(torch.square(score_x.to('cpu')))
 
-    exp_x_2 /= num_datapoints*dims
-    exp_norm_grad_log_density /= num_datapoints*dims
+    exp_x_2 /= num_datapoints
+    exp_norm_grad_log_density /= num_datapoints
 
     return {'x_2': exp_x_2, 'score_x_2': exp_norm_grad_log_density, 't': timestamp}
 
@@ -127,32 +130,30 @@ def calculate_mean(dataloader):
     return mean
 
 def fast_sampling_scheme(config, save_dir):
+    device = 'cpu'
+
     if config.base_log_path is not None:
         save_dir = os.path.join(config.base_log_path, config.experiment_name, 'KL')
-
     Path(save_dir).mkdir(parents=True, exist_ok=True)
-
     assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
-
     DataModule = create_lightning_datamodule(config)
     DataModule.setup()
-    train_dataloader = DataModule.train_dataloader()
+    dataloader = DataModule.val_dataloader()
 
-    lmodule = create_lightning_module(config, config.model.checkpoint_path)
+    lmodule = create_lightning_module(config, config.model.checkpoint_path).to(device)
     lmodule.eval()
     lmodule.configure_sde(config)
 
-    mu_0 = calculate_mean(train_dataloader)
+    mu_0 = calculate_mean(dataloader)
     print(mu_0[0,:,:])
-
-    device = 'cpu'
+    
     dsteps = 1000
-    model = lmodule.score_model.to(device)
+    model = lmodule.score_model
     sde = lmodule.sde
     eps = lmodule.sampling_eps
 
     KL = get_KL_divergence_fn(model=model, 
-                              dataloader=train_dataloader,
+                              dataloader=dataloader,
                               shape=config.data.shape, 
                               sde=sde,
                               eps=eps,
