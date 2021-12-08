@@ -30,7 +30,7 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
     exp_norm_grad_log_density = 0.
     dims=None
     for idx, batch in tqdm(enumerate(dataloader)):
-        if idx>5:
+        if idx>10:
             break
 
         if dims is None:
@@ -141,7 +141,7 @@ def calculate_mean(dataloader):
 
 def fast_sampling_scheme(config, save_dir):
     device = 'cpu'
-    dsteps = 10
+    dsteps = 20
     use_mu_0 = True
 
     if config.base_log_path is not None:
