@@ -111,7 +111,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps, T,
     def KL(t):
         assert t in timestamps, 't is not in timestamps. Interpolation is not supported yet for x_2 expectation.'
         if isinstance(sde, sde_lib.VESDE):
-            _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(t, dtype=torch.float32))
+            _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(T, dtype=torch.float32))
             _, sigma_T = sde.marginal_prob(torch.zeros(1), torch.tensor(T, dtype=torch.float32))
 
             sigma_t, sigma_T = sigma_t.item(), sigma_T.item()
@@ -139,12 +139,13 @@ def calculate_mean(dataloader):
     return mean
 
 def fast_sampling_scheme(config, save_dir):
-    device = 'cpu'
-    dsteps = 20
+    device = 'cuda'
+    dsteps = 25
     use_mu_0 = True
 
     if config.base_log_path is not None:
         save_dir = os.path.join(config.base_log_path, config.experiment_name, 'KL')
+
     Path(save_dir).mkdir(parents=True, exist_ok=True)
 
     assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
@@ -160,7 +161,7 @@ def fast_sampling_scheme(config, save_dir):
     model = lmodule.score_model
     sde = lmodule.sde
     eps = lmodule.sampling_eps
-    T=sde.T/2
+    T=sde.T
 
     if use_mu_0 and isinstance(sde, sde_lib.VESDE):
         mu_0 = calculate_mean(dataloader) #this will be used for the VE SDE if use_mu_0 flag is set to True.
@@ -181,6 +182,11 @@ def fast_sampling_scheme(config, save_dir):
     
     timestamps = torch.linspace(start=eps, end=T, steps=dsteps).numpy()
     KLs = [KL(t) for t in timestamps]
+    grad_KL = np.gradient(KLs)
+
+    with open(os.path.join(save_dir, 'info.pkl'), 'wb') as f:
+        info = {'t':timestamps, 'KL':KLs, 'grad_KL':grad_KL}
+        pickle.dump(info, f)
 
     print(timestamps)
     print(KLs)
@@ -190,6 +196,12 @@ def fast_sampling_scheme(config, save_dir):
     plt.xlabel('diffusion time')
     plt.ylabel('KL divergence')
     plt.savefig(os.path.join(save_dir, 'KL_vs_t.png'))
+
+    plt.figure()
+    plt.plot(timestamps, grad_KL)
+    plt.xlabel('diffusion time')
+    plt.ylabel('KL divergence')
+    plt.savefig(os.path.join(save_dir, 'grad_KL_vs_t.png'))
 
 
 
