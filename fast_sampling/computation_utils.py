@@ -143,7 +143,7 @@ def fast_sampling_scheme(config, save_dir):
     mu_0 = calculate_mean(train_dataloader)
     print(mu_0[0,:,:])
 
-    device = 'cuda'
+    device = 'cpu'
     dsteps = 1000
     model = lmodule.score_model.to(device)
     sde = lmodule.sde
