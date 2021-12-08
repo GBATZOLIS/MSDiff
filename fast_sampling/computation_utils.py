@@ -10,16 +10,18 @@ from lightning_modules.utils import create_lightning_module
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-def compute_expectations(timestamps, score_fn, sde, dataloader, device):
+def compute_expectations(timestamps, model, sde, dataloader, device):
     expectations = {}
     for timestamp in timestamps:
         expectations[timestamp]={}
-        results = compute_sliced_expectations(timestamp, score_fn, sde, dataloader, device)
+        results = compute_sliced_expectations(timestamp, model, sde, dataloader, device)
         expectations[timestamp]['x_2'] = results['x_2']
         expectations[timestamp]['score_x_2'] = results['score_x_2']
     return expectations
 
-def compute_sliced_expectations(timestamp, score_fn, sde, dataloader, device):
+def compute_sliced_expectations(timestamp, model, sde, dataloader, device):
+    score_fn = mutils.get_score_fn(sde, model, train=False, continuous=True)
+    
     num_datapoints = 0
     exp_x_2 = 0.
     exp_norm_grad_log_density = 0.
@@ -77,7 +79,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
 
         return integral
 
-    score_fn = mutils.get_score_fn(sde, model, train=False, continuous=True)
+    
     timestamps = torch.linspace(start=eps, end=sde.T, steps=discretisation_steps)
     
     if load_expections:
@@ -85,7 +87,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
         with open(os.path.join(save_dir, 'expectations.pkl'), 'rb') as f:
             expectations = pickle.load(f)
     else:
-        expectations = compute_expectations(timestamps, score_fn, sde, dataloader, device)
+        expectations = compute_expectations(timestamps, model, sde, dataloader, device)
 
         #save the expectations. It is computationally expensive to re-compute them.
         with open(os.path.join(save_dir, 'expectations.pkl'), 'wb') as f:
