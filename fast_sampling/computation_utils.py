@@ -30,7 +30,7 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
     exp_norm_grad_log_density = 0.
     dims=None
     for idx, batch in tqdm(enumerate(dataloader)):
-        if idx>10:
+        if idx>20:
             break
 
         if dims is None:
@@ -111,7 +111,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps, T,
     def KL(t):
         assert t in timestamps, 't is not in timestamps. Interpolation is not supported yet for x_2 expectation.'
         if isinstance(sde, sde_lib.VESDE):
-            _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(T, dtype=torch.float32))
+            _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(t, dtype=torch.float32))
             _, sigma_T = sde.marginal_prob(torch.zeros(1), torch.tensor(T, dtype=torch.float32))
 
             sigma_t, sigma_T = sigma_t.item(), sigma_T.item()
