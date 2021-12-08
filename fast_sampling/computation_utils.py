@@ -10,23 +10,26 @@ from lightning_modules.utils import create_lightning_module
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-def compute_expectations(timestamps, model, sde, dataloader, device):
+def compute_expectations(timestamps, model, sde, dataloader, mu_0, device):
     expectations = {}
-    for timestamp in timestamps:
+    for timestamp in tqdm(timestamps):
         expectations[timestamp]={}
-        results = compute_sliced_expectations(timestamp, model, sde, dataloader, device)
+        results = compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
         expectations[timestamp]['x_2'] = results['x_2']
         expectations[timestamp]['score_x_2'] = results['score_x_2']
     return expectations
 
-def compute_sliced_expectations(timestamp, model, sde, dataloader, device):
+def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device):
     score_fn = mutils.get_score_fn(sde, model, train=False, continuous=True)
 
     num_datapoints = 0
     exp_x_2 = 0.
     exp_norm_grad_log_density = 0.
     dims=None
-    for batch in tqdm(dataloader):
+    for idx, batch in tqdm(enumerate(dataloader)):
+        if idx>1:
+            break
+        
         if dims is None:
             dims = np.prod(batch.shape[1:])
 
@@ -36,10 +39,12 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, device):
         x = mean + std[(...,) + (None,) * len(batch.shape[1:])] * z
 
         num_datapoints += x.size(0)
-        exp_x_2 += torch.sum(torch.square(x))
 
-        print(x.size(), t.size())
-        
+        if mu_0 is not None:
+            exp_x_2 += torch.sum(torch.square(x-mu_0))
+        else:
+            exp_x_2 += torch.sum(torch.square(x))
+
         with torch.no_grad():
             score_x = score_fn(x.to(device), t.to(device))
 
@@ -59,7 +64,7 @@ def find_timestamps_geq(t, timestamps):
 
 def get_KL_divergence_fn(model, dataloader, shape, sde, eps, 
                          discretisation_steps, save_dir, device, 
-                         load_expections=False):
+                         load_expections=False, mu_0=None):
 
     ##get the function that approximates the KL divergence from time t to time T, i.e., KL(p_t||p_T)
     
@@ -82,7 +87,6 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
 
         return integral
 
-    
     timestamps = torch.linspace(start=eps, end=sde.T, steps=discretisation_steps)
     
     if load_expections:
@@ -90,7 +94,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
         with open(os.path.join(save_dir, 'expectations.pkl'), 'rb') as f:
             expectations = pickle.load(f)
     else:
-        expectations = compute_expectations(timestamps, model, sde, dataloader, device)
+        expectations = compute_expectations(timestamps, model, sde, dataloader, mu_0, device)
 
         #save the expectations. It is computationally expensive to re-compute them.
         with open(os.path.join(save_dir, 'expectations.pkl'), 'wb') as f:
@@ -109,7 +113,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
             A = dims/2*torch.log(2*np.pi*sigma_t**2)+1/2*sigma_t**(-2)*expectations[t]['x_2']
             A -= dims/2*torch.log(2*np.pi*sigma_T**2)+dims/2
 
-        A += 1/2*integral_fn(t, sde.T)
+        A += 1/2*integral_fn(t, sde.T) #this is common for both VE and VP sdes. The other terms are incorporated in the previous if statement.
 
         return A
         
@@ -131,11 +135,15 @@ def calculate_mean(dataloader):
 
 def fast_sampling_scheme(config, save_dir):
     device = 'cpu'
+    dsteps = 100
+    use_mu_0 = True
 
     if config.base_log_path is not None:
         save_dir = os.path.join(config.base_log_path, config.experiment_name, 'KL')
     Path(save_dir).mkdir(parents=True, exist_ok=True)
+
     assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
+    
     DataModule = create_lightning_datamodule(config)
     DataModule.setup()
     dataloader = DataModule.val_dataloader()
@@ -144,13 +152,14 @@ def fast_sampling_scheme(config, save_dir):
     lmodule.eval()
     lmodule.configure_sde(config)
 
-    mu_0 = calculate_mean(dataloader)
-    print(mu_0[0,:,:])
-    
-    dsteps = 1000
     model = lmodule.score_model
     sde = lmodule.sde
     eps = lmodule.sampling_eps
+
+    if use_mu_0 and isinstance(sde, sde_lib.VESDE):
+        mu_0 = calculate_mean(dataloader) #this will be used for the VE SDE if use_mu_0 flag is set to True.
+    else:
+        mu_0 = None
 
     KL = get_KL_divergence_fn(model=model, 
                               dataloader=dataloader,
@@ -160,7 +169,8 @@ def fast_sampling_scheme(config, save_dir):
                               discretisation_steps=dsteps,
                               save_dir = save_dir,
                               device=device,
-                              load_expections=False)
+                              load_expections=False,
+                              mu_0=mu_0)
     
     timestamps = torch.linspace(start=eps, end=sde.T, steps=dsteps)
     KLs = [KL(t) for t in timestamps]
