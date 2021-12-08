@@ -123,7 +123,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
             print(A)
             A += 1/2*sigma_t**(-2)*expectations[t]['x_2']
             print(A)
-            A -= dims/2*np.log(2*np.pi*sigma_T**2)+dims/2
+            A += -1*(dims/2*np.log(2*np.pi*sigma_T**2)+dims/2)
             print(A)
 
         #A += 1/2*integral_fn(t, T) #this is common for both VE and VP sdes. The other terms are incorporated in the previous if statement.
