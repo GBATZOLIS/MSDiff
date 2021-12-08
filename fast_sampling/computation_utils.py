@@ -30,7 +30,7 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
     exp_norm_grad_log_density = 0.
     dims=None
     for idx, batch in tqdm(enumerate(dataloader)):
-        if idx>1:
+        if idx>5:
             break
 
         if dims is None:
@@ -112,28 +112,15 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
         assert t in timestamps, 't is not in timestamps. Interpolation is not supported yet for x_2 expectation.'
         T=sde.T
         if isinstance(sde, sde_lib.VESDE):
-            _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(t))
+            _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(t, dtype=torch.float32))
             _, sigma_T = sde.marginal_prob(torch.zeros(1), torch.tensor(T, dtype=torch.float32))
-            print(t, T, torch.tensor(t), torch.tensor(T))
-            #print(sigma_t, sigma_T)
 
             sigma_t, sigma_T = sigma_t.item(), sigma_T.item()
+            A = dims/2*np.log(2*np.pi*sigma_t**2)+1/2*sigma_t**(-2)*expectations[t]['x_2']
+            A -= dims/2*np.log(2*np.pi*sigma_T**2)+dims/2
 
-            #print(sigma_T)
-            #print(np.log(2*np.pi*sigma_T**2))
+        A += 1/2*integral_fn(t, T) #this is common for both VE and VP sdes. The other terms are incorporated in the previous if statement.
 
-            A = 0.
-            #print(A)
-            A += dims/2*np.log(2*np.pi*sigma_t**2)
-            #print(A)
-            A += 1/2*sigma_t**(-2)*expectations[t]['x_2']
-            #print(A)
-            A += -1*(dims/2*np.log(2*np.pi*sigma_T**2)+dims/2)
-            #print(A)
-
-        #A += 1/2*integral_fn(t, T) #this is common for both VE and VP sdes. The other terms are incorporated in the previous if statement.
-
-        #print(A)
         return A
         
     return KL
