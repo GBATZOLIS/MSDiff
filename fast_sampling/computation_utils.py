@@ -34,7 +34,7 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
     exp_norm_grad_log_density = 0.
     dims=None
     for idx, batch in tqdm(enumerate(dataloader)):
-        if idx>20:
+        if idx>25:
             break
 
         if dims is None:
@@ -155,7 +155,7 @@ def fast_sampling_scheme(config, save_dir):
     T = 'sde'
 
     if config.base_log_path is not None:
-        save_dir = os.path.join(config.base_log_path, config.experiment_name, 'KL')
+        save_dir = os.path.join(config.base_log_path, config.experiment_name, 'KL','T=%.1f-Target_Distribution=%s' % (T,target_distribution))
 
     Path(save_dir).mkdir(parents=True, exist_ok=True)
 
@@ -200,8 +200,6 @@ def fast_sampling_scheme(config, save_dir):
     abs_grad_KL = np.abs(grad_KL)
     normalised_abs_grad_KL = normalise_to_density(np.abs(grad_KL))
 
-    Path(os.path.join(save_dir,'T:%.1f-Target_Distribution:%s' % (T,target_distribution))).mkdir(parents=True, exist_ok=True)
-
     with open(os.path.join(save_dir, 'info.pkl'), 'wb') as f:
         info = {'t':timestamps, 'KL':KL, 'grad_KL':grad_KL, \
                 'abs_grad_KL':abs_grad_KL, 'normalised_abs_grad_KL':normalised_abs_grad_KL}
@@ -222,7 +220,7 @@ def fast_sampling_scheme(config, save_dir):
     plt.figure()
     plt.plot(timestamps, abs_grad_KL)
     plt.xlabel('diffusion time')
-    plt.ylabel('abd grad KL divergence')
+    plt.ylabel('abs grad KL divergence')
     plt.savefig(os.path.join(save_dir, 'abs_grad_KL_vs_t.png'))
 
     plt.figure()
