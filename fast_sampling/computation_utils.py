@@ -117,7 +117,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
             print(sigma_t)
             sigma_t, sigma_T = sigma_t.item(), sigma_T.item()
 
-            print(sigma_T**2)
+            print(sigma_T)
             print(np.log(2*np.pi*sigma_T**2))
 
             A = 0.
