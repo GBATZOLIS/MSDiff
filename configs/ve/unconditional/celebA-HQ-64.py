@@ -13,9 +13,9 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'base'
-  training.batch_size = 1
+  training.batch_size = 50
   training.num_nodes = 1
-  training.gpus = 0
+  training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus

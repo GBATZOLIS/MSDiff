@@ -34,7 +34,7 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
     exp_norm_grad_log_density = 0.
     dims=None
     for idx, batch in tqdm(enumerate(dataloader)):
-        if idx>25:
+        if idx>20:
             break
 
         if dims is None:
@@ -149,7 +149,7 @@ def calculate_mean(dataloader):
 
 def fast_sampling_scheme(config, save_dir):
     device = 'cuda'
-    dsteps = 50
+    dsteps = 1000
     use_mu_0 = True
     target_distribution = 'T'
     T = 'sde'
