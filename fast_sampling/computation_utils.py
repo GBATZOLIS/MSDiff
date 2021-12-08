@@ -72,7 +72,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
     def get_integrant_discrete_values(timestamps, sde, expectations):
         integrant_discrete_values = {}
         for timestamp in timestamps:
-            _, g = sde.sde(torch.zeros(1), timestamp)
+            _, g = sde.sde(torch.zeros(1), torch.tensor(timestamp, dtype=torch.float32))
             integrant_discrete_values[timestamp] = g**2 * expectations[timestamp]['score_x_2']
         return integrant_discrete_values
     
