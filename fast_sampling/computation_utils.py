@@ -73,7 +73,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
         integrant_discrete_values = {}
         for timestamp in timestamps:
             _, g = sde.sde(torch.zeros(1), timestamp)
-            integrant_discrete_values[timestamp.item()] = g**2 * expectations[timestamp]['score_x_2']
+            integrant_discrete_values[timestamp] = g**2 * expectations[timestamp]['score_x_2']
         return integrant_discrete_values
     
     def get_integral_calculator(integrant_discrete_values, timestamps):
@@ -81,7 +81,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
             if t == T:
                 return 0.
             else:
-                integrated_timestamps = find_timestamps_geq(t, timestamps.numpy())
+                integrated_timestamps = find_timestamps_geq(t, timestamps)
                 M = len(integrated_timestamps)
                 int_sum = torch.sum([integrant_discrete_values[t] for t in integrated_timestamps])
                 return (T-t)/M * int_sum
@@ -100,7 +100,8 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
         #save the expectations. It is computationally expensive to re-compute them.
         with open(os.path.join(save_dir, 'expectations.pkl'), 'wb') as f:
             pickle.dump(expectations, f)
-        
+    
+    timestamps = timestamps.numpy()
     dims = np.prod(shape)
     integrant_discrete_values = get_integrant_discrete_values(timestamps, sde, expectations)
     integral_fn = get_integral_calculator(integrant_discrete_values, timestamps)
