@@ -179,6 +179,9 @@ def fast_sampling_scheme(config, save_dir):
     timestamps = torch.linspace(start=eps, end=sde.T, steps=dsteps).numpy()
     KLs = [KL(t) for t in timestamps]
 
+    print(timestamps)
+    print(KLs)
+    
     plt.figure()
     plt.plot(timestamps, KLs)
     plt.xlabel('diffusion time')
