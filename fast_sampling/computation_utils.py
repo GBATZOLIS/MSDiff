@@ -154,11 +154,6 @@ def fast_sampling_scheme(config, save_dir):
     target_distribution = 'T'
     T = 'sde'
 
-    if config.base_log_path is not None:
-        save_dir = os.path.join(config.base_log_path, config.experiment_name, 'KL','T=%.1f-Target_Distribution=%s' % (T,target_distribution))
-
-    Path(save_dir).mkdir(parents=True, exist_ok=True)
-
     assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
     
     DataModule = create_lightning_datamodule(config)
@@ -180,6 +175,10 @@ def fast_sampling_scheme(config, save_dir):
         mu_0 = calculate_mean(dataloader) #this will be used for the VE SDE if use_mu_0 flag is set to True.
     else:
         mu_0 = None
+
+    if config.base_log_path is not None:
+        save_dir = os.path.join(config.base_log_path, config.experiment_name, 'KL','T=%.1f-Target_Distribution=%s' % (T,target_distribution))
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
 
     KL = get_KL_divergence_fn(model=model, 
                               dataloader=dataloader,
