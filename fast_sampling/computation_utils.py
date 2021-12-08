@@ -174,7 +174,7 @@ def fast_sampling_scheme(config, save_dir):
                               load_expections=False,
                               mu_0=mu_0)
     
-    timestamps = np.linspace(start=eps, end=sde.T, steps=dsteps)
+    timestamps = torch.linspace(start=eps, end=sde.T, steps=dsteps).numpy()
     KLs = [KL(t) for t in timestamps]
 
     plt.figure()
