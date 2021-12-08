@@ -83,7 +83,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
             else:
                 integrated_timestamps = find_timestamps_geq(t, timestamps)
                 M = len(integrated_timestamps)
-                int_sum = np.sum([integrant_discrete_values[t] for t in integrated_timestamps])
+                int_sum = np.sum([integrant_discrete_values[tau] for tau in integrated_timestamps])
                 return (T-t)/M * int_sum
 
         return integral
@@ -107,11 +107,11 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
     integral_fn = get_integral_calculator(integrant_discrete_values, timestamps)
 
     def KL(t):
-        assert t.item() in timestamps, 't is not in timestamps. Interpolation is not supported yet for x_2 expectation.'
-        T=torch.tensor(sde.T)
+        assert t in timestamps, 't is not in timestamps. Interpolation is not supported yet for x_2 expectation.'
+        T=sde.T
         if isinstance(sde, sde_lib.VESDE):
-            _, sigma_t = sde.marginal_prob(torch.zeros(1), t)
-            _, sigma_T = sde.marginal_prob(torch.zeros(1), T)
+            _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(t))
+            _, sigma_T = sde.marginal_prob(torch.zeros(1), torch.tensor(T))
             sigma_t, sigma_T = sigma_t.item(), sigma_T.item()
 
             A = dims/2*np.log(2*np.pi*sigma_t**2)+1/2*sigma_t**(-2)*expectations[t]['x_2']
@@ -176,7 +176,7 @@ def fast_sampling_scheme(config, save_dir):
                               load_expections=False,
                               mu_0=mu_0)
     
-    timestamps = torch.linspace(start=eps, end=sde.T, steps=dsteps)
+    timestamps = torch.linspace(start=eps, end=sde.T, steps=dsteps).numpy()
     KLs = [KL(t) for t in timestamps]
 
     plt.figure()
