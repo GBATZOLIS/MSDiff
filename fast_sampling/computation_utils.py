@@ -10,6 +10,10 @@ from lightning_modules.utils import create_lightning_module
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+def normalise_to_density(x):
+    integral = np.sum(x)
+    return x/integral
+
 def compute_expectations(timestamps, model, sde, dataloader, mu_0, device):
     expectations = {}
     for timestamp in tqdm(timestamps):
@@ -140,7 +144,7 @@ def calculate_mean(dataloader):
 
 def fast_sampling_scheme(config, save_dir):
     device = 'cuda'
-    dsteps = 25
+    dsteps = 50
     use_mu_0 = True
 
     if config.base_log_path is not None:
@@ -181,18 +185,18 @@ def fast_sampling_scheme(config, save_dir):
                               mu_0=mu_0)
     
     timestamps = torch.linspace(start=eps, end=T, steps=dsteps).numpy()
-    KLs = [KL(t) for t in timestamps]
-    grad_KL = np.gradient(KLs)
+    KL = [KL(t) for t in timestamps]
+    grad_KL = np.gradient(KL)
+    abs_grad_KL = np.abs(grad_KL)
+    normalised_abs_grad_KL = normalise_to_density(np.abs(grad_KL))
 
     with open(os.path.join(save_dir, 'info.pkl'), 'wb') as f:
-        info = {'t':timestamps, 'KL':KLs, 'grad_KL':grad_KL}
+        info = {'t':timestamps, 'KL':KL, 'grad_KL':grad_KL, \
+                'abs_grad_KL':abs_grad_KL, 'normalised_abs_grad_KL':normalised_abs_grad_KL}
         pickle.dump(info, f)
 
-    print(timestamps)
-    print(KLs)
-
     plt.figure()
-    plt.plot(timestamps, KLs)
+    plt.plot(timestamps, KL)
     plt.xlabel('diffusion time')
     plt.ylabel('KL divergence')
     plt.savefig(os.path.join(save_dir, 'KL_vs_t.png'))
@@ -200,8 +204,22 @@ def fast_sampling_scheme(config, save_dir):
     plt.figure()
     plt.plot(timestamps, grad_KL)
     plt.xlabel('diffusion time')
-    plt.ylabel('KL divergence')
+    plt.ylabel('grad KL divergence')
     plt.savefig(os.path.join(save_dir, 'grad_KL_vs_t.png'))
+    
+    plt.figure()
+    plt.plot(timestamps, abs_grad_KL)
+    plt.xlabel('diffusion time')
+    plt.ylabel('abd grad KL divergence')
+    plt.savefig(os.path.join(save_dir, 'abs_grad_KL_vs_t.png'))
+
+    plt.figure()
+    plt.plot(timestamps, normalised_abs_grad_KL)
+    plt.xlabel('diffusion time')
+    plt.ylabel('norm abs grad KL divergence')
+    plt.savefig(os.path.join(save_dir, 'norm_abs_grad_KL_vs_t.png'))
+
+
 
 
 

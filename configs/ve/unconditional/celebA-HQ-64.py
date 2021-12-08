@@ -7,7 +7,7 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path = None #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion'
+  config.base_log_path = '/home/gb511/score_sde_pytorch-1/ve_fast_sampling' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion'
   config.experiment_name = 've_celebAHQ_64'
 
   # training
