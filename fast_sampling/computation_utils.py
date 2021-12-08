@@ -13,10 +13,11 @@ from tqdm import tqdm
 def compute_expectations(timestamps, model, sde, dataloader, mu_0, device):
     expectations = {}
     for timestamp in tqdm(timestamps):
-        expectations[timestamp]={}
+        dict_timestamp = timestamp.item()
+        expectations[dict_timestamp]={}
         results = compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
-        expectations[timestamp]['x_2'] = results['x_2']
-        expectations[timestamp]['score_x_2'] = results['score_x_2']
+        expectations[dict_timestamp]['x_2'] = results['x_2']
+        expectations[dict_timestamp]['score_x_2'] = results['score_x_2']
     return expectations
 
 def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device):
@@ -29,7 +30,7 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
     for idx, batch in tqdm(enumerate(dataloader)):
         if idx>1:
             break
-        
+
         if dims is None:
             dims = np.prod(batch.shape[1:])
 
@@ -72,7 +73,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
         integrant_discrete_values = {}
         for timestamp in timestamps:
             _, g = sde.sde(torch.zeros(1), timestamp)
-            integrant_discrete_values[timestamp] = g**2 * expectations[timestamp]['score_x_2']
+            integrant_discrete_values[timestamp.item()] = g**2 * expectations[timestamp]['score_x_2']
         return integrant_discrete_values
     
     def get_integral_calculator(integrant_discrete_values, timestamps):
@@ -80,7 +81,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
             if t == T:
                 return 0.
             else:
-                integrated_timestamps = find_timestamps_geq(t, timestamps)
+                integrated_timestamps = find_timestamps_geq(t, timestamps.numpy())
                 M = len(integrated_timestamps)
                 int_sum = torch.sum([integrant_discrete_values[t] for t in integrated_timestamps])
                 return (T-t)/M * int_sum
@@ -135,7 +136,7 @@ def calculate_mean(dataloader):
 
 def fast_sampling_scheme(config, save_dir):
     device = 'cpu'
-    dsteps = 100
+    dsteps = 10
     use_mu_0 = True
 
     if config.base_log_path is not None:
