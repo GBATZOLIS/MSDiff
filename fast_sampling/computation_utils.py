@@ -65,7 +65,7 @@ def find_timestamps_geq(t, timestamps):
             break
     return timestamps[i:]
 
-def get_KL_divergence_fn(model, dataloader, shape, sde, eps, 
+def get_KL_divergence_fn(model, dataloader, shape, sde, eps, T,
                          discretisation_steps, save_dir, device, 
                          load_expections=False, mu_0=None):
 
@@ -90,7 +90,7 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
 
         return integral
 
-    timestamps = torch.linspace(start=eps, end=sde.T, steps=discretisation_steps)
+    timestamps = torch.linspace(start=eps, end=T, steps=discretisation_steps)
     
     if load_expections:
         #load them from the saved directory
@@ -110,7 +110,6 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
 
     def KL(t):
         assert t in timestamps, 't is not in timestamps. Interpolation is not supported yet for x_2 expectation.'
-        T=sde.T
         if isinstance(sde, sde_lib.VESDE):
             _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(T, dtype=torch.float32))
             _, sigma_T = sde.marginal_prob(torch.zeros(1), torch.tensor(T, dtype=torch.float32))
@@ -161,6 +160,7 @@ def fast_sampling_scheme(config, save_dir):
     model = lmodule.score_model
     sde = lmodule.sde
     eps = lmodule.sampling_eps
+    T=sde.T
 
     if use_mu_0 and isinstance(sde, sde_lib.VESDE):
         mu_0 = calculate_mean(dataloader) #this will be used for the VE SDE if use_mu_0 flag is set to True.
@@ -172,13 +172,14 @@ def fast_sampling_scheme(config, save_dir):
                               shape=config.data.shape, 
                               sde=sde,
                               eps=eps,
+                              T=T,
                               discretisation_steps=dsteps,
                               save_dir = save_dir,
                               device=device,
                               load_expections=False,
                               mu_0=mu_0)
     
-    timestamps = torch.linspace(start=eps, end=sde.T, steps=dsteps).numpy()
+    timestamps = torch.linspace(start=eps, end=T, steps=dsteps).numpy()
     KLs = [KL(t) for t in timestamps]
 
     print(timestamps)
