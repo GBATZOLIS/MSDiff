@@ -18,6 +18,8 @@ def compute_expectations(timestamps, model, sde, dataloader, mu_0, device):
         results = compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
         expectations[dict_timestamp]['x_2'] = results['x_2']
         expectations[dict_timestamp]['score_x_2'] = results['score_x_2']
+    
+    print(expectations)
     return expectations
 
 def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device):
@@ -181,7 +183,7 @@ def fast_sampling_scheme(config, save_dir):
 
     print(timestamps)
     print(KLs)
-    
+
     plt.figure()
     plt.plot(timestamps, KLs)
     plt.xlabel('diffusion time')
