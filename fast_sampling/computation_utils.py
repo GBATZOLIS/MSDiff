@@ -149,9 +149,9 @@ def calculate_mean(dataloader):
 
 def fast_sampling_scheme(config, save_dir):
     device = 'cuda'
-    dsteps = 250
+    dsteps = 500
     use_mu_0 = True
-    target_distribution = 'T'
+    target_distribution = 't'
     T = 'sde'
 
     assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
