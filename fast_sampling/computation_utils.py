@@ -71,7 +71,7 @@ def find_timestamps_geq(t, timestamps):
 
 def get_KL_divergence_fn(model, dataloader, shape, sde, eps, T,
                          discretisation_steps, save_dir, device, 
-                         load_expections=False, mu_0=None):
+                         load_expections=False, mu_0=None, target_dist='T'):
 
     ##get the function that approximates the KL divergence from time t to time T, i.e., KL(p_t||p_T)
     
@@ -115,7 +115,12 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps, T,
     def KL(t):
         assert t in timestamps, 't is not in timestamps. Interpolation is not supported yet for x_2 expectation.'
         if isinstance(sde, sde_lib.VESDE):
-            _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(T, dtype=torch.float32))
+            if target_dist == 'T':
+                target_distribution_t = T
+            elif target_dist == 't':
+                target_distribution_t = t
+
+            _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(target_distribution_t, dtype=torch.float32))
             _, sigma_T = sde.marginal_prob(torch.zeros(1), torch.tensor(T, dtype=torch.float32))
 
             sigma_t, sigma_T = sigma_t.item(), sigma_T.item()
@@ -146,6 +151,8 @@ def fast_sampling_scheme(config, save_dir):
     device = 'cuda'
     dsteps = 50
     use_mu_0 = True
+    target_distribution = 'T'
+    T = 'sde'
 
     if config.base_log_path is not None:
         save_dir = os.path.join(config.base_log_path, config.experiment_name, 'KL')
@@ -165,7 +172,9 @@ def fast_sampling_scheme(config, save_dir):
     model = lmodule.score_model
     sde = lmodule.sde
     eps = lmodule.sampling_eps
-    T=sde.T
+
+    if T=='sde':
+        T = sde.T
 
     if use_mu_0 and isinstance(sde, sde_lib.VESDE):
         mu_0 = calculate_mean(dataloader) #this will be used for the VE SDE if use_mu_0 flag is set to True.
@@ -182,13 +191,16 @@ def fast_sampling_scheme(config, save_dir):
                               save_dir = save_dir,
                               device=device,
                               load_expections=False,
-                              mu_0=mu_0)
+                              mu_0=mu_0,
+                              target_dist=target_distribution)
     
     timestamps = torch.linspace(start=eps, end=T, steps=dsteps).numpy()
     KL = [KL(t) for t in timestamps]
     grad_KL = np.gradient(KL)
     abs_grad_KL = np.abs(grad_KL)
     normalised_abs_grad_KL = normalise_to_density(np.abs(grad_KL))
+
+    Path(os.path.join(save_dir,'T:%.1f-Target_Distribution:%s' % (T,target_distribution))).mkdir(parents=True, exist_ok=True)
 
     with open(os.path.join(save_dir, 'info.pkl'), 'wb') as f:
         info = {'t':timestamps, 'KL':KL, 'grad_KL':grad_KL, \
