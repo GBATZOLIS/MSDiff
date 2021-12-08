@@ -160,7 +160,7 @@ def fast_sampling_scheme(config, save_dir):
     model = lmodule.score_model
     sde = lmodule.sde
     eps = lmodule.sampling_eps
-    T=sde.T
+    T=sde.T/2
 
     if use_mu_0 and isinstance(sde, sde_lib.VESDE):
         mu_0 = calculate_mean(dataloader) #this will be used for the VE SDE if use_mu_0 flag is set to True.
