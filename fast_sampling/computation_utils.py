@@ -114,11 +114,12 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps,
         if isinstance(sde, sde_lib.VESDE):
             _, sigma_t = sde.marginal_prob(torch.zeros(1), torch.tensor(t))
             _, sigma_T = sde.marginal_prob(torch.zeros(1), torch.tensor(T))
-            print(sigma_t)
+            print(sigma_t, sigma_T)
+
             sigma_t, sigma_T = sigma_t.item(), sigma_T.item()
 
-            print(sigma_T)
-            print(np.log(2*np.pi*sigma_T**2))
+            #print(sigma_T)
+            #print(np.log(2*np.pi*sigma_T**2))
 
             A = 0.
             print(A)
