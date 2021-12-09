@@ -7,13 +7,13 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion'
-  config.experiment_name = 'vp_celebA'
+  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp'
+  config.experiment_name = 'vp_celebA_smld_weighting'
 
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'base'
-  training.batch_size = 64
+  training.batch_size = 128
   training.num_nodes = 1
   training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
@@ -26,7 +26,7 @@ def get_config():
   
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
-  training.likelihood_weighting = True
+  training.likelihood_weighting = False
   training.continuous = True
   training.reduce_mean = True 
   training.sde = 'vpsde'
@@ -39,12 +39,12 @@ def get_config():
   sampling.n_steps_each = 1
   sampling.noise_removal = True
   sampling.probability_flow = False
-  sampling.snr = 0.15 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
+  sampling.snr = 0.075 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
-  evaluate.batch_size = 64
+  evaluate.batch_size = 128
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -59,7 +59,7 @@ def get_config():
   data.datamodule = 'unpaired_PKLDataset'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
-  data.image_size = 128
+  data.image_size = 64
   data.effective_image_size = data.image_size
   data.shape = [3, data.image_size, data.image_size]
   data.centered = False
@@ -71,7 +71,7 @@ def get_config():
   # model
   config.model = model = ml_collections.ConfigDict()
   model.checkpoint_path = None
-  model.num_scales = 2000
+  model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
   model.beta_min = 0.1
@@ -82,12 +82,11 @@ def get_config():
    # model architecture
   model.name = 'ddpm'
   model.scale_by_sigma = False
-  model.num_scales = 1000
   model.ema_rate = 0.9999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 128
-  model.ch_mult = (1, 1, 2, 2, 4)
+  model.ch_mult = (1, 1, 2, 2)
   model.num_res_blocks = 2
   model.attn_resolutions = (16,)
   model.resamp_with_conv = True
@@ -98,7 +97,7 @@ def get_config():
 
   optim.weight_decay = 0
   optim.optimizer = 'Adam'
-  optim.lr = 2e-4
+  optim.lr = 2e-5
   optim.beta1 = 0.9
   optim.eps = 1e-8
   optim.warmup = 5000 #set it to 0 if you do not want to use warm up.

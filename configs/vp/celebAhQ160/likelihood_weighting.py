@@ -7,20 +7,20 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path = '/home/gb511/score_sde_pytorch-1/ve_fast_sampling' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/ve'
-  config.experiment_name = 've_celebAHQ_64'
+  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp'
+  config.experiment_name = 'vp_celebA_likelihood_weighting'
 
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'base'
-  training.batch_size = 50
+  training.batch_size = 128
   training.num_nodes = 1
-  training.gpus = 0
+  training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
   training.num_epochs = 10000
-  training.n_iters = 2400001
+  training.n_iters = 2400001  
   training.visualization_callback = 'base'
   training.show_evolution = False
   
@@ -29,23 +29,22 @@ def get_config():
   training.likelihood_weighting = True
   training.continuous = True
   training.reduce_mean = True 
-  training.sde = 'vesde'
+  training.sde = 'vpsde'
   
-
   # sampling
   config.sampling = sampling = ml_collections.ConfigDict()
   sampling.method = 'pc'
-  sampling.predictor = 'reverse_diffusion'
-  sampling.corrector = 'langevin'
+  sampling.predictor = 'ancestral_sampling'
+  sampling.corrector = 'none'
   sampling.n_steps_each = 1
   sampling.noise_removal = True
   sampling.probability_flow = False
-  sampling.snr = 0.15 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
+  sampling.snr = 0.075 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
-  evaluate.batch_size = training.batch_size
+  evaluate.batch_size = 128
   evaluate.enable_sampling = True
   evaluate.num_samples = 50000
   evaluate.enable_loss = True
@@ -54,7 +53,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = 'datasets'  #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
+  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
   data.dataset = 'celebA-HQ-160'
   data.use_data_mean = False
   data.datamodule = 'unpaired_PKLDataset'
@@ -71,18 +70,19 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/saved_checkpoints/fast_sampling/ve/celebA-HQ/64/epoch=233-step=595295.ckpt' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/ve_celebAHQ_64/version_0/checkpoints/epoch=233-step=595295.ckpt' 
+  model.checkpoint_path = None
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
   model.beta_min = 0.1
   model.beta_max = 20.
-  model.dropout = 0.1
+  model.dropout = 0.
   model.embedding_type = 'fourier'
 
    # model architecture
-  model.name = 'ncsnpp'
-  model.ema_rate = 0.999
+  model.name = 'ddpm'
+  model.scale_by_sigma = False
+  model.ema_rate = 0.9999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 128
@@ -91,24 +91,13 @@ def get_config():
   model.attn_resolutions = (16,)
   model.resamp_with_conv = True
   model.conditional = True
-  model.fir = True
-  model.fir_kernel = [1, 3, 3, 1]
-  model.skip_rescale = True
-  model.resblock_type = 'biggan'
-  model.progressive = 'output_skip'
-  model.progressive_input = 'input_skip'
-  model.progressive_combine = 'sum'
-  model.attention_type = 'ddpm'
-  model.init_scale = 0.
-  model.fourier_scale = 16
-  model.conv_size = 3
 
   # optimization
   config.optim = optim = ml_collections.ConfigDict()
 
   optim.weight_decay = 0
   optim.optimizer = 'Adam'
-  optim.lr = 2e-4
+  optim.lr = 2e-5
   optim.beta1 = 0.9
   optim.eps = 1e-8
   optim.warmup = 5000 #set it to 0 if you do not want to use warm up.
