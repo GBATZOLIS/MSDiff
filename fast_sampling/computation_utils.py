@@ -10,7 +10,6 @@ from lightning_modules.utils import create_lightning_module
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-def plot_()
 
 def normalise_to_density(x):
     integral = np.sum(x)
