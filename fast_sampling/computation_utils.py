@@ -10,6 +10,8 @@ from lightning_modules.utils import create_lightning_module
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+def plot_()
+
 def normalise_to_density(x):
     integral = np.sum(x)
     return x/integral
@@ -22,8 +24,11 @@ def compute_expectations(timestamps, model, sde, dataloader, mu_0, device):
         results = compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
         expectations[dict_timestamp]['x_2'] = results['x_2']
         expectations[dict_timestamp]['score_x_2'] = results['score_x_2']
+
+        #addition
+        expectations[dict_timestamp]['exp_stats'] = results['exp_stats']
     
-    print(expectations)
+    #print(expectations)
     return expectations
 
 def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device):
@@ -33,8 +38,13 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
     exp_x_2 = 0.
     exp_norm_grad_log_density = 0.
     dims=None
+
+    #those settings will be used for adapting the stepsize
+    break_point = 10
+    x_2=[]
+    norm_grad_log_density=[]
     for idx, batch in tqdm(enumerate(dataloader)):
-        if idx>10:
+        if idx > break_point:
             break
 
         if dims is None:
@@ -49,18 +59,46 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
 
         if mu_0 is not None:
             exp_x_2 += torch.sum(torch.square(x-mu_0))
+
+            #addition
+            if idx <= break_point:
+                x_2.append(torch.sum(torch.square(x-mu_0), dim=0))
         else:
             exp_x_2 += torch.sum(torch.square(x))
 
+            #addition
+            if idx <= break_point:
+                x_2.append(torch.sum(torch.square(x), dim=0))
+
         with torch.no_grad():
             score_x = score_fn(x.to(device), t.to(device))
+            score_x = score_x.to('cpu')
 
-        exp_norm_grad_log_density += torch.sum(torch.square(score_x.to('cpu')))
+        exp_norm_grad_log_density += torch.sum(torch.square(score_x))
+        
+        #addition
+        if idx <= break_point:
+            x_2.append(torch.sum(torch.square(score_x), dim=0))
 
     exp_x_2 /= num_datapoints
     exp_norm_grad_log_density /= num_datapoints
 
-    return {'x_2': exp_x_2.item(), 'score_x_2': exp_norm_grad_log_density.item(), 't': timestamp}
+    #addition
+    x_2 = torch.cat(x_2, dim=0)  
+    norm_grad_log_density = torch.cat(norm_grad_log_density, dim=0)
+    print('x_2.size():', x_2.size())
+    print('norm_grad_log_density.size():', norm_grad_log_density.size())
+    
+    exp_stats = {
+                 'x_2': {'mean': torch.mean(x_2), 
+                         'std': torch.std(x_2, unbiased=True)},
+
+                 'score_norm': {'mean': torch.mean(norm_grad_log_density), 
+                                'std': torch.std(norm_grad_log_density, unbiased=True)}
+                }
+
+    #addition
+    return {'x_2': exp_x_2.item(), 'score_x_2': exp_norm_grad_log_density.item(), 't': timestamp, 'exp_stats':exp_stats}
 
 def find_timestamps_geq(t, timestamps):
     #return timestamps greater or equal to time t (we assumed that timestamps are ordered increasingly)
@@ -149,7 +187,7 @@ def calculate_mean(dataloader):
 
 def fast_sampling_scheme(config, save_dir):
     device = 'cuda'
-    dsteps = 500
+    dsteps = 100
     use_mu_0 = True
     target_distribution = 'T'
     T = 0.675 #'sde'
