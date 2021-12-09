@@ -61,13 +61,13 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
 
             #addition
             if idx <= break_point:
-                x_2.append(torch.sum(torch.square(x-mu_0), dim=0))
+                x_2.append(torch.sum(torch.square(x-mu_0), dim=[i+1 for i in range(len(x.shape)-1)]))
         else:
             exp_x_2 += torch.sum(torch.square(x))
 
             #addition
             if idx <= break_point:
-                x_2.append(torch.sum(torch.square(x), dim=0))
+                x_2.append(torch.sum(torch.square(x), dim=[i+1 for i in range(len(x.shape)-1)]))
 
         with torch.no_grad():
             score_x = score_fn(x.to(device), t.to(device))
@@ -77,7 +77,7 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
         
         #addition
         if idx <= break_point:
-            norm_grad_log_density.append(torch.sum(torch.square(score_x), dim=0))
+            norm_grad_log_density.append(torch.sum(torch.square(score_x), dim=[i+1 for i in range(len(score_x.shape)-1)]))
 
     exp_x_2 /= num_datapoints
     exp_norm_grad_log_density /= num_datapoints
