@@ -91,6 +91,8 @@ def get_config():
   model.attn_resolutions = (16,)
   model.resamp_with_conv = True
   model.conditional = True
+  model.input_channels = data.num_channels
+  model.output_channels = data.num_channels
 
   # optimization
   config.optim = optim = ml_collections.ConfigDict()
