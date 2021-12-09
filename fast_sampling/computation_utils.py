@@ -77,7 +77,7 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
         
         #addition
         if idx <= break_point:
-            x_2.append(torch.sum(torch.square(score_x), dim=0))
+            norm_grad_log_density.append(torch.sum(torch.square(score_x), dim=0))
 
     exp_x_2 /= num_datapoints
     exp_norm_grad_log_density /= num_datapoints
