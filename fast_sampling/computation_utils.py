@@ -15,6 +15,35 @@ def normalise_to_density(x):
     integral = np.sum(x)
     return x/integral
 
+
+def evaluate_continuation(x_2, norm_grad_log_density, num_datapoints):
+    def evaluate_quantity_continuation(quantity, num_datapoints, r):
+        #we want to calculate the number of samples needed for the confidence interval of the sample mean to have width W = r * mean
+        mean = torch.mean(quantity)
+        std = torch.std(quantity)
+
+        optimal_num_samples = int(4*1.96**2*std**2/(r*mean)**2)
+
+        if optimal_num_samples > num_datapoints:
+            return optimal_num_samples
+        else:
+            return 0
+
+    r = 0.05
+    x_2 = torch.cat(x_2, dim=0)  
+    norm_grad_log_density = torch.cat(norm_grad_log_density, dim=0)
+
+    cont_x_2 = evaluate_quantity_continuation(x_2, num_datapoints, r)
+    cont_score_norm = evaluate_quantity_continuation(norm_grad_log_density, num_datapoints, r)
+
+    if cont_x_2 + cont_score_norm > 0:
+        return True
+    elif cont_x_2 + cont_score_norm == 0:
+        return False
+    else:
+        return 'Something is going wrong.'
+
+
 def compute_expectations(timestamps, model, sde, dataloader, mu_0, device):
     expectations = {}
     for timestamp in tqdm(timestamps):
@@ -39,13 +68,16 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
     dims=None
 
     #those settings will be used for adapting the stepsize
-    break_point = 10
+    check_point = 500
     x_2=[]
     norm_grad_log_density=[]
     for idx, batch in tqdm(enumerate(dataloader)):
-        if idx > break_point:
-            break
-
+        if num_datapoints >= check_point:
+            continuation = evaluate_continuation(x_2, norm_grad_log_density, num_datapoints)
+            if continuation == False:
+                print('Adaptive mean evaluation stops at %d samples - the 95 confidence interval is [mean-r/2*mean, mean+r/2mean]' % num_datapoints)
+                break
+            
         if dims is None:
             dims = np.prod(batch.shape[1:])
 
@@ -60,14 +92,12 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
             exp_x_2 += torch.sum(torch.square(x-mu_0))
 
             #addition
-            if idx <= break_point:
-                x_2.append(torch.sum(torch.square(x-mu_0), dim=[i+1 for i in range(len(x.shape)-1)]))
+            x_2.append(torch.sum(torch.square(x-mu_0), dim=[i+1 for i in range(len(x.shape)-1)]))
         else:
             exp_x_2 += torch.sum(torch.square(x))
 
             #addition
-            if idx <= break_point:
-                x_2.append(torch.sum(torch.square(x), dim=[i+1 for i in range(len(x.shape)-1)]))
+            x_2.append(torch.sum(torch.square(x), dim=[i+1 for i in range(len(x.shape)-1)]))
 
         with torch.no_grad():
             score_x = score_fn(x.to(device), t.to(device))
@@ -76,8 +106,7 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
         exp_norm_grad_log_density += torch.sum(torch.square(score_x))
         
         #addition
-        if idx <= break_point:
-            norm_grad_log_density.append(torch.sum(torch.square(score_x), dim=[i+1 for i in range(len(score_x.shape)-1)]))
+        norm_grad_log_density.append(torch.sum(torch.square(score_x), dim=[i+1 for i in range(len(score_x.shape)-1)]))
 
     exp_x_2 /= num_datapoints
     exp_norm_grad_log_density /= num_datapoints
@@ -85,10 +114,8 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
     #addition
     x_2 = torch.cat(x_2, dim=0)  
     norm_grad_log_density = torch.cat(norm_grad_log_density, dim=0)
-    print('x_2.size():', x_2.size())
-    print('norm_grad_log_density.size():', norm_grad_log_density.size())
-    
-    exp_stats = {
+
+    exp_stats = {'num_datapoints': num_datapoints,
                  'x_2': {'mean': torch.mean(x_2), 
                          'std': torch.std(x_2, unbiased=True)},
 
