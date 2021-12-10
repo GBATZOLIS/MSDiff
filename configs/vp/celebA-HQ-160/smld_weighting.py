@@ -15,7 +15,7 @@ def get_config():
   config.training.lightning_module = 'base'
   training.batch_size = 50 #128
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 0
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
