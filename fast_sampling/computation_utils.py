@@ -191,6 +191,11 @@ def get_KL_divergence_fn(model, dataloader, shape, sde, eps, T,
             A = dims/2*np.log(2*np.pi*sigma_t**2)+1/2*sigma_t**(-2)*expectations[t]['x_2']
             A -= dims/2*np.log(2*np.pi*sigma_T**2)+dims/2
 
+        elif isinstance(sde, sde_lib.VPSDE):
+            A = -dims/2 + 1/2*expectations[t]['x_2'] 
+            #the next term comes from the integral
+            A -= 1/4*sde.beta_0*dims*(sde.T-t) + 1/8*(sde.beta_1-sde.beta_0)*dims*(sde.T**2-t**2)
+
         A += 1/2*integral_fn(t, T) #this is common for both VE and VP sdes. The other terms are incorporated in the previous if statement.
 
         return A
@@ -216,7 +221,7 @@ def fast_sampling_scheme(config, save_dir):
     dsteps = 100
     use_mu_0 = True
     target_distribution = 'T'
-    T = 0.675 #'sde'
+    T = 'sde' #0.675 for the ve sde
 
     assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
     
