@@ -219,7 +219,7 @@ def calculate_mean(dataloader):
 
 def fast_sampling_scheme(config, save_dir):
     device = 'cuda'
-    dsteps = 250
+    dsteps = 1000
     use_mu_0 = True
     target_distribution = 'T'
     T = 'sde' #0.675 for the ve sde
