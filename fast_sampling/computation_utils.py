@@ -11,8 +11,9 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 
-def normalise_to_density(x):
-    integral = np.sum(x)
+def normalise_to_density(t, x):
+    a, b ,M = t.min(), t.max(), len(x)
+    integral = (b-a)/M*np.sum(x)
     return x/integral
 
 
@@ -218,7 +219,7 @@ def calculate_mean(dataloader):
 
 def fast_sampling_scheme(config, save_dir):
     device = 'cuda'
-    dsteps = 100
+    dsteps = 250
     use_mu_0 = True
     target_distribution = 'T'
     T = 'sde' #0.675 for the ve sde
@@ -266,7 +267,7 @@ def fast_sampling_scheme(config, save_dir):
     KL = [KL(t) for t in timestamps]
     grad_KL = np.gradient(KL)
     abs_grad_KL = np.abs(grad_KL)
-    normalised_abs_grad_KL = normalise_to_density(np.abs(grad_KL))
+    normalised_abs_grad_KL = normalise_to_density(timestamps, abs_grad_KL)
 
     with open(os.path.join(save_dir, 'info.pkl'), 'wb') as f:
         info = {'t':timestamps, 'KL':KL, 'grad_KL':grad_KL, \
