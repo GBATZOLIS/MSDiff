@@ -8,7 +8,7 @@ def get_config():
 
   #logging
   config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/mri_to_pet'
-  config.experiment_name = 'vp_da'
+  config.experiment_name = 'vp_da_smld'
 
   # training
   config.training = training = ml_collections.ConfigDict()
@@ -30,7 +30,7 @@ def get_config():
   training.snapshot_freq_for_preemption = 5000
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
-  training.likelihood_weighting = True
+  training.likelihood_weighting = False
   training.continuous = True
   training.reduce_mean = True 
   training.sde = 'vpsde'
@@ -43,7 +43,7 @@ def get_config():
   sampling.n_steps_each = 1
   sampling.noise_removal = True
   sampling.probability_flow = False
-  sampling.snr = 0.16 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
+  sampling.snr = 0.15 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
