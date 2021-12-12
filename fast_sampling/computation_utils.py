@@ -72,7 +72,7 @@ def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device)
     check_point = 500
     x_2=[]
     norm_grad_log_density=[]
-    for idx, batch in tqdm(enumerate(dataloader)):
+    for idx, batch in enumerate(dataloader):
         if num_datapoints >= check_point:
             continuation = evaluate_continuation(x_2, norm_grad_log_density, num_datapoints)
             if continuation == False:
