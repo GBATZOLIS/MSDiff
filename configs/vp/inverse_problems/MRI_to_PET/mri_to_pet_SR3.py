@@ -8,7 +8,7 @@ def get_config():
 
   #logging
   config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/mri_to_pet'
-  config.experiment_name = 'vp_da_smld'
+  config.experiment_name = 'vp_da_smld_improved'
 
   # training
   config.training = training = ml_collections.ConfigDict()
@@ -43,7 +43,7 @@ def get_config():
   sampling.n_steps_each = 1
   sampling.noise_removal = True
   sampling.probability_flow = False
-  sampling.snr = 0.15 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
+  sampling.snr = 0.075 
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
@@ -96,13 +96,13 @@ def get_config():
   # We use an adjusted beta max 
   # because the range is doubled in each level starting from the first level
   model.beta_max = 20.
-  model.dropout = 0.1
+  model.dropout = 0.
   model.embedding_type = 'fourier'
 
 
   model.name = 'ddpm3D_paired_SR3'
   model.scale_by_sigma = True
-  model.ema_rate = 0.999
+  model.ema_rate = 0.9999
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 64
@@ -120,14 +120,11 @@ def get_config():
 
   optim.weight_decay = 0
   optim.optimizer = 'Adam'
-  optim.lr = 2e-4
+  optim.lr = 2e-5
   optim.beta1 = 0.9
   optim.eps = 1e-8
-  optim.warmup = 0 #set it to 0 if you do not want to use warm up.
+  optim.warmup = 5000 #set it to 0 if you do not want to use warm up.
   optim.grad_clip = 1 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.
-
   config.seed = 42
-  #config.device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
-
 
   return config
