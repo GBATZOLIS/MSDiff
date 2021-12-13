@@ -9,6 +9,8 @@ from . import utils
 import torch.optim as optim
 import os
 import torch
+from fast_sampling.computation_utils import get_adaptive_discretisation_fn
+import pickle 
 
 @utils.register_lightning_module(name='base')
 class BaseSdeGenerativeModel(pl.LightningModule):
@@ -64,12 +66,49 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         self.log('eval_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
     
-    def sample(self, show_evolution=False, num_samples=None, predictor='default', corrector='default', p_steps='default', c_steps='default', snr='default', denoise='default'):
+    def sample(self, show_evolution=False, num_samples=None, predictor='default', 
+                    corrector='default', p_steps='default', c_steps='default', 
+                    snr='default', denoise='default', adaptive='default'):
+        
         if num_samples is None:
             num_samples = self.config.eval.batch_size
+        
+        #Code for managing adaptive sampling
+        if adaptive == 'default':
+            adaptive = self.backwardconfig.sampling.adaptive
+            assert adaptive in [True, False], 'adaptive flag should be either True or False'
+
+        if adaptive:
+            try:
+                assert self.config.sampling.KL_profile is not None, 'Adaptive sampling cannot be used as the KL profile has not been provided. Adaptive is set to False.'
+            except AssertionError:
+                adaptive = False #set adaptive to False since we cannot use it given that we are not provided with the KL profile
+            
+            if adaptive:
+                try:
+                    adaptive_discretisation_fn = self.adaptive_dicrete_fn
+                except AttributeError:
+                    #load the KL profile
+                    with open(self.config.sampling.KL_profile, 'rb') as f:
+                        info = pickle.load(f)
+                    
+                    adaptive_discretisation_fn = get_adaptive_discretisation_fn(info['t'], info['KL'])
+
+
 
         sampling_shape = [num_samples] + self.config.data.shape
-        sampling_fn = get_sampling_fn(self.config, self.sde, sampling_shape, self.sampling_eps)
+        sampling_fn = get_sampling_fn(config=self.config, 
+                                      sde=self.sde, 
+                                      shape=sampling_shape, 
+                                      eps=self.sampling_eps,
+                                      predictor=predictor, 
+                                      corrector=corrector, 
+                                      p_steps=p_steps, 
+                                      c_steps=c_steps, 
+                                      snr=snr, 
+                                      denoise=denoise, 
+                                      adaptive_disc_fn=adaptive_discretisation_fn)
+
         return sampling_fn(self.score_model, show_evolution=show_evolution)
 
     def configure_optimizers(self):

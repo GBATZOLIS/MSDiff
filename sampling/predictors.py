@@ -2,6 +2,7 @@ import abc
 import torch
 import sde_lib
 import numpy as np
+from fast_sampling.computation_utils import get_inverse_step_fn
 
 _PREDICTORS = {}
 
@@ -30,12 +31,15 @@ def get_predictor(name):
 class Predictor(abc.ABC):
   """The abstract class for a predictor algorithm."""
 
-  def __init__(self, sde, score_fn, probability_flow=False):
+  def __init__(self, sde, score_fn, probability_flow=False, discretisation=None):
     super().__init__()
     self.sde = sde
     # Compute the reverse SDE/ODE
     self.rsde = sde.reverse(score_fn, probability_flow)
     self.score_fn = score_fn
+
+    if discretisation is not None:
+      self.inverse_step_fn = get_inverse_step_fn(discretisation)
 
   @abc.abstractmethod
   def update_fn(self, x, t):
@@ -55,7 +59,7 @@ class EulerMaruyamaPredictor(Predictor):
     super().__init__(sde, score_fn, probability_flow)
 
   def update_fn(self, x, t):
-    dt = -1. / self.rsde.N
+    dt = self.inverse_step_fn(t) #-1. / self.rsde.N
     z = torch.randn_like(x)
     drift, diffusion = self.rsde.sde(x, t)
     x_mean = x + drift * dt

@@ -11,8 +11,10 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 
+""" FUNCTIONS USED FOR EVALUATING THE KL DIVERGENCE """
+
 def normalise_to_density(t, x):
-    a, b ,M = t.min(), t.max(), len(x)
+    a, b, M = t.min(), t.max(), len(x)
     integral = (b-a)/M*np.sum(x)
     return x/integral
 
@@ -216,6 +218,125 @@ def calculate_mean(dataloader):
     
     mean /= total_num_images
     return mean
+
+""" FUNCTIONS USED FOR EVALUATING THE ADAPTIVE SAMPLING SCHEME FROM THE KL DIVERGENCE """
+
+def find_inter_tstamps(t1, t0, timestamps):
+    intermediate_tstamps = []
+    idx_intermediate_tstamps = []
+    for i, tstamp in enumerate(timestamps):
+        if tstamp>=t0 and tstamp<=t1:
+            intermediate_tstamps.append(tstamp)
+            idx_intermediate_tstamps.append(i)
+
+    return intermediate_tstamps, idx_intermediate_tstamps
+
+def find_closest_cdf_values(x, cdf):
+    #assert cdf.min()<x and cdf.max()>x, 'x is not in correct range (%.7f,%.7f): x=%.7f' % (cdf[0],cdf[-1],x)
+    if x < cdf.min():
+        return cdf[0], cdf[0]
+    else:
+        stop = False
+        len_cdf = len(cdf)
+        for i in range(len_cdf):
+            if not stop:
+                if cdf[len_cdf - i - 1] < x:
+                    #print(cdf[len_cdf - i - 1])
+                    next_val = cdf[len_cdf-i]
+                    prev_val = cdf[len_cdf-i-1]
+                    stop=True
+            else:
+                break
+
+        return prev_val, next_val
+
+def map_cdf_to_time(timestamps, cdf):
+    cdf_to_time = {}
+    for i, t in enumerate(timestamps):
+        cdf_to_time[cdf[i]]=timestamps[i]
+    return cdf_to_time
+
+def get_inverse_cdf_fn(timestamps, cdf):
+    cdf_to_time = map_cdf_to_time(timestamps, cdf)
+    def inverse_cdf_fn(x):
+        if x in cdf:
+            return cdf_to_time[x]
+        else:
+            prev_val, next_val = find_closest_cdf_values(x, cdf)
+            if prev_val == next_val and prev_val == cdf[0]:
+                return cdf_to_time[prev_val]
+            else:
+                prev_distance, next_distance = np.abs(x-prev_val), np.abs(x-next_val)
+                total_dist = prev_distance + next_distance
+                prev_frac_dist, next_frac_dist = prev_distance/total_dist, next_distance/total_dist
+
+                t0, t1 = cdf_to_time[prev_val], cdf_to_time[next_val]
+                return t0+prev_frac_dist*(t1-t0)
+    
+    return inverse_cdf_fn
+
+def get_cdf_fn(timestamps, density):
+    eps, T = timestamps[0], timestamps[-1]
+    def cdf_fn(t):
+        assert t >= eps and t <= T, 't is not in the range (eps,T)'
+        inter_tstamps, idx_inter_tstamps = find_inter_tstamps(t, eps, timestamps)
+        inter_densities = [density[x] for x in idx_inter_tstamps]
+        M = len(inter_densities)
+        if M==0:
+            return 0.
+        else:
+            return (t-eps)/M*np.sum(inter_densities)
+    return cdf_fn
+
+def get_adaptive_step_calculator_from_density(timestamps, density):
+    eps, T = timestamps[0], timestamps[-1]
+    S = (T-eps) / len(density) * np.sum(density) #integral S
+    print('S: %.4f' % S)
+    
+    cdf_fn = get_cdf_fn(timestamps, density)
+    cdf = np.array([cdf_fn(x) for x in timestamps])
+    #print(cdf[0], cdf[-1])
+    inverse_cdf_fn = get_inverse_cdf_fn(timestamps, cdf)
+
+    def calculate_adaptive_steps(N):
+        intervals = N-1
+        stepsize = cdf[-1]/intervals
+        print('stepsize: %.4f' % stepsize)
+        adapt_steps=[T]
+        cumult = 1
+        for i in tqdm(range(intervals)):
+            cumult -= stepsize
+            #print(cumult)
+            t_cumult = inverse_cdf_fn(cumult)
+            adapt_steps.append(t_cumult)
+
+        return adapt_steps
+        
+    return calculate_adaptive_steps
+
+def get_adaptive_discretisation_fn(timestamps, KL):
+    #input: KL divergence at timestamps (usually calculated from 0 to 1 for 1000 equally spaced points)
+    #outputs: adaptive discretisation function (receives as input the number of discretisation points and outputs their time locations)
+    grad_KL = np.gradient(KL)
+    abs_grad_KL = np.abs(grad_KL)
+    normalised_abs_grad_KL = normalise_to_density(timestamps, abs_grad_KL)
+    return get_adaptive_step_calculator_from_density(timestamps, KL)
+
+def get_inverse_step_fn(discretisation):
+    #discretisation sequence is ordered from biggest time to smallest time
+    map_t_to_negative_dt = {}
+    steps = len(discretisation)
+    for i in range(steps):
+        if i <= steps-2:
+            map_t_to_negative_dt[discretisation[i]] = discretisation[i+1] - discretisation[i]
+        elif i==steps-1:
+            map_t_to_negative_dt[discretisation[i]] = map_t_to_negative_dt[discretisation[i-1]]
+
+    def inverse_step_fn(t):
+        return map_t_to_negative_dt[t]
+    
+    return inverse_step_fn
+
 
 def fast_sampling_scheme(config, save_dir):
     device = 'cuda'

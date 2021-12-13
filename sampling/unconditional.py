@@ -9,10 +9,16 @@ from models.utils import from_flattened_numpy, to_flattened_numpy, get_score_fn
 from scipy import integrate
 import sde_lib
 from models import utils as mutils
+import pickle 
 
 def get_sampling_fn(config, sde, shape, eps,
-                    predictor='default', corrector='default', p_steps='default', 
-                    c_steps='default', snr='default', denoise='default'):
+                    predictor='default', 
+                    corrector='default', 
+                    p_steps='default', 
+                    c_steps='default', 
+                    snr='default', 
+                    denoise='default', 
+                    adaptive_disc_fn=None):
 
   """Create a sampling function.
   Args:
@@ -68,7 +74,8 @@ def get_sampling_fn(config, sde, shape, eps,
                                  probability_flow=config.sampling.probability_flow,
                                  continuous=config.training.continuous,
                                  denoise=denoise,
-                                 eps=eps)
+                                 eps=eps,
+                                 adaptive_disc_fn=adaptive_disc_fn)
   else:
     raise ValueError(f"Sampler name {sampler_name} unknown.")
 
@@ -160,7 +167,7 @@ def get_ode_sampler(sde, shape,
 
 def get_pc_sampler(sde, shape, predictor, corrector, snr, 
                    p_steps, c_steps, probability_flow=False, continuous=False,
-                   denoise=True, eps=1e-3):
+                   denoise=True, eps=1e-3, adaptive_disc_fn=None):
 
   """Create a Predictor-Corrector (PC) sampler.
   Args:
@@ -178,12 +185,14 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
   Returns:
     A sampling function that returns samples and the number of function evaluations during sampling.
   """
+
   # Create predictor & corrector update functions
   predictor_update_fn = functools.partial(shared_predictor_update_fn,
                                           sde=sde,
                                           predictor=predictor,
                                           probability_flow=probability_flow,
                                           continuous=continuous)
+  
   corrector_update_fn = functools.partial(shared_corrector_update_fn,
                                           sde=sde,
                                           corrector=corrector,
@@ -204,13 +213,17 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
     with torch.no_grad():
       # Initial sample
       x = sde.prior_sampling(shape).to(model.device).type(torch.float32)
-      timesteps = torch.linspace(sde.T, eps, p_steps, device=model.device)
+
+      if adaptive_disc_fn is None:
+        timesteps = torch.linspace(sde.T, eps, p_steps, device=model.device)
+      else:
+        timesteps = torch.tensor(adaptive_disc_fn(p_steps), device=model.device)
 
       for i in tqdm(range(p_steps)):
         t = timesteps[i]
         vec_t = torch.ones(shape[0], device=t.device) * t
-        x, x_mean = corrector_update_fn(x, vec_t, model=model)
-        x, x_mean = predictor_update_fn(x, vec_t, model=model)
+        x, x_mean = corrector_update_fn(x=x, t=vec_t, model=model)
+        x, x_mean = predictor_update_fn(x=x, t=vec_t, model=model, discretisation=timesteps)
         
         if show_evolution:
           evolution.append(x.cpu())
@@ -344,7 +357,7 @@ def get_pc_inpainter(sde, predictor, corrector, snr,
 
   return pc_inpainter
 
-def shared_predictor_update_fn(x, t, sde, model, predictor, probability_flow, continuous):
+def shared_predictor_update_fn(x, t, sde, model, predictor, probability_flow, continuous, discretisation):
   """A wrapper that configures and returns the update function of predictors."""
   score_fn = mutils.get_score_fn(sde, model, conditional=False, train=False, continuous=continuous)
 
@@ -352,7 +365,7 @@ def shared_predictor_update_fn(x, t, sde, model, predictor, probability_flow, co
     # Corrector-only sampler
     predictor_obj = NonePredictor(sde, score_fn, probability_flow)
   else:
-    predictor_obj = predictor(sde, score_fn, probability_flow)
+    predictor_obj = predictor(sde, score_fn, probability_flow, discretisation)
   return predictor_obj.update_fn(x, t)
 
 def shared_corrector_update_fn(x, t, sde, model, corrector, continuous, snr, n_steps):
