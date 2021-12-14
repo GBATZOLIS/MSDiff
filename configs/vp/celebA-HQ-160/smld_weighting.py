@@ -42,7 +42,7 @@ def get_config():
   sampling.snr = 0.075 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
   sampling.adaptive = True
   #provide the directory where the information needed for calculating the adaptive steps is saved.
-  sampling.KL_profile = '/home/gb511/score_sde_pytorch-1/fast_sampling_experiments/vp_celebA_smld_weighting/KL/T=1.000-Target_Distribution=T/info.pkl' 
+  sampling.kl_profile = '/home/gb511/score_sde_pytorch-1/fast_sampling_experiments/vp_celebA_smld_weighting/KL/T=1.000-Target_Distribution=T/info.pkl' 
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()

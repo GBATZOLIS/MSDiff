@@ -83,8 +83,8 @@ class BaseSdeGenerativeModel(pl.LightningModule):
 
         if adaptive:
             try:
-                assert hasattr(self.config.sampling, 'KL_profile'), 'config.sampling.KL_profile must be provided if adaptive is set to True.'
-                if self.config.sampling.KL_profile == None:
+                assert hasattr(self.config.sampling, 'kl_profile'), 'config.sampling.kl_profile must be provided if adaptive is set to True.'
+                if self.config.sampling.kl_profile == None:
                     adaptive = False
             except AssertionError:
                 adaptive = False #set adaptive to False since we cannot use it given that we are not provided with the KL profile
@@ -94,7 +94,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                     adaptive_discretisation_fn = self.adaptive_dicrete_fn
                 except AttributeError:
                     #load the KL profile
-                    with open(self.config.sampling.KL_profile, 'rb') as f:
+                    with open(self.config.sampling.kl_profile, 'rb') as f:
                         info = pickle.load(f)
                     
                     adaptive_discretisation_fn = get_adaptive_discretisation_fn(info['t'], info['KL'])

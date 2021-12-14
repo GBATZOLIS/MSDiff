@@ -55,8 +55,8 @@ class Predictor(abc.ABC):
 
 @register_predictor(name='euler_maruyama')
 class EulerMaruyamaPredictor(Predictor):
-  def __init__(self, sde, score_fn, probability_flow=False):
-    super().__init__(sde, score_fn, probability_flow)
+  def __init__(self, sde, score_fn, probability_flow=False, discretisation=None):
+    super().__init__(sde, score_fn, probability_flow, discretisation)
 
   def update_fn(self, x, t):
     dt = self.inverse_step_fn(t) #-1. / self.rsde.N
