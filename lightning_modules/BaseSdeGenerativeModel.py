@@ -83,10 +83,12 @@ class BaseSdeGenerativeModel(pl.LightningModule):
 
         if adaptive:
             try:
-                assert self.config.sampling.KL_profile is not None, 'Adaptive sampling cannot be used as the KL profile has not been provided. Adaptive is set to False.'
+                assert hasattr(self.config.sampling.KL_profile), 'config.sampling.KL_profile must be provided if adaptive is set to True.'
+                if self.config.sampling.KL_profile == None:
+                    adaptive = False
             except AssertionError:
                 adaptive = False #set adaptive to False since we cannot use it given that we are not provided with the KL profile
-            
+
             if adaptive:
                 try:
                     adaptive_discretisation_fn = self.adaptive_dicrete_fn
