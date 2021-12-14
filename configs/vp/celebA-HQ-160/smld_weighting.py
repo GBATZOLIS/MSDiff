@@ -48,7 +48,7 @@ def get_config():
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
   evaluate.batch_size = 50
-
+  evaluate.callback = 'base'
   evaluate.predictor = 'euler_maruyama'
   evaluate.corrector = 'none'
   evaluate.p_steps = np.arange(200, 1200, step=200)
