@@ -83,7 +83,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
 
         if adaptive:
             try:
-                assert hasattr(self.config.sampling.KL_profile), 'config.sampling.KL_profile must be provided if adaptive is set to True.'
+                assert hasattr(self.config.sampling, 'KL_profile'), 'config.sampling.KL_profile must be provided if adaptive is set to True.'
                 if self.config.sampling.KL_profile == None:
                     adaptive = False
             except AssertionError:
