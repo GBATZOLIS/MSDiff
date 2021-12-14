@@ -39,7 +39,7 @@ class Predictor(abc.ABC):
     self.score_fn = score_fn
 
     if discretisation is not None:
-      self.inverse_step_fn = get_inverse_step_fn(discretisation)
+      self.inverse_step_fn = get_inverse_step_fn(discretisation.cpu().numpy())
 
   @abc.abstractmethod
   def update_fn(self, x, t):
@@ -59,7 +59,7 @@ class EulerMaruyamaPredictor(Predictor):
     super().__init__(sde, score_fn, probability_flow, discretisation)
 
   def update_fn(self, x, t):
-    dt = self.inverse_step_fn(t) #-1. / self.rsde.N
+    dt = torch.tensor(self.inverse_step_fn(t[0].cpu().item())).type_as(t) #-1. / self.rsde.N
     z = torch.randn_like(x)
     drift, diffusion = self.rsde.sde(x, t)
     x_mean = x + drift * dt
