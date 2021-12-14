@@ -40,9 +40,9 @@ def create_video_grid(evolution):
 
 @utils.register_callback(name='paired')
 class PairedVisualizationCallback(Callback):
-    def __init__(self, show_evolution=False):
+    def __init__(self, config):
         super().__init__()
-        self.show_evolution = show_evolution
+        self.show_evolution = config.training.show_evolution
 
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
@@ -93,23 +93,23 @@ class PairedVisualizationCallback(Callback):
 
 @utils.register_callback(name='test_paired')
 class TestPairedVisualizationCallback(PairedVisualizationCallback):
-    def __init__(self, show_evolution, eval_config, data_config, approach):
-        super().__init__(show_evolution)
+    def __init__(self, config):
+        super().__init__(config)
         #settings related to the conditional sampling function.
-        self.predictor = eval_config.predictor
-        self.corrector = eval_config.corrector
-        self.p_steps = eval_config.p_steps
-        self.c_steps = eval_config.c_steps
-        self.denoise = eval_config.denoise
-        self.use_path = eval_config.use_path
+        self.predictor = config.eval.predictor
+        self.corrector = config.eval.corrector
+        self.p_steps = config.eval.p_steps
+        self.c_steps = config.eval.c_steps
+        self.denoise = config.eval.denoise
+        self.use_path = config.eval.use_path
         
         #settings for determining the sampling process and saving the samples
-        self.save_samples = eval_config.save_samples
+        self.save_samples = config.eval.save_samples
         if self.save_samples:
-            self.base_dir = eval_config.base_log_dir
-            self.dataset = data_config.dataset
-            self.task = data_config.task
-            self.approach = approach
+            self.base_dir = config.eval.base_log_dir
+            self.dataset = config.data.dataset
+            self.task = config.data.task
+            self.approach = config.training.conditioning_approach
 
             self.samples_dir = os.path.join(self.base_dir, self.task, self.dataset, self.approach, 'images', 'samples')
             self.gt_x_dir = os.path.join(self.base_dir, self.task, self.dataset, self.approach, 'images', 'x_gt')
@@ -119,13 +119,13 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
             Path(self.gt_x_dir).mkdir(parents=True, exist_ok=True)
             Path(self.gt_y_dir).mkdir(parents=True, exist_ok=True)
         
-        self.draws = eval_config.draws
-        self.evaluation_metrics = eval_config.evaluation_metrics
+        self.draws = config.eval.draws
+        self.evaluation_metrics = config.eval.evaluation_metrics
         
-        if not isinstance(eval_config.snr, list):
-            self.snr = [eval_config.snr]
+        if not isinstance(config.eval.snr, list):
+            self.snr = [config.eval.snr]
         else:
-            self.snr = eval_config.snr #list of snr values to be tested.
+            self.snr = config.eval.snr #list of snr values to be tested.
 
         self.results = {}
         for e_snr in self.snr:
@@ -145,9 +145,9 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
                 self.results[e_snr][eval_metric]=[]
 
         #auxiliary counters and limits
-        self.images_tested = eval_config.batch_size * eval_config.first_test_batch
-        self.first_test_batch = eval_config.first_test_batch
-        self.last_test_batch = eval_config.last_test_batch
+        self.images_tested = config.eval.batch_size * config.eval.first_test_batch
+        self.first_test_batch = config.eval.first_test_batch
+        self.last_test_batch = config.eval.last_test_batch
         
         #file to save the results in the form of a dictionary that can be used to combine results later on.
         self.save_results_file = os.path.join(self.base_dir, self.task, self.dataset, self.approach, 'test_metrics', '%s_%s.pkl' % (self.first_test_batch, self.last_test_batch))
@@ -259,10 +259,10 @@ class TestPairedVisualizationCallback(PairedVisualizationCallback):
             pl_module.logger.experiment.add_figure(eval_metric, fig)
 
 @utils.register_callback(name='paired3D')
-class PairedVisualizationCallback(Callback):
-    def __init__(self, show_evolution=False):
+class Paired3DVisualizationCallback(Callback):
+    def __init__(self, config):
         super().__init__()
-        self.show_evolution = show_evolution
+        self.show_evolution = config.training.show_evolution
 
     def convert_to_3D(self, x):
         if len(x.shape[1:]) == 3:

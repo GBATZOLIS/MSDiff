@@ -48,11 +48,20 @@ def get_config():
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
   evaluate.batch_size = 50
-  evaluate.enable_sampling = True
+
+  evaluate.predictor = 'euler_maruyama'
+  evaluate.corrector = 'none'
+  evaluate.p_steps = np.arange(200, 1200, step=200)
+  evaluate.c_steps = 1
+  evaluate.denoise = True
+  evaluate.adaptive = True
   evaluate.num_samples = 50000
-  evaluate.enable_loss = True
-  evaluate.enable_bpd = False
-  evaluate.bpd_dataset = 'test'
+
+  #evaluate.enable_sampling = True
+  #evaluate.enable_loss = True
+  #evaluate.enable_bpd = False
+  #evaluate.bpd_dataset = 'test'
+  
 
   # data
   config.data = data = ml_collections.ConfigDict()

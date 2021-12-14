@@ -66,6 +66,9 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         self.log('eval_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
     
+    def test_step(self, batch, batch_idx):
+        return 
+    
     def sample(self, show_evolution=False, num_samples=None, predictor='default', 
                     corrector='default', p_steps='default', c_steps='default', 
                     snr='default', denoise='default', adaptive='default'):

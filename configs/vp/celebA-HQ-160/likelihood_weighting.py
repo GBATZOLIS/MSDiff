@@ -50,6 +50,7 @@ def get_config():
   evaluate.enable_loss = True
   evaluate.enable_bpd = False
   evaluate.bpd_dataset = 'test'
+  evaluate.adaptive = True
 
   # data
   config.data = data = ml_collections.ConfigDict()

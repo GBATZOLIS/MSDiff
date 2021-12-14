@@ -1,10 +1,12 @@
 import torch
 from pytorch_lightning.callbacks import Callback
 from utils import scatter, plot, compute_grad, create_video
+from torchvision.utils import make_grid, save_image
 from models.ema import ExponentialMovingAverage
 import torchvision
 from . import utils
 import numpy as np
+import os
 
 @utils.register_callback(name='configuration')
 class ConfigurationSetterCallback(Callback):
@@ -134,9 +136,48 @@ class EMACallback(Callback):
 
 @utils.register_callback(name='base')
 class ImageVisualizationCallback(Callback):
-    def __init__(self, show_evolution=False):
+    def __init__(self, config):
         super().__init__()
-        self.show_evolution = show_evolution
+        self.show_evolution = config.training.show_evolution
+
+        #evaluation settings
+        self.num_samples = config.eval.num_samples
+        self.predictor = config.eval.predictor
+        self.corrector = config.eval.corrector
+        self.p_steps = config.eval.p_steps
+        self.c_steps = config.eval.c_steps
+        self.denoise = config.eval.denoise
+        self.adaptive = config.eval.adaptive
+        self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
+    
+    def generate_synthetic_dataset(self, pl_module, p_steps):
+        adaptive_name = 'KL-adaptive' if self.adaptive else 'uniform'
+        p_step_dir = os.path.join(self.save_samples_dir, adaptive_name, '%d' % p_steps)
+
+        num_generated_samples=0
+        while num_generated_samples < self.num_samples:
+            samples, _ = pl_module.sample(predictor=self.predictor,
+                                          corrector=self.corrector,
+                                          p_steps=p_steps,
+                                          c_steps=self.c_steps,
+                                          denoise=self.denoise,
+                                          adaptive=self.adaptive)
+            samples = torch.clamp(samples, min=0, max=1)
+
+            batch_size = samples.size(0)
+            if num_generated_samples+batch_size <= self.num_samples:
+                for i in range(samples.size(0)):
+                    fp = os.path.join(p_step_dir, '%d.png' % (num_generated_samples+i+1))
+                    save_image(samples[i, :, :, :], fp)
+            elif num_generated_samples+batch_size > self.num_samples:
+                for i in range(self.num_samples - num_generated_samples): #add what is missing to fill the basket.
+                    fp = os.path.join(p_step_dir, '%d.png' % (num_generated_samples+i+1))
+                    save_image(samples[i, :, :, :], fp)
+            
+    def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
+        if batch_idx == 0:
+            for p_steps in self.p_steps:
+                self.generate_synthetic_dataset(pl_module, p_steps)
 
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
@@ -158,8 +199,8 @@ class ImageVisualizationCallback(Callback):
     
     def visualise_evolution(self, evolution, pl_module):
         #to be implemented - has already been implemented for the conditional case
-        return
-
+        return NotImplementedError('Visualisation of evolution not supported yet for unconditional sampling.')
+    
 
 
 @utils.register_callback(name='GradientVisualization')
@@ -188,9 +229,9 @@ class GradientVisualizer(Callback):
 
 @utils.register_callback(name='2DVisualization')
 class TwoDimVizualizer(Callback):
-    def __init__(self, show_evolution=False):
+    def __init__(self, config):
         super().__init__()
-        self.evolution = show_evolution
+        self.evolution = config.training.show_evolution
 
     def on_train_start(self, trainer, pl_module):
         # pl_module.logxger.log_hyperparams(params=pl_module.config.to_dict())

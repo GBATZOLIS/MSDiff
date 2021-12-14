@@ -68,10 +68,6 @@ class ConditionalSdeGenerativeModel(BaseSdeGenerativeModel.BaseSdeGenerativeMode
     
     def test_step(self, batch, batch_idx):
         print('Test batch %d' % batch_idx)
-        #y, x = batch
-        #print('y.size(): ', y.size())
-        #print(y[0:10,:,30,30])
-        #samples, _ = self.sample(y) 
         
         
     def sample(self, y, show_evolution=False, predictor='default', corrector='default', p_steps='default', c_steps='default', snr='default', denoise='default', use_path='default'):
