@@ -103,7 +103,10 @@ class BaseSdeGenerativeModel(pl.LightningModule):
 
             else:
                 print('uniform-discretisation is used.')
-                adaptive_discretisation_fn=None 
+                adaptive_discretisation_fn=None
+        else:
+            print('uniform-discretisation is used.')
+            adaptive_discretisation_fn=None 
 
         sampling_shape = [num_samples] + self.config.data.shape
         sampling_fn = get_sampling_fn(config=self.config, 
