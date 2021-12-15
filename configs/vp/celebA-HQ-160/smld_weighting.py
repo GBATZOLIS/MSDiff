@@ -55,7 +55,7 @@ def get_config():
   evaluate.c_steps = 1
   evaluate.denoise = True
   evaluate.adaptive = True
-  evaluate.num_samples = 50000
+  evaluate.num_samples = 50 #50000
 
   #evaluate.enable_sampling = True
   #evaluate.enable_loss = True
