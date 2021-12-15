@@ -54,8 +54,8 @@ def get_config():
   evaluate.p_steps = np.arange(100, 1100, step=100)
   evaluate.c_steps = 1
   evaluate.denoise = True
-  evaluate.adaptive = True
-  evaluate.num_samples = 50000
+  evaluate.adaptive = [True, False]
+  evaluate.num_samples = 10000
 
   #evaluate.enable_sampling = True
   #evaluate.enable_loss = True

@@ -158,8 +158,8 @@ class ImageVisualizationCallback(Callback):
     def on_test_start(self, trainer, pl_module):
         self.update_config(pl_module)
 
-    def generate_synthetic_dataset(self, pl_module, p_steps):
-        adaptive_name = 'KL-adaptive' if self.adaptive else 'uniform'
+    def generate_synthetic_dataset(self, pl_module, p_steps, adaptive):
+        adaptive_name = 'KL-adaptive' if adaptive else 'uniform'
         p_step_dir = os.path.join(self.save_samples_dir, 'p(%s)-c(%s)' % (pl_module.config.eval.predictor, pl_module.config.eval.corrector), adaptive_name, '%d' % p_steps)
         Path(p_step_dir).mkdir(parents=True, exist_ok=True)
 
@@ -170,7 +170,7 @@ class ImageVisualizationCallback(Callback):
                                           p_steps=p_steps,
                                           c_steps=self.c_steps,
                                           denoise=self.denoise,
-                                          adaptive=self.adaptive)
+                                          adaptive=adaptive)
             samples = torch.clamp(samples, min=0, max=1)
 
             batch_size = samples.size(0)
@@ -188,8 +188,9 @@ class ImageVisualizationCallback(Callback):
             
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         if batch_idx == 0:
-            for p_steps in self.p_steps:
-                self.generate_synthetic_dataset(pl_module, p_steps)
+            for adaptive in self.adaptive:
+                for p_steps in self.p_steps:
+                    self.generate_synthetic_dataset(pl_module, p_steps, adaptive)
 
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
