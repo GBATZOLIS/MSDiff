@@ -7,6 +7,7 @@ import torchvision
 from . import utils
 import numpy as np
 import os
+from pathlib import Path
 
 @utils.register_callback(name='configuration')
 class ConfigurationSetterCallback(Callback):
@@ -138,6 +139,7 @@ class EMACallback(Callback):
 class ImageVisualizationCallback(Callback):
     def __init__(self, config):
         super().__init__()
+        self.config = config
         self.show_evolution = config.training.show_evolution
 
         #evaluation settings
@@ -150,9 +152,16 @@ class ImageVisualizationCallback(Callback):
         self.adaptive = config.eval.adaptive
         self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
     
+    def update_config(self, pl_module):
+        pl_module.config = self.config
+
+    def on_test_start(self, trainer, pl_module):
+        self.update_config(pl_module)
+
     def generate_synthetic_dataset(self, pl_module, p_steps):
         adaptive_name = 'KL-adaptive' if self.adaptive else 'uniform'
         p_step_dir = os.path.join(self.save_samples_dir, adaptive_name, '%d' % p_steps)
+        Path(p_step_dir).mkdir(parents=True, exist_ok=True)
 
         num_generated_samples=0
         while num_generated_samples < self.num_samples:

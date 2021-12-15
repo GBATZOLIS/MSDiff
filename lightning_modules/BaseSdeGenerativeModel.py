@@ -90,6 +90,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                 adaptive = False #set adaptive to False since we cannot use it given that we are not provided with the KL profile
 
             if adaptive:
+                print('KL adaptive discretisation is used.')
                 try:
                     adaptive_discretisation_fn = self.adaptive_dicrete_fn
                 except AttributeError:
@@ -100,7 +101,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                     adaptive_discretisation_fn = get_adaptive_discretisation_fn(info['t'], info['KL'])
 
             else:
-                print('uniform-discretisation is used')
+                print('uniform-discretisation is used.')
                 adaptive_discretisation_fn=None 
 
         sampling_shape = [num_samples] + self.config.data.shape
