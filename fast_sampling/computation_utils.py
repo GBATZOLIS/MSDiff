@@ -337,8 +337,8 @@ def get_inverse_step_fn(discretisation):
             return map_t_to_negative_dt[t]
         else:
             closest_t_key = discretisation[np.argmin(np.abs(discretisation-t))]
-            #print('closest_t_key: ', closest_t_key)
-            #print('t: ', t)
+            print('closest_t_key: ', closest_t_key)
+            print('t: ', t)
             return map_t_to_negative_dt[closest_t_key]
     
     return inverse_step_fn

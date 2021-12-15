@@ -51,11 +51,11 @@ def get_config():
   evaluate.callback = 'base'
   evaluate.predictor = 'euler_maruyama'
   evaluate.corrector = 'none'
-  evaluate.p_steps = np.arange(200, 1200, step=200)
+  evaluate.p_steps = [100] #np.arange(200, 1200, step=200)
   evaluate.c_steps = 1
   evaluate.denoise = True
   evaluate.adaptive = True
-  evaluate.num_samples = 60 #50000
+  evaluate.num_samples = 40 #50000
 
   #evaluate.enable_sampling = True
   #evaluate.enable_loss = True
