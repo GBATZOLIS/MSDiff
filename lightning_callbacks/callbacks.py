@@ -183,6 +183,9 @@ class ImageVisualizationCallback(Callback):
                     fp = os.path.join(p_step_dir, '%d.png' % (num_generated_samples+i+1))
                     save_image(samples[i, :, :, :], fp)
             
+            num_generated_samples+=batch_size
+            
+            
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         if batch_idx == 0:
             for p_steps in self.p_steps:
