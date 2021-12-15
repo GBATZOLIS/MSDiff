@@ -320,7 +320,7 @@ def get_adaptive_discretisation_fn(timestamps, KL):
     grad_KL = np.gradient(KL)
     abs_grad_KL = np.abs(grad_KL)
     normalised_abs_grad_KL = normalise_to_density(timestamps, abs_grad_KL)
-    return get_adaptive_step_calculator_from_density(timestamps, KL)
+    return get_adaptive_step_calculator_from_density(timestamps, normalised_abs_grad_KL)
 
 def get_inverse_step_fn(discretisation):
     #discretisation sequence is ordered from biggest time to smallest time

@@ -78,7 +78,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         
         #Code for managing adaptive sampling
         if adaptive == 'default':
-            adaptive = self.backwardconfig.sampling.adaptive
+            adaptive = self.config.sampling.adaptive
             assert adaptive in [True, False], 'adaptive flag should be either True or False'
 
         if adaptive:
@@ -99,6 +99,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                         info = pickle.load(f)
                     
                     adaptive_discretisation_fn = get_adaptive_discretisation_fn(info['t'], info['KL'])
+                    self.adaptive_dicrete_fn = adaptive_discretisation_fn
 
             else:
                 print('uniform-discretisation is used.')
