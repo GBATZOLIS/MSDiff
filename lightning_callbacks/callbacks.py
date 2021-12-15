@@ -160,7 +160,7 @@ class ImageVisualizationCallback(Callback):
 
     def generate_synthetic_dataset(self, pl_module, p_steps):
         adaptive_name = 'KL-adaptive' if self.adaptive else 'uniform'
-        p_step_dir = os.path.join(self.save_samples_dir, adaptive_name, '%d' % p_steps)
+        p_step_dir = os.path.join(self.save_samples_dir, 'p(%s)-c(%s)' % (pl_module.config.eval.predictor, pl_module.config.eval.corrector), adaptive_name, '%d' % p_steps)
         Path(p_step_dir).mkdir(parents=True, exist_ok=True)
 
         num_generated_samples=0

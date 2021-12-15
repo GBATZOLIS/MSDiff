@@ -7,7 +7,7 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path = '/home/gb511/score_sde_pytorch-1/fast_sampling_experiments/'  #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp' 
+  config.base_log_path =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp' #'/home/gb511/score_sde_pytorch-1/fast_sampling_experiments/'
   config.experiment_name = 'vp_celebA_smld_weighting'
 
   # training
@@ -42,12 +42,12 @@ def get_config():
   sampling.snr = 0.075 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
   sampling.adaptive = True
   #provide the directory where the information needed for calculating the adaptive steps is saved.
-  sampling.kl_profile = '/home/gb511/score_sde_pytorch-1/fast_sampling_experiments/vp_celebA_smld_weighting/KL/T=1.000-Target_Distribution=T/info.pkl' 
+  sampling.kl_profile = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/KL/T=1.000-Target_Distribution=T/info.pkl' #'/home/gb511/score_sde_pytorch-1/fast_sampling_experiments/vp_celebA_smld_weighting/KL/T=1.000-Target_Distribution=T/info.pkl' 
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
-  evaluate.batch_size = 50
+  evaluate.batch_size = 128
   evaluate.callback = 'base'
   evaluate.predictor = 'euler_maruyama'
   evaluate.corrector = 'none'
@@ -55,7 +55,7 @@ def get_config():
   evaluate.c_steps = 1
   evaluate.denoise = True
   evaluate.adaptive = True
-  evaluate.num_samples = 100
+  evaluate.num_samples = 50000
 
   #evaluate.enable_sampling = True
   #evaluate.enable_loss = True
@@ -65,7 +65,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
+  data.base_dir =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
   data.dataset = 'celebA-HQ-160'
   data.use_data_mean = False
   data.datamodule = 'unpaired_PKLDataset'
@@ -82,7 +82,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/saved_checkpoints/fast_sampling/vp/celebA-HQ-160/64/smld/epoch=324-step=413399.ckpt' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/version_0/checkpoints/epoch=324-step=413399.ckpt'
+  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/version_0/checkpoints/epoch=324-step=413399.ckpt' #'/home/gb511/saved_checkpoints/fast_sampling/vp/celebA-HQ-160/64/smld/epoch=324-step=413399.ckpt'
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
