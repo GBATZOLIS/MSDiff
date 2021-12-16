@@ -68,7 +68,7 @@ def sort_files_based_on_basename(path_list):
 
 class SynthesizedDataset(Dataset):
     def __init__(self, path):
-        self.filenames = listdir_nothidden_filenames(path)
+        self.filenames = listdir_nothidden_paths(path)
     
     def __getitem__(self, index):
         img = ToTensor()(Image.open(self.filenames[index]).convert('RGB'))
@@ -310,8 +310,11 @@ def run_unconditional_evaluation_pipeline(config):
     results = {}
     for adaptive in config.eval.adaptive:
         adaptive_name = 'KL-adaptive' if adaptive else 'uniform'
+        print('-----------')
+        print(adaptive_name)
         results[adaptive_name]={}
         for psteps in config.eval.p_steps:
+            print(psteps)
             path=os.path.join(base_path, adaptive_name, '%d' % psteps)
             dataset = SynthesizedDataset(path=path)
             dataloader = DataLoader(dataset, batch_size = config.eval.batch_size, shuffle=False, num_workers=config.eval.workers)
@@ -330,7 +333,7 @@ def run_unconditional_evaluation_pipeline(config):
     pickle.dump(results, f)
     f.close()
 
-    
+
 
 def run_conditional_evaluation_pipeline(task, base_path, snr, device):
     #EVALUATION PIPELINE FOR CONDITIONAL GENERATION / INVERSE PROBLEMS
