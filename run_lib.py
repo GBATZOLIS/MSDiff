@@ -18,7 +18,7 @@ from lightning_modules.utils import create_lightning_module
 from torchvision.transforms import RandomCrop, CenterCrop, ToTensor, Resize
 from torchvision.transforms.functional import InterpolationMode
 
-from evaluation import run_evaluation_pipeline
+from evaluation import run_conditional_evaluation_pipeline
 import create_dataset
 import compute_dataset_statistics
 from torch.nn import Upsample
@@ -107,12 +107,15 @@ def test(config, log_path, checkpoint_path):
     
     trainer.test(LightningModule, test_dataloaders = DataModule.test_dataloader())
 
-def evaluation_pipeline(master_config):
+def conditional_evaluation_pipeline(master_config):
   for config_name, config in master_config.items():
     print('Tested Configuration: %s - %s - %s' % (config.data.task, config.data.dataset, config.training.conditioning_approach))
     for snr in config.eval.snr:
       base_path = os.path.join(config.eval.base_log_dir, config.data.task, config.data.dataset, config.training.conditioning_approach, 'images')
-      run_evaluation_pipeline(config.data.task, base_path, snr, device='cuda')
+      run_conditional_evaluation_pipeline(config.data.task, base_path, snr, device='cuda')
+
+def unconditional_evaluation_pipeline(config):
+  run_unconditional_evaluation_pipeline(config)
 
 def multi_scale_test(master_config, log_path):
   def get_lowest_level_fn(scale_info, coord_space):

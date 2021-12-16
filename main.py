@@ -11,7 +11,15 @@ flags.DEFINE_string("checkpoint_path", None, "Checkpoint directory.")
 flags.DEFINE_string("data_path", None, "Checkpoint directory.")
 flags.DEFINE_string("log_path", "./", "Checkpoint directory.")
 flags.DEFINE_enum("mode", "train", \
-  ["train", "test", "multi_scale_test", "compute_dataset_statistics", 'evaluation_pipeline', 'compute_fast_sampling_scheme'], "Running mode: train or test")
+  
+  ["train", "test", \
+  "multi_scale_test", \
+  "compute_dataset_statistics", \
+  'conditional_evaluation_pipeline', \
+  'unconditional_evaluation_pipeline', \
+  'compute_fast_sampling_scheme'], \
+
+  "Running mode: train or test")
 flags.DEFINE_string("eval_folder", "eval",
                     "The folder name for storing evaluation results")
 flags.mark_flags_as_required(["config", "mode", "log_path"])
@@ -26,8 +34,10 @@ def main(argv):
     run_lib.multi_scale_test(FLAGS.config, FLAGS.log_path)
   elif FLAGS.mode == 'compute_dataset_statistics':
     run_lib.compute_data_stats(FLAGS.config)
-  elif FLAGS.mode == 'evaluation_pipeline':
-    run_lib.evaluation_pipeline(FLAGS.config)
+  elif FLAGS.mode == 'conditional_evaluation_pipeline':
+    run_lib.conditional_evaluation_pipeline(FLAGS.config)
+  elif FLAGS.mode == 'unconditional_evaluation_pipeline':
+    run_lib.unconditional_evaluation_pipeline(FLAGS.config)
   elif FLAGS.mode == 'compute_fast_sampling_scheme':
     run_lib.compute_fast_sampling_scheme(FLAGS.config, FLAGS.log_path)
 

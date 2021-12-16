@@ -14,6 +14,8 @@ import torch
 from tqdm import tqdm
 from scipy import linalg
 import copy
+from lightning_data_modules.utils import create_lightning_datamodule
+from pathlib import Path
 
 #for the fid calculation
 from models.inception import InceptionV3
@@ -65,6 +67,17 @@ def sort_files_based_on_basename(path_list):
     return sorted_paths
 
 class SynthesizedDataset(Dataset):
+    def __init__(self, path):
+        self.filenames = listdir_nothidden_filenames(path)
+    
+    def __getitem__(self, index):
+        img = ToTensor()(Image.open(self.filenames[index]).convert('RGB'))
+        return img
+    
+    def __len__(self):
+        return len(self.filenames)
+
+class SynthesizedPairedDataset(Dataset):
     """A template dataset class for you to implement custom datasets."""
     def __init__(self, task, base_path, snr):
         #base_path: -> samples -> snr_0.150 -> draw_i
@@ -153,7 +166,7 @@ def get_activation_fn(model):
         return activation
     return activation_fn
 
-def get_fid_fn(distribution):
+def get_fid_fn(distribution, precomputed_stats=None):
     if distribution == 'target': #unconditional fid
         def fid_fn(acts):
             activations = copy.deepcopy(acts)
@@ -208,7 +221,7 @@ def get_fid_fn(distribution):
             
             del activations
             return joint_fid
-    
+
     return fid_fn
 
 def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
@@ -264,8 +277,65 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     return (diff.dot(diff) + np.trace(sigma1)
             + np.trace(sigma2) - 2 * tr_covmean)
 
-def run_evaluation_pipeline(task, base_path, snr, device):
-    #report: 
+def get_activations(dataloader, activation_fn, device):
+    activations=[]
+    for data in dataloader:
+        activations.append(activation_fn(data.to(device)))
+    return activations
+
+def get_stats_from_activations(activations):
+    concat_activations = torch.cat(activations, dim=0).numpy()
+    mu, sigma = np.mean(concat_activations, axis=0), np.cov(concat_activations, rowvar=False)
+    stats={'mu':mu, 'sigma':sigma}
+    return stats
+
+def run_unconditional_evaluation_pipeline(config):
+    #set up the inception model
+    device='cuda'
+    dims = 2048
+    block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
+    inception_model = InceptionV3([block_idx], resize_input=True).to(device)
+    inception_model.eval()
+    activation_fn = get_activation_fn(inception_model)
+
+    DataModule = create_lightning_datamodule(config)
+    DataModule.setup()
+    test_dataloader = DataModule.test_dataloader()
+    gt_activations = get_activations(test_dataloader, activation_fn, device)
+    gt_stats = get_stats_from_activations(gt_activations)
+
+    base_path=os.path.join(config.base_log_path, config.experiment_name, \
+    'samples', 'p(%s)-c(%s)' % (config.eval.predictor, config.eval.corrector))
+    
+    results = {}
+    for adaptive in config.eval.adaptive:
+        adaptive_name = 'KL-adaptive' if adaptive else 'uniform'
+        results[adaptive_name]={}
+        for psteps in config.eval.p_steps:
+            path=os.path.join(base_path, adaptive_name, '%d' % psteps)
+            dataset = SynthesizedDataset(path=path)
+            dataloader = DataLoader(dataset, batch_size = config.eval.batch_size, shuffle=False, num_workers=config.eval.workers)
+            activations = get_activations(dataloader, activation_fn, device)
+            stats = get_stats_from_activations(activations)
+            fid = calculate_frechet_distance(mu1=gt_stats['mu'], sigma1=gt_stats['sigma'], 
+                                             mu2=stats['mu'], sigma2=stats['sigma'])
+            results[adaptive_name][psteps]=fid
+    
+    #create the evaluation log file
+    evaluation_log_path = os.path.join(config.base_log_path, config.experiment_name, 'evaluation')
+    Path(evaluation_log_path).mkdir(parents=True, exist_ok=True)
+
+    #log the results dictionary
+    f = open(os.path.join(evaluation_log_path, 'results.pkl'), "wb")
+    pickle.dump(results, f)
+    f.close()
+
+    
+
+def run_conditional_evaluation_pipeline(task, base_path, snr, device):
+    #EVALUATION PIPELINE FOR CONDITIONAL GENERATION / INVERSE PROBLEMS
+
+    #The final report includes: 
     #1.) Expected LPIPS
     #2.) Expected PSNR
     #3.) Expected SSIM
@@ -282,7 +352,7 @@ def run_evaluation_pipeline(task, base_path, snr, device):
     inception_model.eval()
     activation_fn = get_activation_fn(inception_model)
 
-    dataset = SynthesizedDataset(task, base_path, snr)
+    dataset = SynthesizedPairedDataset(task, base_path, snr)
     dataloader = DataLoader(dataset, batch_size = 1, shuffle=False, num_workers=8) 
 
     loss_fn_alex = lpips.LPIPS(net='alex').to(device)
