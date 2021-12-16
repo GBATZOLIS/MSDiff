@@ -18,7 +18,7 @@ from lightning_modules.utils import create_lightning_module
 from torchvision.transforms import RandomCrop, CenterCrop, ToTensor, Resize
 from torchvision.transforms.functional import InterpolationMode
 
-from evaluation import run_conditional_evaluation_pipeline
+from evaluation import run_conditional_evaluation_pipeline, run_unconditional_evaluation_pipeline
 import create_dataset
 import compute_dataset_statistics
 from torch.nn import Upsample
