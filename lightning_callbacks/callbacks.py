@@ -150,6 +150,7 @@ class ImageVisualizationCallback(Callback):
         self.c_steps = config.eval.c_steps
         self.denoise = config.eval.denoise
         self.adaptive = config.eval.adaptive
+        self.gamma = config.eval.gamma
         self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
     
     def update_config(self, pl_module):
@@ -158,9 +159,9 @@ class ImageVisualizationCallback(Callback):
     def on_test_start(self, trainer, pl_module):
         self.update_config(pl_module)
 
-    def generate_synthetic_dataset(self, pl_module, p_steps, adaptive):
+    def generate_synthetic_dataset(self, pl_module, p_steps, adaptive, gamma):
         adaptive_name = 'KL-adaptive' if adaptive else 'uniform'
-        p_step_dir = os.path.join(self.save_samples_dir, 'p(%s)-c(%s)' % (pl_module.config.eval.predictor, pl_module.config.eval.corrector), adaptive_name, '%d' % p_steps)
+        p_step_dir = os.path.join(self.save_samples_dir, 'p(%s)-c(%s)' % (pl_module.config.eval.predictor, pl_module.config.eval.corrector), adaptive_name, '%.2f' % gamma, '%d' % p_steps)
         Path(p_step_dir).mkdir(parents=True, exist_ok=True)
 
         num_generated_samples=0
@@ -170,7 +171,9 @@ class ImageVisualizationCallback(Callback):
                                           p_steps=p_steps,
                                           c_steps=self.c_steps,
                                           denoise=self.denoise,
-                                          adaptive=adaptive)
+                                          adaptive=adaptive,
+                                          gamma=gamma)
+
             samples = torch.clamp(samples, min=0, max=1)
 
             batch_size = samples.size(0)
@@ -189,8 +192,9 @@ class ImageVisualizationCallback(Callback):
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         if batch_idx == 0:
             for adaptive in self.adaptive:
-                for p_steps in self.p_steps:
-                    self.generate_synthetic_dataset(pl_module, p_steps, adaptive)
+                for gamma in self.gamma:
+                    for p_steps in self.p_steps:
+                        self.generate_synthetic_dataset(pl_module, p_steps, adaptive, gamma)
 
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch

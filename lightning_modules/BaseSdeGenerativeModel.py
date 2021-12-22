@@ -71,7 +71,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
     
     def sample(self, show_evolution=False, num_samples=None, predictor='default', 
                     corrector='default', p_steps='default', c_steps='default', 
-                    snr='default', denoise='default', adaptive='default'):
+                    snr='default', denoise='default', adaptive='default', gamma=0.):
         
         if num_samples is None:
             num_samples = self.config.eval.batch_size
@@ -93,13 +93,21 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                 print('KL adaptive discretisation is used.')
                 try:
                     adaptive_discretisation_fn = self.adaptive_dicrete_fn
+                    if gamma != self.gamma:
+                        #gamma has changed so we need to update the adaptive discretisation function
+                        adaptive_discretisation_fn = get_adaptive_discretisation_fn(self.kl_info['t'], self.kl_info['KL'], gamma)
+                        self.adaptive_dicrete_fn = adaptive_discretisation_fn
+                        self.gamma = gamma
+
                 except AttributeError:
                     #load the KL profile
                     with open(self.config.sampling.kl_profile, 'rb') as f:
                         info = pickle.load(f)
-                    
-                    adaptive_discretisation_fn = get_adaptive_discretisation_fn(info['t'], info['KL'])
+
+                    self.kl_info = info
+                    adaptive_discretisation_fn = get_adaptive_discretisation_fn(info['t'], info['KL'], gamma)
                     self.adaptive_dicrete_fn = adaptive_discretisation_fn
+                    self.gamma = gamma
 
             else:
                 print('uniform-discretisation is used.')

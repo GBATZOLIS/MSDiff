@@ -18,6 +18,11 @@ def normalise_to_density(t, x):
     integral = (b-a)/M*np.sum(x)
     return x/integral
 
+def get_uniformisation_fn(gamma):
+    def uniformisation_fn(fn):
+        mean=np.mean(fn)
+        return gamma*fn+(1-gamma)*mean
+    return uniformisation_fn
 
 def evaluate_continuation(x_2, norm_grad_log_density, num_datapoints):
     def evaluate_quantity_continuation(quantity, num_datapoints, r):
@@ -314,12 +319,13 @@ def get_adaptive_step_calculator_from_density(timestamps, density):
         
     return calculate_adaptive_steps
 
-def get_adaptive_discretisation_fn(timestamps, KL):
+def get_adaptive_discretisation_fn(timestamps, KL, gamma):
     #input: KL divergence at timestamps (usually calculated from 0 to 1 for 1000 equally spaced points)
     #outputs: adaptive discretisation function (receives as input the number of discretisation points and outputs their time locations)
     grad_KL = np.gradient(KL)
     abs_grad_KL = np.abs(grad_KL)
-    normalised_abs_grad_KL = normalise_to_density(timestamps, abs_grad_KL)
+    uniformisation_fn = get_uniformisation_fn(gamma=gamma)
+    normalised_abs_grad_KL = normalise_to_density(timestamps, uniformisation_fn(abs_grad_KL))
     return get_adaptive_step_calculator_from_density(timestamps, normalised_abs_grad_KL)
 
 def get_inverse_step_fn(discretisation):
