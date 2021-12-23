@@ -304,25 +304,23 @@ def run_unconditional_evaluation_pipeline(config):
     gt_activations = get_activations(test_dataloader, activation_fn, device)
     gt_stats = get_stats_from_activations(gt_activations)
 
-    base_path=os.path.join(config.base_log_path, config.experiment_name, \
-    'samples', 'p(%s)-c(%s)' % (config.eval.predictor, config.eval.corrector))
+    base_path = os.path.join(config.base_log_path, config.experiment_name, \
+    'samples', 'p(%s)-c(%s)' % (config.eval.predictor, config.eval.corrector),'KL-adaptive' )
     
     results = {}
-    for adaptive in config.eval.adaptive:
-        adaptive_name = 'KL-adaptive' if adaptive else 'uniform'
-        print('-----------')
-        print(adaptive_name)
-        results[adaptive_name]={}
-        for psteps in config.eval.p_steps:
-            print(psteps)
-            path=os.path.join(base_path, adaptive_name, '%d' % psteps)
+    for gamma in listdir_nothidden_filenames(base_path):
+        print('gamma: ', gamma)
+        results[gamma]={}
+        for psteps in listdir_nothidden_filenames(os.path.join(base_path, gamma)):
+            print('psteps: ', psteps)
+            path = os.path.join(base_path, gamma, psteps)
             dataset = SynthesizedDataset(path=path)
             dataloader = DataLoader(dataset, batch_size = config.eval.batch_size, shuffle=False, num_workers=config.eval.workers)
             activations = get_activations(dataloader, activation_fn, device)
             stats = get_stats_from_activations(activations)
             fid = calculate_frechet_distance(mu1=gt_stats['mu'], sigma1=gt_stats['sigma'], 
                                              mu2=stats['mu'], sigma2=stats['sigma'])
-            results[adaptive_name][psteps]=fid
+            results[gamma][psteps] = fid
     
     #create the evaluation log file
     evaluation_log_path = os.path.join(config.base_log_path, config.experiment_name, 'evaluation')
