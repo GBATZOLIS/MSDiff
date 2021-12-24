@@ -308,10 +308,12 @@ def run_unconditional_evaluation_pipeline(config):
     'samples', 'p(%s)-c(%s)' % (config.eval.predictor, config.eval.corrector),'KL-adaptive' )
     
     results = {}
-    for gamma in listdir_nothidden_filenames(base_path):
+    #for gamma in listdir_nothidden_filenames(base_path):
+    for gamma in ['0.01']:
         print('gamma: ', gamma)
         results[gamma]={}
-        for psteps in listdir_nothidden_filenames(os.path.join(base_path, gamma)):
+        #for psteps in listdir_nothidden_filenames(os.path.join(base_path, gamma)):
+        for psteps in ['100', '500']:
             print('psteps: ', psteps)
             path = os.path.join(base_path, gamma, psteps)
             dataset = SynthesizedDataset(path=path)
@@ -327,7 +329,8 @@ def run_unconditional_evaluation_pipeline(config):
     Path(evaluation_log_path).mkdir(parents=True, exist_ok=True)
 
     #log the results dictionary
-    f = open(os.path.join(evaluation_log_path, 'results.pkl'), "wb")
+    #f = open(os.path.join(evaluation_log_path, 'results.pkl'), "wb")
+    f = open(os.path.join(evaluation_log_path, 'results_0.01.pkl'), "wb")
     pickle.dump(results, f)
     f.close()
 
