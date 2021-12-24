@@ -55,7 +55,7 @@ def get_config():
   evaluate.c_steps = 1
   evaluate.denoise = True
   evaluate.adaptive = [True] #[True, False]
-  evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive
+  evaluate.gamma = [0.] #0->uniform, 1->KL-adaptive
   evaluate.num_samples = 10000
 
   #evaluate.enable_sampling = True
