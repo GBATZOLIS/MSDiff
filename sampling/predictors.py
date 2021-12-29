@@ -62,7 +62,7 @@ class DDIMPredictor(Predictor):
   def compute_coefficients(self, t):
     #this function should be placed inside the SDE classes to generalise the predictor.
 
-    log_mean_coeff = -0.25 * t ** 2 * (self.sde.beta_1 - self.sde.beta_0) - 0.5 * t[0] * self.sde.beta_0
+    log_mean_coeff = -0.25 * t[0] ** 2 * (self.sde.beta_1 - self.sde.beta_0) - 0.5 * t[0] * self.sde.beta_0
     a_t = torch.exp(log_mean_coeff)
     sigma_t_2 = 1. - torch.exp(2. * log_mean_coeff)
     lambda_t = torch.log(a_t**2/sigma_t_2) #logSNR
