@@ -53,6 +53,40 @@ class Predictor(abc.ABC):
     """
     pass
 
+@register_predictor(name='ddim')
+class DDIMPredictor(Predictor):
+  def __init__(self, sde, score_fn, probability_flow=False, discretisation=None):
+    super().__init__(sde, score_fn, probability_flow, discretisation)
+    assert isinstance(sde, sde_lib.VPSDE), 'ddim sampler is supported only for the VPSDE currently.'
+
+  def compute_coefficients(self, t):
+    #this function should be placed inside the SDE classes to generalise the predictor.
+
+    log_mean_coeff = -0.25 * t ** 2 * (self.sde.beta_1 - self.sde.beta_0) - 0.5 * t[0] * self.sde.beta_0
+    a_t = torch.exp(log_mean_coeff)
+    sigma_t_2 = 1. - torch.exp(2. * log_mean_coeff)
+    lambda_t = torch.log(a_t**2/sigma_t_2) #logSNR
+    coefficients = {'a': a_t,
+                    'sigma_2': sigma_t_2,
+                    'lambda': lambda_t}
+    return coefficients
+
+  def update_fn(self, x, t):
+    #compute the negative timestep
+    dt = torch.tensor(self.inverse_step_fn(t[0].cpu().item())).type_as(t) #-1. / self.rsde.N 
+    s = t + dt
+    #compute the coefficients
+    coefficients_t = self.compute_coefficients(t)
+    coefficients_s = self.compute_coefficients(s)
+
+    a_ratio = coefficients_s['a']/coefficients_t['a']
+    score_multiplier = (1-torch.exp((coefficients_t['lambda'] - coefficients_s['lambda']) / 2))*coefficients_t['sigma_2']
+    
+    z_t = x
+    z_s = a_ratio*(z_t+score_multiplier*self.score_fn(z_t, t))
+    return z_s, z_s
+
+
 @register_predictor(name='euler_maruyama')
 class EulerMaruyamaPredictor(Predictor):
   def __init__(self, sde, score_fn, probability_flow=False, discretisation=None):
