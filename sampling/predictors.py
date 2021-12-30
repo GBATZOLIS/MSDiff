@@ -90,14 +90,19 @@ class DDIMPredictor(Predictor):
 class EulerMaruyamaPredictor(Predictor):
   def __init__(self, sde, score_fn, probability_flow=False, discretisation=None):
     super().__init__(sde, score_fn, probability_flow, discretisation)
+    self.probability_flow=probability_flow
 
   def update_fn(self, x, t):
     dt = torch.tensor(self.inverse_step_fn(t[0].cpu().item())).type_as(t) #-1. / self.rsde.N
     z = torch.randn_like(x)
     drift, diffusion = self.rsde.sde(x, t)
     x_mean = x + drift * dt
-    x = x_mean + diffusion[(...,) + (None,) * len(x.shape[1:])] * torch.sqrt(-dt) * z
-    return x, x_mean
+    
+    if self.probability_flow:
+      return x_mean, x_mean
+    else:
+      x = x_mean + diffusion[(...,) + (None,) * len(x.shape[1:])] * torch.sqrt(-dt) * z
+      return x, x_mean
 
 @register_predictor(name='conditional_euler_maruyama')
 class conditionalEulerMaruyamaPredictor(Predictor):
