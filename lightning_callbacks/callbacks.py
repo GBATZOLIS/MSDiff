@@ -148,6 +148,7 @@ class ImageVisualizationCallback(Callback):
         self.corrector = config.eval.corrector
         self.p_steps = config.eval.p_steps
         self.c_steps = config.eval.c_steps
+        self.probability_flow = config.eval.probability_flow
         self.denoise = config.eval.denoise
         self.adaptive = config.eval.adaptive
         self.gamma = config.eval.gamma
@@ -161,7 +162,8 @@ class ImageVisualizationCallback(Callback):
 
     def generate_synthetic_dataset(self, pl_module, p_steps, adaptive, gamma):
         adaptive_name = 'KL-adaptive' if adaptive else 'uniform'
-        p_step_dir = os.path.join(self.save_samples_dir, 'p(%s)-c(%s)' % (pl_module.config.eval.predictor, pl_module.config.eval.corrector), adaptive_name, '%.2f' % gamma, '%d' % p_steps)
+        eq = 'ode' if self.probability_flow else 'sde'
+        p_step_dir = os.path.join(self.save_samples_dir, 'eq(%s)-p(%s)-c(%s)' % (eq, pl_module.config.eval.predictor, pl_module.config.eval.corrector), adaptive_name, '%.2f' % gamma, '%d' % p_steps)
         Path(p_step_dir).mkdir(parents=True, exist_ok=True)
 
         num_generated_samples=0
@@ -170,6 +172,7 @@ class ImageVisualizationCallback(Callback):
                                           corrector=self.corrector,
                                           p_steps=p_steps,
                                           c_steps=self.c_steps,
+                                          probability_flow=self.probability_flow,
                                           denoise=self.denoise,
                                           adaptive=adaptive,
                                           gamma=gamma)

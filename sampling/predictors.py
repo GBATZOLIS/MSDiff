@@ -86,7 +86,6 @@ class DDIMPredictor(Predictor):
     z_s = a_ratio*(z_t+score_multiplier*self.score_fn(z_t, t))
     return z_s, z_s
 
-
 @register_predictor(name='euler_maruyama')
 class EulerMaruyamaPredictor(Predictor):
   def __init__(self, sde, score_fn, probability_flow=False, discretisation=None):

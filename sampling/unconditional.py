@@ -16,6 +16,7 @@ def get_sampling_fn(config, sde, shape, eps,
                     corrector='default', 
                     p_steps='default', 
                     c_steps='default', 
+                    probability_flow='default',
                     snr='default', 
                     denoise='default', 
                     adaptive_disc_fn=None):
@@ -53,6 +54,9 @@ def get_sampling_fn(config, sde, shape, eps,
   if denoise == 'default':
     denoise = config.sampling.noise_removal
 
+  if probability_flow == 'default':
+    probability_flow=config.sampling.probability_flow
+
   sampler_name = config.sampling.method
 
   # Probability flow ODE sampling with black-box ODE solvers
@@ -71,7 +75,7 @@ def get_sampling_fn(config, sde, shape, eps,
                                  snr=snr,
                                  p_steps=p_steps,
                                  c_steps=c_steps, 
-                                 probability_flow=config.sampling.probability_flow,
+                                 probability_flow=probability_flow,
                                  continuous=config.training.continuous,
                                  denoise=denoise,
                                  eps=eps,

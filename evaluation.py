@@ -304,8 +304,9 @@ def run_unconditional_evaluation_pipeline(config):
     gt_activations = get_activations(test_dataloader, activation_fn, device)
     gt_stats = get_stats_from_activations(gt_activations)
 
+    eq = 'ode' if config.eval.probability_flow else 'sde'
     base_path = os.path.join(config.base_log_path, config.experiment_name, \
-    'samples', 'p(%s)-c(%s)' % (config.eval.predictor, config.eval.corrector),'KL-adaptive' )
+    'samples', 'eq(%s)-p(%s)-c(%s)' % (eq, config.eval.predictor, config.eval.corrector),'KL-adaptive')
     
     results = {}
     for gamma in listdir_nothidden_filenames(base_path):

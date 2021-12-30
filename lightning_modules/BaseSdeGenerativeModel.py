@@ -70,7 +70,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         return 
     
     def sample(self, show_evolution=False, num_samples=None, predictor='default', 
-                    corrector='default', p_steps='default', c_steps='default', 
+                    corrector='default', p_steps='default', c_steps='default', probability_flow='default',
                     snr='default', denoise='default', adaptive='default', gamma=0.):
         
         if num_samples is None:
@@ -125,6 +125,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                                       corrector=corrector, 
                                       p_steps=p_steps, 
                                       c_steps=c_steps, 
+                                      probability_flow=probability_flow,
                                       snr=snr, 
                                       denoise=denoise, 
                                       adaptive_disc_fn=adaptive_discretisation_fn)
