@@ -324,12 +324,11 @@ def run_unconditional_evaluation_pipeline(config):
             results[gamma][psteps] = fid
     
     #create the evaluation log file
-    evaluation_log_path = os.path.join(config.base_log_path, config.experiment_name, 'evaluation')
+    evaluation_log_path = os.path.join(config.base_log_path, config.experiment_name, 'evaluation', 'eq(%s)-p(%s)-c(%s)' % (eq, config.eval.predictor, config.eval.corrector))
     Path(evaluation_log_path).mkdir(parents=True, exist_ok=True)
 
     #log the results dictionary
-    #f = open(os.path.join(evaluation_log_path, 'results.pkl'), "wb")
-    f = open(os.path.join(evaluation_log_path, 'results_langevin.pkl'), "wb")
+    f = open(os.path.join(evaluation_log_path, 'results.pkl'), "wb")
     pickle.dump(results, f)
     f.close()
 
