@@ -169,6 +169,12 @@ class VPSDE(SDE):
     diffusion = torch.sqrt(beta_t)
     return drift, diffusion
 
+  def perturbation_coefficients(self, t):
+    log_mean_coeff = -0.25 * t ** 2 * (self.beta_1 - self.beta_0) - 0.5 * t * self.beta_0
+    a_t = torch.exp(log_mean_coeff)
+    sigma_t = torch.sqrt(1. - torch.exp(2. * log_mean_coeff))
+    return a_t, sigma_t
+
   def marginal_prob(self, x, t): #perturbation kernel
     log_mean_coeff = -0.25 * t ** 2 * (self.beta_1 - self.beta_0) - 0.5 * t * self.beta_0
     mean = torch.exp(log_mean_coeff[(...,) + (None,) * len(x.shape[1:])]) * x
