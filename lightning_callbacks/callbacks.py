@@ -168,7 +168,8 @@ class ImageVisualizationCallback(Callback):
 
         num_generated_samples=0
         while num_generated_samples < self.num_samples:
-            samples, _ = pl_module.sample(predictor=self.predictor,
+            samples, info = pl_module.sample(show_evolution=True,
+                                          predictor=self.predictor,
                                           corrector=self.corrector,
                                           p_steps=p_steps,
                                           c_steps=self.c_steps,
@@ -176,7 +177,18 @@ class ImageVisualizationCallback(Callback):
                                           denoise=self.denoise,
                                           adaptive=adaptive,
                                           gamma=gamma)
+            
+            #saving code
+            evolution = info['evolution']
+            for i in evolution.size(0):
+                p_step_dir_batch = os.path.join(p_step_dir, '%d' % num_generated_samples+samples.size(0))
+                Path(p_step_dir_batch).mkdir(parents=True, exist_ok=True)
+                normalised_grid_evolution_step = torchvision.utils.make_grid(evolution[i], normalize=True, scale_each=True)
+                fp = os.path.join(p_step_dir_batch, '%d.png' % (i+1))
+                save_image(normalised_grid_evolution_step, fp)
+                
 
+            '''
             samples = torch.clamp(samples, min=0, max=1)
 
             batch_size = samples.size(0)
@@ -188,8 +200,9 @@ class ImageVisualizationCallback(Callback):
                 for i in range(self.num_samples - num_generated_samples): #add what is missing to fill the basket.
                     fp = os.path.join(p_step_dir, '%d.png' % (num_generated_samples+i+1))
                     save_image(samples[i, :, :, :], fp)
-            
-            num_generated_samples+=batch_size
+            '''
+
+            num_generated_samples+=samples.size(0)
             
             
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):

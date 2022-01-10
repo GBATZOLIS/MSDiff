@@ -47,7 +47,7 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
-  evaluate.batch_size = 128
+  evaluate.batch_size = 64
   evaluate.callback = 'base'
   evaluate.predictor = 'ddim'
   evaluate.corrector = 'none'
@@ -56,8 +56,8 @@ def get_config():
   evaluate.probability_flow = True
   evaluate.denoise = True
   evaluate.adaptive = [True] #[True, False]
-  evaluate.gamma = [0.] #0->uniform, 1->KL-adaptive
-  evaluate.num_samples = 128
+  evaluate.gamma = [0., 1.] #0->uniform, 1->KL-adaptive
+  evaluate.num_samples = 64
 
   #evaluate.enable_sampling = True
   #evaluate.enable_loss = True
