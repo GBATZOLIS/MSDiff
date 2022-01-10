@@ -180,7 +180,7 @@ class ImageVisualizationCallback(Callback):
             
             #saving code
             evolution = info['evolution']
-            for i in evolution.size(0):
+            for i in range(evolution.size(0)):
                 p_step_dir_batch = os.path.join(p_step_dir, '%d' % num_generated_samples+samples.size(0))
                 Path(p_step_dir_batch).mkdir(parents=True, exist_ok=True)
                 normalised_grid_evolution_step = torchvision.utils.make_grid(evolution[i], normalize=True, scale_each=True)
