@@ -62,6 +62,8 @@ class DDIMPredictor(Predictor):
   def update_fn(self, z_t, t):
     #compute the negative timestep
     dt = torch.tensor(self.inverse_step_fn(t[0].cpu().item())).type_as(t) #-1. / self.rsde.N 
+    print(t, dt)
+    
     s = t + dt
     #compute the coefficients
     a_t, sigma_t = self.sde.perturbation_coefficients(t[0])
