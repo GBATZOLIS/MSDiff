@@ -51,12 +51,12 @@ def get_config():
   evaluate.callback = 'base'
   evaluate.predictor = 'ddim'
   evaluate.corrector = 'none'
-  evaluate.p_steps = [100] #[100, 200, 400, 800] #np.arange(100, 1100, step=100)
+  evaluate.p_steps = [500] #[100, 200, 400, 800] #np.arange(100, 1100, step=100)
   evaluate.c_steps = 1
   evaluate.probability_flow = True
   evaluate.denoise = True
   evaluate.adaptive = [True] #[True, False]
-  evaluate.gamma = [0.05, 0.1, 0.25] #0->uniform, 1->KL-adaptive
+  evaluate.gamma = [0.] #0->uniform, 1->KL-adaptive
   evaluate.num_samples = 128
 
   #evaluate.enable_sampling = True
