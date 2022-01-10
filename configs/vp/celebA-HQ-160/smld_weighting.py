@@ -55,9 +55,9 @@ def get_config():
   evaluate.c_steps = 1
   evaluate.probability_flow = True
   evaluate.denoise = True
-  evaluate.adaptive = [True] #[True, False]
+  evaluate.adaptive = [True, False] #[True, False]
   evaluate.gamma = [0., 1.] #0->uniform, 1->KL-adaptive
-  evaluate.num_samples = 10000
+  evaluate.num_samples = 100
 
   #evaluate.enable_sampling = True
   #evaluate.enable_loss = True
