@@ -49,14 +49,14 @@ def get_config():
   evaluate.workers = 4*training.gpus
   evaluate.batch_size = 128
   evaluate.callback = 'base'
-  evaluate.predictor = 'euler_maruyama'
+  evaluate.predictor = 'ddim'
   evaluate.corrector = 'none'
   evaluate.p_steps = [100] #[100, 200, 400, 800] #np.arange(100, 1100, step=100)
   evaluate.c_steps = 1
   evaluate.probability_flow = True
   evaluate.denoise = True
   evaluate.adaptive = [True] #[True, False]
-  evaluate.gamma = [0., 0.5, 1.] #0->uniform, 1->KL-adaptive
+  evaluate.gamma = [0.01] #0->uniform, 1->KL-adaptive
   evaluate.num_samples = 128
 
   #evaluate.enable_sampling = True
