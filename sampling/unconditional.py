@@ -219,9 +219,9 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
       x = sde.prior_sampling(shape).to(model.device).type(torch.float32)
 
       if adaptive_disc_fn is None:
-        timesteps = torch.linspace(sde.T, eps, p_steps, device=model.device)
+        timesteps = torch.linspace(sde.T, eps, p_steps+1, device=model.device)
       else:
-        timesteps = torch.tensor(adaptive_disc_fn(p_steps), device=model.device)
+        timesteps = torch.tensor(adaptive_disc_fn(p_steps+1), device=model.device)
 
       for i in range(p_steps):
         t = timesteps[i]
