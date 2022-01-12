@@ -178,9 +178,8 @@ class ImageVisualizationCallback(Callback):
                                           adaptive=adaptive,
                                           gamma=gamma)
             
-            
-
-            #saving code
+            '''
+            #saving code -> debug ddim with uniformly placed steps.
             num_generated_samples+=samples.size(0)
             evolution = info['evolution']
             for i in range(evolution.size(0)):
@@ -189,10 +188,8 @@ class ImageVisualizationCallback(Callback):
                 normalised_grid_evolution_step = torchvision.utils.make_grid(evolution[i], normalize=True, scale_each=True)
                 fp = os.path.join(p_step_dir_batch, '%d.png' % (i+1))
                 save_image(normalised_grid_evolution_step, fp)
-            
-            
-
             '''
+            
             samples = torch.clamp(samples, min=0, max=1)
 
             batch_size = samples.size(0)
@@ -206,9 +203,6 @@ class ImageVisualizationCallback(Callback):
                     save_image(samples[i, :, :, :], fp)
 
             num_generated_samples+=samples.size(0)
-            '''
-
-            
             
             
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
