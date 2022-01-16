@@ -100,11 +100,11 @@ def get_distillation_loss_fn(N, sde, train, continuous, eps):
     denominator = a_t_ddash - sigma_ratio * a_t
     student_target = (z_t_ddash - sigma_ratio[(...,) + (None,) * len(z_t.shape[1:])] * z_t) / denominator[(...,) + (None,) * len(z_t.shape[1:])]
 
-    snr = torch.log(a_t**2/sigma_t**2)
+    snr = a_t**2/sigma_t**2
 
     prediction = student_denoising_fn(z_t, t)
     losses = torch.square(prediction - student_target)
-    losses = torch.mean(losses.reshape(losses.shape[0], -1), dim=-1) * snr
+    losses = torch.mean(losses.reshape(losses.shape[0], -1), dim=-1) * (snr+1.)
     loss = torch.mean(losses)
     return loss
   
