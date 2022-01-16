@@ -126,6 +126,7 @@ def get_config():
   distillation.starting_iter = 1
   distillation.iterations = 8
   distillation.N = 512 #initial target for the student sampling steps -> will be halved at the end of every iteration
+  distillation.num_steps = 50000
   distillation.checkpoint_path = None
 
   distillation.optim = ml_collections.ConfigDict()
