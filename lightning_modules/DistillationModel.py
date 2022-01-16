@@ -31,7 +31,7 @@ class BaseDistillationModel(pl.LightningModule):
     
     def training_step(self, batch, batch_idx):
         distillation_loss_fn = get_distillation_loss_fn(N=self.N, sde=self.sde, 
-                                                        train=True, continuous=self.config.continuous, 
+                                                        train=True, continuous=self.config.training.continuous, 
                                                         eps=self.sampling_eps)
         
         loss = distillation_loss_fn(self.StudentModule.score_model, self.TeacherModule.score_model, batch)
@@ -40,7 +40,7 @@ class BaseDistillationModel(pl.LightningModule):
     
     def validation_step(self, batch, batch_idx):
         distillation_loss_fn = get_distillation_loss_fn(N=self.N, sde=self.sde, 
-                                                        train=False, continuous=self.config.continuous, 
+                                                        train=False, continuous=self.config.training.continuous, 
                                                         eps=self.sampling_eps)
         
         loss = distillation_loss_fn(self.StudentModule.score_model, self.TeacherModule.score_model, batch)
