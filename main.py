@@ -17,7 +17,8 @@ flags.DEFINE_enum("mode", "train", \
   "compute_dataset_statistics", \
   'conditional_evaluation_pipeline', \
   'unconditional_evaluation_pipeline', \
-  'compute_fast_sampling_scheme'], \
+  'compute_fast_sampling_scheme',
+  'distillation'], \
 
   "Running mode: train or test")
 flags.DEFINE_string("eval_folder", "eval",
@@ -40,6 +41,8 @@ def main(argv):
     run_lib.unconditional_evaluation_pipeline(FLAGS.config)
   elif FLAGS.mode == 'compute_fast_sampling_scheme':
     run_lib.compute_fast_sampling_scheme(FLAGS.config, FLAGS.log_path)
+  elif FLAGS.mode == 'distillation':
+    run_lib.run_distillation(config)
 
 if __name__ == "__main__":
   app.run(main)
