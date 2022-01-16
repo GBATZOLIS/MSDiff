@@ -151,7 +151,15 @@ def get_model_fn(model, train=False):
 
   return model_fn
 
-
+def get_denoising_fn(sde, model, train, continuous):
+  score_fn = get_score_fn(sde, model, conditional=False, train=train, continuous=continuous)
+  
+  def denoising_fn(x, t):
+    a_t, sigma_t = sde.perturbation_coefficients(t)
+    sigma_t_2 = sigma_t**2
+    return (sigma_t_2[(...,) + (None,) * len(x.shape[1:])]*score_fn(x,t) + x)/a_t[(...,) + (None,) * len(x.shape[1:])]
+  
+  return denoising_fn
 
 def get_score_fn(sde, model, conditional=False, train=False, continuous=False):
   """Wraps `score_fn` so that the model output corresponds to a real time-dependent score function.

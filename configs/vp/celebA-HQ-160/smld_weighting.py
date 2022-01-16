@@ -67,7 +67,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
+  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
   data.dataset = 'celebA-HQ-160'
   data.use_data_mean = False
   data.datamodule = 'unpaired_PKLDataset'
@@ -84,7 +84,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/version_0/checkpoints/epoch=324-step=413399.ckpt' #'/home/gb511/saved_checkpoints/fast_sampling/vp/celebA-HQ-160/64/smld/epoch=324-step=413399.ckpt'
+  model.checkpoint_path = '/home/gb511/saved_checkpoints/fast_sampling/vp/celebA-HQ-160/64/smld/epoch=324-step=413399.ckpt' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/version_0/checkpoints/epoch=324-step=413399.ckpt'
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
@@ -119,5 +119,22 @@ def get_config():
   optim.warmup = 5000 #set it to 0 if you do not want to use warm up.
   optim.grad_clip = 1 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.
   config.seed = 42
+
+  # distillation
+  config.distillation = distillation = ml_collections.ConfigDict()
+  distillation.log_path = '/home/gb511/projects/fast_sampling/distillation'
+  distillation.starting_iter = 1
+  distillation.iterations = 8
+  distillation.N = 512 #initial target for the student sampling steps -> will be halved at the end of every iteration
+  distillation.checkpoint_path = None
+
+  distillation.optim = ml_collections.ConfigDict()
+  distillation.optim.weight_decay = 0
+  distillation.optim.optimizer = 'Adam'
+  distillation.optim.lr = 2e-5
+  distillation.optim.beta1 = 0.9
+  distillation.optim.eps = 1e-8
+  distillation.optim.warmup = 0 #set it to 0 if you do not want to use warm up.
+  distillation.optim.grad_clip = 1 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.
 
   return config

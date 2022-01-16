@@ -51,6 +51,66 @@ def optimization_manager(config):
 
   return optimize_fn
 
+def get_distillation_loss_fn(N, sde, train, continuous, eps):
+  #N is the number of target sampling steps for the student
+
+  def get_ddim_step_fn(sde, denoising_fn):
+    def ddim_step_fn(z_t, t, dt):
+      #t is a vector (batch_size,)
+      #dt: (batch_size,)
+      #z_t: (batch_size, **data_dims)
+      t_dash = t + dt
+      a_t, sigma_t = sde.perturbation_coefficients(t)
+      a_t_dash, sigma_t_dash = sde.perturbation_coefficients(t_dash)
+
+      sigma_ratio = sigma_t_dash / sigma_t
+      z_t_factor = sigma_ratio[(...,) + (None,) * len(z_t.shape[1:])]
+      
+      denoising_factor = a_t_dash - sigma_ratio*a_t
+      denoising_factor = denoising_factor[(...,) + (None,) * len(z_t.shape[1:])]
+
+      z_step = z_t_factor * z_t + denoising_factor * denoising_fn(z_t, t)
+      return z_step
+    
+    return ddim_step_fn
+
+  def loss_fn(student_model, teacher_model, batch):
+    student_denoising_fn = mutils.get_denoising_fn(sde, student_model, train=train, continuous=continuous)
+    teacher_denoising_fn = mutils.get_denoising_fn(sde, teacher_model, train=False, continuous=continuous)
+
+    available_timesteps = torch.linspace(eps, sde.T, N+1, device=teacher_model.device)[1:]
+    t = available_timesteps[torch.randint(len(available_timesteps), (batch.size(0),))]
+
+    epsilon = torch.randn_like(batch)
+    mean, std = sde.marginal_prob(batch, t)
+    z_t = mean + std[(...,) + (None,) * len(batch.shape[1:])] * epsilon
+
+    ddim_step_fn = get_ddim_step_fn(sde, teacher_denoising_fn)
+
+    dt = -0.5/N
+    z_t_dash = ddim_step_fn(z_t, t, dt)
+    t_dash = t + dt
+    z_t_ddash = ddim_step_fn(z_t_dash, t_dash, dt)
+    t_ddash = t_dash + dt
+
+    a_t, sigma_t = sde.perturbation_coefficients(t)
+    a_t_ddash, sigma_t_ddash = sde.perturbation_coefficients(t_ddash)
+
+    sigma_ratio = sigma_t_ddash / sigma_t
+    denominator = a_t_ddash - sigma_ratio * a_t
+    student_target = (z_t_ddash - sigma_ratio[(...,) + (None,) * len(z_t.shape[1:])] * z_t) / denominator[(...,) + (None,) * len(z_t.shape[1:])]
+
+    snr = torch.log(a_t**2/sigma_t**2)
+
+    prediction = student_denoising_fn(z_t, t)
+    losses = torch.square(prediction - student_target)
+    losses = torch.mean(losses.reshape(losses.shape[0], -1), dim=-1) * snr
+    loss = torch.mean(losses)
+    return loss
+  
+  return loss_fn
+
+    
 
 def get_sde_loss_fn(sde, train, reduce_mean=True, continuous=True, likelihood_weighting=True, eps=1e-5):
   """Create a loss function for training with arbirary SDEs.

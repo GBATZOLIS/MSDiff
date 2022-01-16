@@ -12,6 +12,7 @@ import torch
 from fast_sampling.computation_utils import get_adaptive_discretisation_fn
 import pickle 
 
+
 @utils.register_lightning_module(name='base')
 class BaseSdeGenerativeModel(pl.LightningModule):
     def __init__(self, config, *args, **kwargs):

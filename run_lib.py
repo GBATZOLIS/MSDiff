@@ -5,6 +5,9 @@ import numpy as np
 
 from torchvision.utils import make_grid
 
+from losses import get_distillation_loss_fn
+
+from lightning_callbacks.DistillationCallback import DistillationCallback
 from lightning_callbacks import callbacks, HaarMultiScaleCallback, PairedCallback #needed for callback registration
 from lightning_callbacks.HaarMultiScaleCallback import normalise_per_image, permute_channels, normalise, normalise_per_band, create_supergrid
 from lightning_callbacks.utils import get_callbacks
@@ -12,7 +15,7 @@ from lightning_callbacks.utils import get_callbacks
 from lightning_data_modules import HaarDecomposedDataset, ImageDatasets, PairedDataset, SyntheticDataset, SRDataset, SRFLOWDataset, DUALGLOWDataset #needed for datamodule registration
 from lightning_data_modules.utils import create_lightning_datamodule
 
-from lightning_modules import BaseSdeGenerativeModel, HaarMultiScaleSdeGenerativeModel, ConditionalSdeGenerativeModel #need for lightning module registration
+from lightning_modules import DistillationModel, BaseSdeGenerativeModel, HaarMultiScaleSdeGenerativeModel, ConditionalSdeGenerativeModel #need for lightning module registration
 from lightning_modules.utils import create_lightning_module
 
 from torchvision.transforms import RandomCrop, CenterCrop, ToTensor, Resize
@@ -33,6 +36,41 @@ from fast_sampling.computation_utils import fast_sampling_scheme
 
 def compute_fast_sampling_scheme(config, save_dir):
   fast_sampling_scheme(config, save_dir)
+
+def run_distillation(config):
+  DataModule = create_lightning_datamodule(config)
+  starting_iter = config.distillation.starting_iter #default would be 1
+
+  for it in range(starting_iter, config.distillation.iterations+1):
+    logger = pl.loggers.TensorBoardLogger(config.distillation.log_path, name='distillation_it_%d' % it)
+
+    if it == 1:
+      Dmodule = DistillationModel.BaseDistillationModel(config)
+      TeacherModule = create_lightning_module(config)
+      TeacherModule = TeacherModule.load_from_checkpoint(config.model.checkpoint_path)
+      Dmodule.TeacherModule.load_state_dict(TeacherModule.state_dict())
+      Dmodule.StudentModule.load_state_dict(Dmodule.TeacherModule.state_dict())
+
+    elif it > 1 and it == starting_iter:
+      assert config.distillation.checkpoint_path is not None, 'Latest distillation teacher should be provided for initialisation from starting iteration %d' % starting_iter
+      Dmodule = DistillationModel.BaseDistillationModel(config)
+      Dmodule = Dmodule.load_from_checkpoint(config.distillation.checkpoint_path)
+      Dmodule.TeacherModule.load_state_dict(Dmodule.StudentModule.state_dict())
+
+    trainer = pl.Trainer(gpus=config.training.gpus,
+                          num_nodes = config.training.num_nodes,
+                          accelerator = config.training.accelerator,
+                          accumulate_grad_batches = config.training.accumulate_grad_batches,
+                          gradient_clip_val = config.optim.grad_clip,
+                          max_steps=config.distillation.num_steps,
+                          callbacks = DistillationCallback(config),
+                          logger = logger)
+
+    trainer.fit(Dmodule, datamodule=DataModule)
+
+    Dmodule.TeacherModule.load_state_dict(Dmodule.StudentModule.state_dict())
+    Dmodule.N /= 2
+
 
 def train(config, log_path, checkpoint_path):
     if config.data.create_dataset:
