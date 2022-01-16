@@ -50,13 +50,15 @@ def run_distillation(config):
       TeacherModule = TeacherModule.load_from_checkpoint(config.model.checkpoint_path)
       Dmodule.TeacherModule.load_state_dict(TeacherModule.state_dict())
       Dmodule.StudentModule.load_state_dict(Dmodule.TeacherModule.state_dict())
+      Dmodule.configure_sde(config)
 
     elif it > 1 and it == starting_iter:
       assert config.distillation.checkpoint_path is not None, 'Latest distillation teacher should be provided for initialisation from starting iteration %d' % starting_iter
       Dmodule = DistillationModel.BaseDistillationModel(config)
       Dmodule = Dmodule.load_from_checkpoint(config.distillation.checkpoint_path)
       Dmodule.TeacherModule.load_state_dict(Dmodule.StudentModule.state_dict())
-
+      Dmodule.configure_sde(config)
+      
     trainer = pl.Trainer(gpus=config.training.gpus,
                           num_nodes = config.training.num_nodes,
                           accelerator = config.training.accelerator,
