@@ -42,7 +42,7 @@ def main(argv):
   elif FLAGS.mode == 'compute_fast_sampling_scheme':
     run_lib.compute_fast_sampling_scheme(FLAGS.config, FLAGS.log_path)
   elif FLAGS.mode == 'distillation':
-    run_lib.run_distillation(config)
+    run_lib.run_distillation(FLAGS.config)
 
 if __name__ == "__main__":
   app.run(main)
