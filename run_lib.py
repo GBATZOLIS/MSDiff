@@ -63,7 +63,7 @@ def run_distillation(config):
                           num_nodes = config.training.num_nodes,
                           accelerator = config.training.accelerator,
                           accumulate_grad_batches = config.training.accumulate_grad_batches,
-                          gradient_clip_val = config.optim.grad_clip,
+                          gradient_clip_val = config.distillation.optim.grad_clip,
                           max_steps=config.distillation.num_steps,
                           callbacks = DistillationCallback(config),
                           logger = logger)
