@@ -12,7 +12,7 @@ import torch
 from fast_sampling.computation_utils import get_adaptive_discretisation_fn
 import pickle 
 from lightning_modules.utils import create_lightning_module
-
+from tqdm import tqdm
 
 @utils.register_lightning_module(name='base_distillation')
 class BaseDistillationModel(pl.LightningModule):
@@ -119,7 +119,7 @@ class BaseDistillationModel(pl.LightningModule):
             x = self.sde.prior_sampling(shape).to(model.device).type(torch.float32)
             timesteps = torch.linspace(self.sde.T, self.sampling_eps, self.N+1, device=model.device)
 
-            for i in range(self.N):
+            for i in tqdm(range(self.N)):
                 t = timesteps[i]
                 vec_t = torch.ones(shape[0], device=t.device) * t
                 dt = timesteps[i+1] - timesteps[i]
