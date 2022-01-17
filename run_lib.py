@@ -43,7 +43,7 @@ def run_distillation(config):
 
   for it in range(starting_iter, config.distillation.iterations+1):
     logger = pl.loggers.TensorBoardLogger(config.distillation.log_path, name='distillation_it_%d' % it)
-
+    
     if it == 1:
       Dmodule = DistillationModel.BaseDistillationModel(config)
       TeacherModule = create_lightning_module(config)
@@ -58,6 +58,8 @@ def run_distillation(config):
       Dmodule = Dmodule.load_from_checkpoint(config.distillation.prev_checkpoint_path)
       Dmodule.TeacherModule.load_state_dict(Dmodule.StudentModule.state_dict())
       Dmodule.configure_sde(config)
+    
+    Dmodule.iteration = it
       
     trainer = pl.Trainer(gpus=config.training.gpus,
                           num_nodes = config.training.num_nodes,
@@ -69,7 +71,10 @@ def run_distillation(config):
                           logger = logger,
                           resume_from_checkpoint = config.distillation.resume_checkpoint_path)
 
-    trainer.fit(Dmodule, datamodule=DataModule)
+    trainer.fit(Dmodule, datamodule = DataModule)
+
+    DataModule.setup() #this is probably unnecessary
+    trainer.test(Dmodule, test_dataloaders = DataModule.test_dataloader())
 
     Dmodule.TeacherModule.load_state_dict(Dmodule.StudentModule.state_dict())
     Dmodule.N /= 2
