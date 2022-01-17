@@ -72,9 +72,7 @@ def run_distillation(config):
                           resume_from_checkpoint = config.distillation.resume_checkpoint_path)
 
     trainer.fit(Dmodule, datamodule = DataModule)
-
-    DataModule.setup() #this is probably unnecessary
-    trainer.test(Dmodule, test_dataloaders = DataModule.test_dataloader())
+    trainer.test(Dmodule, datamodule = DataModule)
 
     Dmodule.TeacherModule.load_state_dict(Dmodule.StudentModule.state_dict())
     Dmodule.N /= 2
