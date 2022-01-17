@@ -55,7 +55,7 @@ def run_distillation(config):
     elif it > 1 and it == starting_iter:
       assert config.distillation.checkpoint_path is not None, 'Latest distillation teacher should be provided for initialisation from starting iteration %d' % starting_iter
       Dmodule = DistillationModel.BaseDistillationModel(config)
-      Dmodule = Dmodule.load_from_checkpoint(config.distillation.checkpoint_path)
+      Dmodule = Dmodule.load_from_checkpoint(config.distillation.prev_checkpoint_path)
       Dmodule.TeacherModule.load_state_dict(Dmodule.StudentModule.state_dict())
       Dmodule.configure_sde(config)
       
@@ -66,7 +66,8 @@ def run_distillation(config):
                           gradient_clip_val = config.distillation.optim.grad_clip,
                           max_steps=config.distillation.num_steps,
                           callbacks = DistillationCallback(config),
-                          logger = logger)
+                          logger = logger,
+                          resume_from_checkpoint= config.distillation.resume_checkpoint_path)
 
     trainer.fit(Dmodule, datamodule=DataModule)
 

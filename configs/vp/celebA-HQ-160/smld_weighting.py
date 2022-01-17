@@ -127,7 +127,12 @@ def get_config():
   distillation.iterations = 8
   distillation.N = 512 #initial target for the student sampling steps -> will be halved at the end of every iteration
   distillation.num_steps = 50000
-  distillation.checkpoint_path = None
+
+  #resume from the checkpoint of the previous iteration. Training from the start for the current starting iteration.
+  distillation.prev_checkpoint_path = None 
+  
+  #Training from the last checkpoint of the current starting iteration.
+  distillation.resume_checkpoint_path = '/home/gb511/projects/fast_sampling/distillation/distillation_it_1/version_5/checkpoints/epoch=4-step=16279.ckpt' 
 
   distillation.optim = ml_collections.ConfigDict()
   distillation.optim.weight_decay = 0

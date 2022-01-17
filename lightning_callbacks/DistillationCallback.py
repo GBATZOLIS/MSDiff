@@ -42,7 +42,7 @@ class DistillationCallback(Callback):
 
         num_generated_samples=0
         while num_generated_samples < self.num_samples:
-            samples, info = pl_module.sample(show_evolution=True,
+            samples = pl_module.sample(show_evolution=True,
                                           predictor=self.predictor,
                                           corrector=self.corrector,
                                           p_steps=p_steps,
@@ -89,7 +89,7 @@ class DistillationCallback(Callback):
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
         if current_epoch >= 2 and current_epoch % 5 == 0:
-            samples, _ = pl_module.sample(num_samples=self.config.eval.batch_size)
+            samples = pl_module.sample(num_samples=self.config.eval.batch_size)
             self.visualise_samples(samples, pl_module)
 
     def visualise_samples(self, samples, pl_module):
