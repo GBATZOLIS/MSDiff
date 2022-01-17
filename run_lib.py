@@ -67,7 +67,7 @@ def run_distillation(config):
                           max_steps=config.distillation.num_steps,
                           callbacks = DistillationCallback(config),
                           logger = logger,
-                          resume_from_checkpoint= config.distillation.resume_checkpoint_path)
+                          resume_from_checkpoint = config.distillation.resume_checkpoint_path)
 
     trainer.fit(Dmodule, datamodule=DataModule)
 

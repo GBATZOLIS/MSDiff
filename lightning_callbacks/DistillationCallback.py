@@ -86,9 +86,10 @@ class DistillationCallback(Callback):
                     for p_steps in self.p_steps:
                         self.generate_synthetic_dataset(pl_module, p_steps, adaptive, gamma)
 
-    def on_validation_epoch_end(self, trainer, pl_module):
+    #def on_validation_epoch_end(self, trainer, pl_module):
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         current_epoch = pl_module.current_epoch
-        if current_epoch >= 2 and current_epoch % 5 == 0:
+        if current_epoch >= 2 and current_epoch % 5 == 0 and batch_idx==0:
             samples = pl_module.sample(num_samples=self.config.eval.batch_size)
             self.visualise_samples(samples, pl_module)
 
