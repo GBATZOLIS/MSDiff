@@ -126,7 +126,7 @@ def get_config():
   distillation.starting_iter = 1
   distillation.iterations = 8
   distillation.N = 512 #initial target for the student sampling steps -> will be halved at the end of every iteration
-  distillation.num_steps = 50000
+  distillation.num_steps = 16300
 
   #resume from the checkpoint of the previous iteration. Training from the start for the current starting iteration.
   distillation.prev_checkpoint_path = None 
