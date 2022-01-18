@@ -75,7 +75,7 @@ def run_distillation(config):
     trainer.test(Dmodule, datamodule = DataModule)
 
     Dmodule.TeacherModule.load_state_dict(Dmodule.StudentModule.state_dict())
-    Dmodule.N /= 2
+    Dmodule.N = Dmodule.N // 2
 
 
 def train(config, log_path, checkpoint_path):
