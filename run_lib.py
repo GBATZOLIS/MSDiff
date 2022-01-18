@@ -53,7 +53,7 @@ def run_distillation(config):
       Dmodule.configure_sde(config)
 
     elif it > 1 and it == starting_iter:
-      assert config.distillation.checkpoint_path is not None, 'Latest distillation teacher should be provided for initialisation from starting iteration %d' % starting_iter
+      assert config.distillation.prev_checkpoint_path is not None, 'Latest distillation teacher should be provided for initialisation from starting iteration %d' % starting_iter
       Dmodule = DistillationModel.BaseDistillationModel(config)
       Dmodule = Dmodule.load_from_checkpoint(config.distillation.prev_checkpoint_path)
       Dmodule.TeacherModule.load_state_dict(Dmodule.StudentModule.state_dict())
