@@ -45,7 +45,7 @@ def main(argv):
   elif FLAGS.mode == 'distillation':
     run_lib.run_distillation(FLAGS.config)
   elif FLAGS.mode == 'compute_lipschitz_constant':
-    run_lib.compute_lipschitz_constant
+    run_lib.compute_lipschitz_constant(FLAGS.config)
 
 if __name__ == "__main__":
   app.run(main)
