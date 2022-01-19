@@ -120,7 +120,8 @@ def get_Lip_constant_fn(model, dataloader, sde):
         for idx, batch in enumerate(dataloader):
             if idx > 1000:
                 break
-
+            
+            batch = batch.to(model.device)
             z = torch.randn_like(batch.to(model.device))
             vec_t = torch.ones(batch.size(0), device=model.device) * t
             mean, std = sde.marginal_prob(batch, vec_t)
