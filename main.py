@@ -44,7 +44,7 @@ def main(argv):
     run_lib.compute_fast_sampling_scheme(FLAGS.config, FLAGS.log_path)
   elif FLAGS.mode == 'distillation':
     run_lib.run_distillation(FLAGS.config)
-  elif FLAGS.mode = 'compute_lipschitz_constant':
+  elif FLAGS.mode == 'compute_lipschitz_constant':
     run_lib.compute_lipschitz_constant
 
 if __name__ == "__main__":
