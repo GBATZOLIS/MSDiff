@@ -9,7 +9,7 @@ from lightning_data_modules.utils import create_lightning_datamodule
 from lightning_modules.utils import create_lightning_module
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-
+from utils import compute_grad
 
 """ FUNCTIONS USED FOR EVALUATING THE KL DIVERGENCE """
 
@@ -51,7 +51,6 @@ def evaluate_continuation(x_2, norm_grad_log_density, num_datapoints):
     else:
         return 'Something is going wrong.'
 
-
 def compute_expectations(timestamps, model, sde, dataloader, mu_0, device):
     expectations = {}
     for timestamp in tqdm(timestamps):
@@ -66,6 +65,77 @@ def compute_expectations(timestamps, model, sde, dataloader, mu_0, device):
     
     #print(expectations)
     return expectations
+
+def get_Lip_constant_profile(config):
+    assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
+
+    device = 'cuda'
+    dsteps = 100
+    
+    DataModule = create_lightning_datamodule(config)
+    DataModule.setup()
+    dataloader = DataModule.train_dataloader()
+
+    lmodule = create_lightning_module(config, config.model.checkpoint_path).to(device)
+    lmodule.eval()
+    lmodule.configure_sde(config)
+
+    model = lmodule.score_model
+    sde = lmodule.sde
+    eps = lmodule.sampling_eps
+
+    if config.base_log_path is not None:
+        save_dir = os.path.join(config.base_log_path, config.experiment_name, 'Lip_constant')
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
+
+    Lip_constant_fn = get_Lip_constant_fn(model=model, 
+                              dataloader=dataloader, 
+                              sde=sde)
+    
+    timestamps = torch.linspace(start=eps, end=sde.T, steps=dsteps)
+    
+    Lip_constant_profile = []
+    for i in tqdm(range(timestamps.size(0))):
+        t = timestamps[i]
+        Lip_constant_profile.append(Lip_constant_fn(t))
+
+    with open(os.path.join(save_dir, 'info.pkl'), 'wb') as f:
+        info = {'t':timestamps, 'Lip_constant':Lip_constant_profile}
+        pickle.dump(info, f)
+
+
+def get_Lip_constant_fn(model, dataloader, sde):
+    def get_drift_fn(model):
+        """Get the drift function of the reverse-time SDE."""
+        score_fn = mutils.get_score_fn(sde, model, conditional=False, train=False, continuous=True)
+        def drift_fn(x, t):
+            rsde = sde.reverse(score_fn, probability_flow=True)
+            return rsde.sde(x, t)[0]
+        return drift_fn
+    
+    def Lip_constant_fn(t):
+        drift_fn = get_drift_fn(model)
+        
+        max_grad_norm = 0.
+        for idx, batch in enumerate(dataloader):
+            if idx > 1000:
+                break
+
+            z = torch.randn_like(batch.to(model.device))
+            vec_t = torch.ones(batch.size(0), device=model.device) * t
+            mean, std = sde.marginal_prob(batch, vec_t)
+            x = mean + std[(...,) + (None,) * len(batch.shape[1:])] * z
+
+            gradients = compute_grad(f=drift_fn, x=x, t=vec_t)
+            gradients = gradients.reshape(gradients.shape[0], -1)
+            grad_norm = gradients.norm(p=2, dim=1).max().item() #this should probably be modified
+            
+            if grad_norm > max_grad_norm:
+                max_grad_norm = grad_norm
+
+        return max_grad_norm
+
+    return Lip_constant_fn
 
 def compute_sliced_expectations(timestamp, model, sde, dataloader, mu_0, device):
     score_fn = mutils.get_score_fn(sde, model, train=False, continuous=True)
@@ -140,6 +210,8 @@ def find_timestamps_geq(t, timestamps):
         if timestamp >= t:
             break
     return timestamps[i:]
+
+
 
 def get_KL_divergence_fn(model, dataloader, shape, sde, eps, T,
                          discretisation_steps, save_dir, device, 
