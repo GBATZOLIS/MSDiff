@@ -43,6 +43,7 @@ def get_config():
   sampling.adaptive = True
   #provide the directory where the information needed for calculating the adaptive steps is saved.
   sampling.kl_profile = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/KL/T=1.000-Target_Distribution=T/info.pkl' #'/home/gb511/score_sde_pytorch-1/fast_sampling_experiments/vp_celebA_smld_weighting/KL/T=1.000-Target_Distribution=T/info.pkl' 
+  sampling.lipschitz_profile = None
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
@@ -55,8 +56,10 @@ def get_config():
   evaluate.c_steps = 1
   evaluate.probability_flow = True
   evaluate.denoise = True
-  evaluate.adaptive = [True] #[True, False]
-  evaluate.gamma = [0., 1.] #0->uniform, 1->KL-adaptive
+  evaluate.adaptive = [True, False] 
+  evaluate.adaptive_method = 'lipschitz' #options: [kl, lipschitz]
+  evaluate.alpha = [1., 2.] #used for lipschitz-adaptive method
+  evaluate.gamma = [0., 1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
   evaluate.num_samples = 10000
 
   #evaluate.enable_sampling = True

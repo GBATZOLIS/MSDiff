@@ -72,7 +72,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
     
     def sample(self, show_evolution=False, num_samples=None, predictor='default', 
                     corrector='default', p_steps='default', c_steps='default', probability_flow='default',
-                    snr='default', denoise='default', adaptive='default', gamma=0.):
+                    snr='default', denoise='default', adaptive='default', gamma=0., alpha=1.):
         
         if num_samples is None:
             num_samples = self.config.eval.batch_size
@@ -83,32 +83,53 @@ class BaseSdeGenerativeModel(pl.LightningModule):
             assert adaptive in [True, False], 'adaptive flag should be either True or False'
 
         if adaptive:
-            try:
-                assert hasattr(self.config.sampling, 'kl_profile'), 'config.sampling.kl_profile must be provided if adaptive is set to True.'
+            if self.config.eval.adaptive_method == 'kl':
                 if self.config.sampling.kl_profile == None:
                     adaptive = False
-            except AssertionError:
-                adaptive = False #set adaptive to False since we cannot use it given that we are not provided with the KL profile
+            elif self.config.eval.adaptive_method == 'lipschitz':
+                if self.config.sampling.lipschitz_profile == None:
+                    adaptive = False
 
             if adaptive:
-                print('KL adaptive discretisation is used.')
+                print('Adaptive discretisation is used.')
                 try:
                     adaptive_discretisation_fn = self.adaptive_dicrete_fn
-                    if gamma != self.gamma:
-                        #gamma has changed so we need to update the adaptive discretisation function
-                        adaptive_discretisation_fn = get_adaptive_discretisation_fn(self.kl_info['t'], self.kl_info['KL'], gamma)
+
+                    if self.config.eval.adaptive_method == 'kl':
+                        if gamma != self.gamma:
+                            #gamma has changed so we need to update the adaptive discretisation function
+                            adaptive_discretisation_fn = get_adaptive_discretisation_fn(self.kl_info['t'], self.kl_info['KL'], gamma, 'kl')
+                            self.adaptive_dicrete_fn = adaptive_discretisation_fn
+                            self.gamma = gamma
+                    
+                    if self.config.eval.adaptive_method == 'lipschitz':
+                        if alpha != self.alpha:
+                            #alpha has changed so we need to update the adaptive discretisation function
+                            adaptive_discretisation_fn = get_adaptive_discretisation_fn(self.lipschitz_info['t'], self.lipschitz_info['Lip_constant'], alpha, 'lipschitz')
+                            self.adaptive_dicrete_fn = adaptive_discretisation_fn
+                            self.alpha = alpha
+                            
+                except AttributeError:
+
+                    if self.config.eval.adaptive_method == 'kl':
+                        #load the KL profile
+                        with open(self.config.sampling.kl_profile, 'rb') as f:
+                            info = pickle.load(f)
+
+                        self.kl_info = info
+                        adaptive_discretisation_fn = get_adaptive_discretisation_fn(info['t'], info['KL'], gamma, 'kl')
                         self.adaptive_dicrete_fn = adaptive_discretisation_fn
                         self.gamma = gamma
-
-                except AttributeError:
-                    #load the KL profile
-                    with open(self.config.sampling.kl_profile, 'rb') as f:
-                        info = pickle.load(f)
-
-                    self.kl_info = info
-                    adaptive_discretisation_fn = get_adaptive_discretisation_fn(info['t'], info['KL'], gamma)
-                    self.adaptive_dicrete_fn = adaptive_discretisation_fn
-                    self.gamma = gamma
+                    
+                    elif self.config.eval.adaptive_method == 'lipschitz':
+                        #load the lipschitz profile
+                        with open(self.config.sampling.lipschitz_profile, 'rb') as f:
+                            info = pickle.load(f)
+                        
+                        self.lipschitz_info = info
+                        adaptive_discretisation_fn = get_adaptive_discretisation_fn(self.lipschitz_info['t'], self.lipschitz_info['Lip_constant'], alpha, 'lipschitz')
+                        self.adaptive_dicrete_fn = adaptive_discretisation_fn
+                        self.alpha = alpha
 
             else:
                 print('uniform-discretisation is used.')
@@ -116,6 +137,16 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         else:
             print('uniform-discretisation is used.')
             adaptive_discretisation_fn=None 
+        
+        if adaptive:
+            if self.config.eval.adaptive_method == 'kl':
+                adaptive_steps = torch.tensor(self.adaptive_dicrete_fn(p_steps+1))
+
+            elif self.config.eval.adaptive_method == 'lipschitz':
+                adaptive_steps = torch.tensor(self.adaptive_dicrete_fn())
+        
+        else:
+            adaptive_steps = None
 
         sampling_shape = [num_samples] + self.config.data.shape
         sampling_fn = get_sampling_fn(config=self.config, 
@@ -129,7 +160,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                                       probability_flow=probability_flow,
                                       snr=snr, 
                                       denoise=denoise, 
-                                      adaptive_disc_fn=adaptive_discretisation_fn)
+                                      adaptive_steps=adaptive_steps)
 
         return sampling_fn(self.score_model, show_evolution=show_evolution)
 

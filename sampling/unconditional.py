@@ -19,7 +19,7 @@ def get_sampling_fn(config, sde, shape, eps,
                     probability_flow='default',
                     snr='default', 
                     denoise='default', 
-                    adaptive_disc_fn=None):
+                    adaptive_steps=None):
 
   """Create a sampling function.
   Args:
@@ -79,7 +79,7 @@ def get_sampling_fn(config, sde, shape, eps,
                                  continuous=config.training.continuous,
                                  denoise=denoise,
                                  eps=eps,
-                                 adaptive_disc_fn=adaptive_disc_fn)
+                                 adaptive_steps=adaptive_steps)
   else:
     raise ValueError(f"Sampler name {sampler_name} unknown.")
 
@@ -171,7 +171,7 @@ def get_ode_sampler(sde, shape,
 
 def get_pc_sampler(sde, shape, predictor, corrector, snr, 
                    p_steps, c_steps, probability_flow=False, continuous=False,
-                   denoise=True, eps=1e-3, adaptive_disc_fn=None):
+                   denoise=True, eps=1e-3, adaptive_steps=None):
 
   """Create a Predictor-Corrector (PC) sampler.
   Args:
@@ -218,11 +218,12 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
       # Initial sample
       x = sde.prior_sampling(shape).to(model.device).type(torch.float32)
 
-      if adaptive_disc_fn is None:
+      if adaptive_steps is None:
         timesteps = torch.linspace(sde.T, eps, p_steps+1, device=model.device)
       else:
-        timesteps = torch.tensor(adaptive_disc_fn(p_steps+1), device=model.device)
-
+        timesteps = adaptive_steps.to(model.device)
+      
+      p_steps = timesteps.size(0)-1
       for i in range(p_steps):
         t = timesteps[i]
         vec_t = torch.ones(shape[0], device=t.device) * t
@@ -236,10 +237,10 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
 
       if show_evolution:
         sampling_info = {'evolution': torch.stack(evolution), 
-                        'times':timesteps, 'steps': p_steps * (c_steps + 1)}
+                        'times':timesteps, 'steps': p_steps}
         return samples, sampling_info
       else:
-        sampling_info = {'times':timesteps, 'steps': p_steps * (c_steps + 1)}
+        sampling_info = {'times':timesteps, 'steps': p_steps}
         return samples, sampling_info
 
   return pc_sampler

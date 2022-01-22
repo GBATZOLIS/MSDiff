@@ -70,7 +70,7 @@ def get_Lip_constant_profile(config):
     assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
 
     device = 'cuda'
-    dsteps = 200
+    dsteps = 1000
     
     DataModule = create_lightning_datamodule(config)
     DataModule.setup()
@@ -392,14 +392,41 @@ def get_adaptive_step_calculator_from_density(timestamps, density):
         
     return calculate_adaptive_steps
 
-def get_adaptive_discretisation_fn(timestamps, KL, gamma):
-    #input: KL divergence at timestamps (usually calculated from 0 to 1 for 1000 equally spaced points)
-    #outputs: adaptive discretisation function (receives as input the number of discretisation points and outputs their time locations)
-    grad_KL = np.gradient(KL)
-    abs_grad_KL = np.abs(grad_KL)
-    uniformisation_fn = get_uniformisation_fn(gamma=gamma)
-    normalised_abs_grad_KL = normalise_to_density(timestamps, uniformisation_fn(abs_grad_KL))
-    return get_adaptive_step_calculator_from_density(timestamps, normalised_abs_grad_KL)
+def get_adaptive_discretisation_fn(timestamps, value, gamma, adaptive_method):
+    if adaptive_method == 'kl':
+        KL = value
+        #input: KL divergence at timestamps (usually calculated from 0 to 1 for 1000 equally spaced points)
+        #outputs: adaptive discretisation function (receives as input the number of discretisation points and outputs their time locations)
+        grad_KL = np.gradient(KL)
+        abs_grad_KL = np.abs(grad_KL)
+        uniformisation_fn = get_uniformisation_fn(gamma=gamma)
+        normalised_abs_grad_KL = normalise_to_density(timestamps, uniformisation_fn(abs_grad_KL))
+        return get_adaptive_step_calculator_from_density(timestamps, normalised_abs_grad_KL)
+    
+    elif adaptive_method == 'lipschitz':
+        lipschitz_constant = value
+        alpha = gamma
+        def sequence_generator():
+            start, end = timestamps[-1], timestamps[0]
+            sequence = []
+
+            current_timepoint = start
+            sequence.append(current_timepoint)
+            while current_timepoint > end:
+                lip = lipschitz_constant[np.argmin(np.abs(timestamps-current_timepoint))]
+                step = -1 * alpha * 1/lip
+
+                current_timepoint = current_timepoint + step
+
+                if current_timepoint >= end:
+                    sequence.append(current_timepoint)
+                else:
+                    sequence.append(end)
+            
+            return sequence
+        
+        return sequence_generator
+
 
 def get_inverse_step_fn(discretisation):
     #discretisation sequence is ordered from biggest time to smallest time
