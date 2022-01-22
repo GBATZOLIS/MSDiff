@@ -7,15 +7,15 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path = '/home/gb511/score_sde_pytorch-1/ve_fast_sampling' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/ve'
+  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/ve' #'/home/gb511/score_sde_pytorch-1/ve_fast_sampling' 
   config.experiment_name = 've_celebAHQ_64'
 
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'base'
-  training.batch_size = 50
+  training.batch_size = 128
   training.num_nodes = 1
-  training.gpus = 0
+  training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -54,7 +54,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = 'datasets'  #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
+  data.base_dir =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
   data.dataset = 'celebA-HQ-160'
   data.use_data_mean = False
   data.datamodule = 'unpaired_PKLDataset'
@@ -71,7 +71,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/saved_checkpoints/fast_sampling/ve/celebA-HQ/64/epoch=233-step=595295.ckpt' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/ve_celebAHQ_64/version_0/checkpoints/epoch=233-step=595295.ckpt' 
+  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/ve_celebAHQ_64/version_0/checkpoints/epoch=233-step=595295.ckpt'  #'/home/gb511/saved_checkpoints/fast_sampling/ve/celebA-HQ/64/epoch=233-step=595295.ckpt' 
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
