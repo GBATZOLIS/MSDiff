@@ -70,7 +70,7 @@ def get_Lip_constant_profile(config):
     assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
 
     device = 'cuda'
-    dsteps = 200
+    dsteps = 1000
     
     DataModule = create_lightning_datamodule(config)
     DataModule.setup()
@@ -118,7 +118,7 @@ def get_Lip_constant_fn(model, dataloader, sde):
         
         max_grad_norm = 0.
         for idx, batch in enumerate(dataloader):
-            if idx > 200:
+            if idx > 400:
                 break
 
             batch = batch.to(model.device)
