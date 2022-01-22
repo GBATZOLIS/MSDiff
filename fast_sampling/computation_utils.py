@@ -70,7 +70,7 @@ def get_Lip_constant_profile(config):
     assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
 
     device = 'cuda'
-    dsteps = 1000
+    dsteps = 200
     
     DataModule = create_lightning_datamodule(config)
     DataModule.setup()
