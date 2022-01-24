@@ -58,7 +58,7 @@ def get_config():
   evaluate.c_steps = 1
   evaluate.probability_flow = True
   evaluate.denoise = True
-  evaluate.adaptive = [True, False] 
+  evaluate.adaptive = [False] 
   evaluate.adaptive_method = 'lipschitz' #options: [kl, lipschitz]
   evaluate.alpha = [1.] #used for lipschitz-adaptive method
   evaluate.starting_T = [1.]
