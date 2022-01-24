@@ -243,9 +243,10 @@ class ImageVisualizationCallback(Callback):
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         if batch_idx == 0:
             for start_T in self.starting_T:
-                    for alpha in self.alpha:
-                        for adaptive in self.adaptive:
-                            self.generate_lipschitz_synthetic_dataset(pl_module, adaptive, alpha, start_T)
+                print(start_T)
+                for alpha in self.alpha:
+                    for adaptive in self.adaptive:
+                        self.generate_lipschitz_synthetic_dataset(pl_module, adaptive, alpha, start_T)
 
 
     def on_validation_epoch_end(self, trainer, pl_module):
