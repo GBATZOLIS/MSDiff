@@ -217,8 +217,8 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
     if show_evolution:
       evolution = []
 
-    T_start = starting_T.copy()
-    
+    T_start = starting_T
+
     with torch.no_grad():
       # Initial sample
       x = sde.prior_sampling(shape, T_start).to(model.device).type(torch.float32)
