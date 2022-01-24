@@ -181,8 +181,6 @@ class ImageVisualizationCallback(Callback):
         T_start = pl_module.sde.T if starting_T == 'default' else starting_T
         num_adaptive_steps = torch.tensor(adaptive_discretisation_fn(T_start)).size(0) - 1
 
-        print(num_adaptive_steps)
-
         num_generated_samples = 0
         while num_generated_samples < self.num_samples:
             samples, info = pl_module.sample(show_evolution=False,

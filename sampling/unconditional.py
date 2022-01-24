@@ -231,8 +231,8 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
         starting_T = sde.T
 
       if adaptive_steps is None:
-        total_discrete_steps = p_steps+1
-        timesteps = torch.linspace(starting_T, eps, total_discrete_steps, device=model.device)
+        total_discrete_points = p_steps+1
+        timesteps = torch.linspace(starting_T, eps, total_discrete_points, device=model.device)
       else:
         timesteps = adaptive_steps.to(model.device)
         p_steps = timesteps.size(0) - 1
