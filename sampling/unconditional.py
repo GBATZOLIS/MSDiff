@@ -235,8 +235,8 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
         timesteps = torch.linspace(starting_T, eps, total_discrete_steps, device=model.device)
       else:
         timesteps = adaptive_steps.to(model.device)
+        p_steps = timesteps.size(0) - 1
       
-      p_steps = timesteps.size(0)-1
       for i in tqdm(range(p_steps)):
         t = timesteps[i]
         vec_t = torch.ones(shape[0], device=t.device) * t
