@@ -42,15 +42,30 @@ def get_config():
   sampling.probability_flow = False
   sampling.snr = 0.15 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
 
+  #new additions for adaptive sampling
+  sampling.adaptive = False
+  #provide the directory where the information needed for calculating the adaptive steps is saved.
+  sampling.kl_profile = None
+  sampling.lipschitz_profile = None
+
+
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
   evaluate.batch_size = training.batch_size
-  evaluate.enable_sampling = True
-  evaluate.num_samples = 50000
-  evaluate.enable_loss = True
-  evaluate.enable_bpd = False
-  evaluate.bpd_dataset = 'test'
+  evaluate.callback = 'base'
+  evaluate.predictor = 'ddim'
+  evaluate.corrector = 'none'
+  evaluate.p_steps = [100] #[100, 200, 400, 800] #np.arange(100, 1100, step=100)
+  evaluate.c_steps = 1
+  evaluate.probability_flow = True
+  evaluate.denoise = True
+  evaluate.adaptive = [True, False] 
+  evaluate.adaptive_method = 'lipschitz' #options: [kl, lipschitz]
+  evaluate.alpha = [1.] #used for lipschitz-adaptive method
+  evaluate.starting_T = [1., 0.7]
+  evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
+  evaluate.num_samples = 10000
 
   # data
   config.data = data = ml_collections.ConfigDict()

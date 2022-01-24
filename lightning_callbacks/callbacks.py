@@ -153,8 +153,10 @@ class ImageVisualizationCallback(Callback):
         self.probability_flow = config.eval.probability_flow
         self.denoise = config.eval.denoise
         self.adaptive = config.eval.adaptive
+        self.adaptive_method = config.eval.adaptive_method
         self.gamma = config.eval.gamma
         self.alpha = config.eval.alpha
+        self.starting_T = config.eval.starting_T
         self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
     
     def update_config(self, pl_module):
@@ -163,18 +165,22 @@ class ImageVisualizationCallback(Callback):
     def on_test_start(self, trainer, pl_module):
         self.update_config(pl_module)
     
-    def generate_lipschitz_synthetic_dataset(self, pl_module, adaptive, alpha):
+    def generate_lipschitz_synthetic_dataset(self, pl_module, adaptive, alpha, starting_T):
+        eq = 'ode' if self.probability_flow else 'sde'
         adaptive_name = 'adaptive' if adaptive else 'uniform'
-        save_dir = os.path.join(self.save_samples_dir, 'lipschitz', 'alpha_%.2f' % alpha, adaptive_name)
-        
+
+        save_dir = os.path.join(self.save_samples_dir, 
+        'eq(%s)-p(%s)-c(%s)' % (eq, pl_module.config.eval.predictor, pl_module.config.eval.corrector), 
+        self.adaptive_method, 'T_%.2f' % starting_T, 'alpha_%.2f' % alpha, adaptive_name)
 
         with open(self.config.sampling.lipschitz_profile, 'rb') as f:
             info = pickle.load(f)
 
         adaptive_discretisation_fn = get_adaptive_discretisation_fn(info['t'], info['Lip_constant'], alpha, 'lipschitz')
-        num_adaptive_steps = torch.tensor(adaptive_discretisation_fn()).size(0)
+        T_start = pl_module.sde.T if starting_T == 'default' else starting_T
+        num_adaptive_steps = torch.tensor(adaptive_discretisation_fn(T_start)).size(0)
 
-        num_generated_samples=0
+        num_generated_samples = 0
         while num_generated_samples < self.num_samples:
             samples, info = pl_module.sample(show_evolution=False,
                                             predictor=self.predictor,
@@ -184,7 +190,8 @@ class ImageVisualizationCallback(Callback):
                                             probability_flow=self.probability_flow,
                                             denoise=self.denoise,
                                             adaptive=adaptive,
-                                            alpha=alpha)
+                                            alpha=alpha, 
+                                            starting_T=starting_T)
         
             samples = torch.clamp(samples, min=0, max=1)
 
@@ -218,18 +225,6 @@ class ImageVisualizationCallback(Callback):
                                             adaptive=adaptive,
                                             gamma=gamma)
             
-            '''
-            #saving code -> debug ddim with uniformly placed steps.
-            num_generated_samples+=samples.size(0)
-            evolution = info['evolution']
-            for i in range(evolution.size(0)):
-                p_step_dir_batch = os.path.join(p_step_dir, '%d' % num_generated_samples)
-                Path(p_step_dir_batch).mkdir(parents=True, exist_ok=True)
-                normalised_grid_evolution_step = torchvision.utils.make_grid(evolution[i], normalize=True, scale_each=True)
-                fp = os.path.join(p_step_dir_batch, '%d.png' % (i+1))
-                save_image(normalised_grid_evolution_step, fp)
-            '''
-            
             samples = torch.clamp(samples, min=0, max=1)
 
             batch_size = samples.size(0)
@@ -247,16 +242,10 @@ class ImageVisualizationCallback(Callback):
             
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         if batch_idx == 0:
-            '''
-            for adaptive in self.adaptive:
-                for gamma in self.gamma:
-                    for p_steps in self.p_steps:
-                        self.generate_kl_synthetic_dataset(pl_module, p_steps, adaptive, gamma)
-            '''
-
-            for adaptive in self.adaptive:
-                for alpha in self.alpha:
-                    self.generate_lipschitz_synthetic_dataset(pl_module, adaptive, alpha)
+            for start_T in self.starting_T:
+                    for alpha in self.alpha:
+                        for adaptive in self.adaptive:
+                            self.generate_lipschitz_synthetic_dataset(pl_module, adaptive, alpha, start_T)
 
 
     def on_validation_epoch_end(self, trainer, pl_module):

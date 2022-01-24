@@ -306,33 +306,39 @@ def run_unconditional_evaluation_pipeline(config):
 
     eq = 'ode' if config.eval.probability_flow else 'sde'
     base_path = os.path.join(config.base_log_path, config.experiment_name, \
-    'samples', 'eq(%s)-p(%s)-c(%s)' % (eq, config.eval.predictor, config.eval.corrector),'KL-adaptive')
+    'samples', 'eq(%s)-p(%s)-c(%s)' % (eq, config.eval.predictor, config.eval.corrector), config.eval.adaptive_method)
     
     results = {}
-    for gamma in listdir_nothidden_filenames(base_path):
-        print('gamma: ', gamma)
-        results[gamma]={}
-        for psteps in listdir_nothidden_filenames(os.path.join(base_path, gamma)):
-            print('psteps: ', psteps)
-            path = os.path.join(base_path, gamma, psteps)
-            dataset = SynthesizedDataset(path=path)
-            dataloader = DataLoader(dataset, batch_size = config.eval.batch_size, shuffle=False, num_workers=config.eval.workers)
-            activations = get_activations(dataloader, activation_fn, device)
-            stats = get_stats_from_activations(activations)
-            fid = calculate_frechet_distance(mu1=gt_stats['mu'], sigma1=gt_stats['sigma'], 
-                                             mu2=stats['mu'], sigma2=stats['sigma'])
-            results[gamma][psteps] = fid
-    
+    for starting_T in config.eval.starting_T:
+        results[starting_T]={}
+        for alpha in config.eval.alpha:
+            results[starting_T][alpha]={}
+            for adaptive in config.eval.adaptive:
+                adaptive_name = 'adaptive' if adaptive else 'uniform'
+                path = os.path.join(base_path, 'T_%.2f' % starting_T, 'alpha_%.2f' % alpha, adaptive_name)
+                
+                dataset = SynthesizedDataset(path=path)
+                dataloader = DataLoader(dataset, batch_size = config.eval.batch_size, shuffle=False, num_workers=config.eval.workers)
+                activations = get_activations(dataloader, activation_fn, device)
+                stats = get_stats_from_activations(activations)
+                fid = calculate_frechet_distance(mu1=gt_stats['mu'], sigma1=gt_stats['sigma'], 
+                                                mu2=stats['mu'], sigma2=stats['sigma'])
+                
+                results[starting_T][alpha][adaptive_name] = fid
+
     #create the evaluation log file
-    evaluation_log_path = os.path.join(config.base_log_path, config.experiment_name, 'evaluation', 'eq(%s)-p(%s)-c(%s)' % (eq, config.eval.predictor, config.eval.corrector))
+    evaluation_log_path = os.path.join(config.base_log_path, 
+                                       config.experiment_name, 
+                                        'evaluation', 
+    'eq(%s)-p(%s)-c(%s)' % (eq, config.eval.predictor, config.eval.corrector), 
+                                        config.eval.adaptive_method)
+    
     Path(evaluation_log_path).mkdir(parents=True, exist_ok=True)
 
     #log the results dictionary
     f = open(os.path.join(evaluation_log_path, 'results.pkl'), "wb")
     pickle.dump(results, f)
     f.close()
-
-
 
 def run_conditional_evaluation_pipeline(task, base_path, snr, device):
     #EVALUATION PIPELINE FOR CONDITIONAL GENERATION / INVERSE PROBLEMS

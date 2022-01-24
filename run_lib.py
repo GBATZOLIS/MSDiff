@@ -154,6 +154,10 @@ def test(config, log_path, checkpoint_path):
     
     trainer.test(LightningModule, test_dataloaders = DataModule.test_dataloader())
 
+    #evaluate FID scores on the generated samples
+    unconditional_evaluation_pipeline(config)
+
+
 def conditional_evaluation_pipeline(master_config):
   for config_name, config in master_config.items():
     print('Tested Configuration: %s - %s - %s' % (config.data.task, config.data.dataset, config.training.conditioning_approach))

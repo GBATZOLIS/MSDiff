@@ -7,7 +7,7 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp' #'/home/gb511/projects/fast_sampling'
+  config.base_log_path = '/home/gb511/projects/fast_sampling' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp' 
   config.experiment_name = 'vp_celebA_smld_weighting'
 
   # training
@@ -40,9 +40,11 @@ def get_config():
   sampling.noise_removal = True
   sampling.probability_flow = False
   sampling.snr = 0.075 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
-  sampling.adaptive = True
+  
+  #new additions for adaptive sampling
+  sampling.adaptive = False
   #provide the directory where the information needed for calculating the adaptive steps is saved.
-  sampling.kl_profile = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/KL/T=1.000-Target_Distribution=T/info.pkl' #'/home/gb511/score_sde_pytorch-1/fast_sampling_experiments/vp_celebA_smld_weighting/KL/T=1.000-Target_Distribution=T/info.pkl' 
+  sampling.kl_profile = None
   sampling.lipschitz_profile = None
 
   # evaluation (this file is not modified at all - subject to change)
@@ -52,25 +54,20 @@ def get_config():
   evaluate.callback = 'base'
   evaluate.predictor = 'ddim'
   evaluate.corrector = 'none'
-  evaluate.p_steps = [20, 50, 100] #[100, 200, 400, 800] #np.arange(100, 1100, step=100)
+  evaluate.p_steps = [100] #[100, 200, 400, 800] #np.arange(100, 1100, step=100)
   evaluate.c_steps = 1
   evaluate.probability_flow = True
   evaluate.denoise = True
   evaluate.adaptive = [True, False] 
   evaluate.adaptive_method = 'lipschitz' #options: [kl, lipschitz]
-  evaluate.alpha = [1., 2.] #used for lipschitz-adaptive method
-  evaluate.gamma = [0., 1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
-  evaluate.num_samples = 10000
-
-  #evaluate.enable_sampling = True
-  #evaluate.enable_loss = True
-  #evaluate.enable_bpd = False
-  #evaluate.bpd_dataset = 'test'
-  
+  evaluate.alpha = [1.] #used for lipschitz-adaptive method
+  evaluate.starting_T = [1.]
+  evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
+  evaluate.num_samples = 50 #10000
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
+  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
   data.dataset = 'celebA-HQ-160'
   data.use_data_mean = False
   data.datamodule = 'unpaired_PKLDataset'
@@ -87,7 +84,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/version_0/checkpoints/epoch=324-step=413399.ckpt' #'/home/gb511/saved_checkpoints/fast_sampling/vp/celebA-HQ-160/64/smld/epoch=324-step=413399.ckpt'
+  model.checkpoint_path = '/home/gb511/saved_checkpoints/fast_sampling/vp/celebA-HQ-160/64/smld/epoch=324-step=413399.ckpt' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/version_0/checkpoints/epoch=324-step=413399.ckpt' 
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01

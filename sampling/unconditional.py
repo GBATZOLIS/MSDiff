@@ -19,7 +19,8 @@ def get_sampling_fn(config, sde, shape, eps,
                     probability_flow='default',
                     snr='default', 
                     denoise='default', 
-                    adaptive_steps=None):
+                    adaptive_steps=None,
+                    starting_T='default'):
 
   """Create a sampling function.
   Args:
@@ -79,7 +80,8 @@ def get_sampling_fn(config, sde, shape, eps,
                                  continuous=config.training.continuous,
                                  denoise=denoise,
                                  eps=eps,
-                                 adaptive_steps=adaptive_steps)
+                                 adaptive_steps=adaptive_steps,
+                                 starting_T=starting_T)
   else:
     raise ValueError(f"Sampler name {sampler_name} unknown.")
 
@@ -171,7 +173,7 @@ def get_ode_sampler(sde, shape,
 
 def get_pc_sampler(sde, shape, predictor, corrector, snr, 
                    p_steps, c_steps, probability_flow=False, continuous=False,
-                   denoise=True, eps=1e-3, adaptive_steps=None):
+                   denoise=True, eps=1e-3, adaptive_steps=None, starting_T='default'):
 
   """Create a Predictor-Corrector (PC) sampler.
   Args:
@@ -216,10 +218,13 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
 
     with torch.no_grad():
       # Initial sample
-      x = sde.prior_sampling(shape).to(model.device).type(torch.float32)
+      x = sde.prior_sampling(shape, starting_T).to(model.device).type(torch.float32)
 
+      if starting_T == 'default':
+        starting_T = sde.T
+        
       if adaptive_steps is None:
-        timesteps = torch.linspace(sde.T, eps, p_steps+1, device=model.device)
+        timesteps = torch.linspace(starting_T, eps, p_steps+1, device=model.device)
       else:
         timesteps = adaptive_steps.to(model.device)
       

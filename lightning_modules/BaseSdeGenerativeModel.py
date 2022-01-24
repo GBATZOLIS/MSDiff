@@ -72,16 +72,22 @@ class BaseSdeGenerativeModel(pl.LightningModule):
     
     def sample(self, show_evolution=False, num_samples=None, predictor='default', 
                     corrector='default', p_steps='default', c_steps='default', probability_flow='default',
-                    snr='default', denoise='default', adaptive='default', gamma=0., alpha=1.):
+                    snr='default', denoise='default', adaptive='default', gamma=0., alpha=1., starting_T='default'):
         
         if num_samples is None:
             num_samples = self.config.eval.batch_size
-        
+
+        if starting_T == 'default':
+            starting_T = self.sde.T
+
         #Code for managing adaptive sampling
         if adaptive == 'default':
-            adaptive = self.config.sampling.adaptive
-            assert adaptive in [True, False], 'adaptive flag should be either True or False'
-
+            if hasattr(self.config.sampling, 'adaptive'):
+                adaptive = self.config.sampling.adaptive
+                assert adaptive in [True, False], 'adaptive flag should be either True or False'
+            else:
+                adaptive = False
+            
         if adaptive:
             if self.config.eval.adaptive_method == 'kl':
                 if self.config.sampling.kl_profile == None:
@@ -143,8 +149,8 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                 adaptive_steps = torch.tensor(self.adaptive_dicrete_fn(p_steps+1))
 
             elif self.config.eval.adaptive_method == 'lipschitz':
-                adaptive_steps = torch.tensor(self.adaptive_dicrete_fn())
-        
+                T_start = self.sde.T if starting_T == 'default' else starting_T
+                adaptive_steps = torch.tensor(self.adaptive_dicrete_fn(T_start))
         else:
             adaptive_steps = None
 
@@ -160,7 +166,8 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                                       probability_flow=probability_flow,
                                       snr=snr, 
                                       denoise=denoise, 
-                                      adaptive_steps=adaptive_steps)
+                                      adaptive_steps=adaptive_steps,
+                                      starting_T=starting_T)
 
         return sampling_fn(self.score_model, show_evolution=show_evolution)
 

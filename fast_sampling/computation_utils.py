@@ -406,8 +406,10 @@ def get_adaptive_discretisation_fn(timestamps, value, gamma, adaptive_method):
     elif adaptive_method == 'lipschitz':
         lipschitz_constant = value
         alpha = gamma
-        def sequence_generator():
-            start, end = timestamps[-1], timestamps[0]
+        def sequence_generator(starting_T):
+            start = starting_T
+            end = timestamps[0]
+
             sequence = []
 
             current_timepoint = start

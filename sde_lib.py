@@ -181,7 +181,7 @@ class VPSDE(SDE):
     std = torch.sqrt(1. - torch.exp(2. * log_mean_coeff))
     return mean, std
 
-  def prior_sampling(self, shape):
+  def prior_sampling(self, shape, T='default'):
     return torch.randn(*shape)
 
   def prior_logp(self, z):
@@ -344,13 +344,18 @@ class VESDE(SDE):
 
     return mean_backward, std_backward
 
-  def prior_sampling(self, shape):
-    if self.diffused_mean is not None:
-      repeat_tuple = tuple([shape[0]]+[1 for _ in shape[1:]])
-      diffused_mean = self.diffused_mean.unsqueeze(0).repeat(repeat_tuple)
-      return torch.randn(*shape) * self.sigma_max + diffused_mean
+  def prior_sampling(self, shape, T='default'):
+    if T=='default':
+      if self.diffused_mean is not None:
+        repeat_tuple = tuple([shape[0]]+[1 for _ in shape[1:]])
+        diffused_mean = self.diffused_mean.unsqueeze(0).repeat(repeat_tuple)
+        return torch.randn(*shape) * self.sigma_max + diffused_mean
+      else:
+        std = sigma_min * (sigma_max / sigma_min) ** T
+        return torch.randn(*shape) * std
+    
     else:
-      return torch.randn(*shape) * self.sigma_max
+      return torch.randn(*shape)*
 
   def prior_logp(self, z):
     shape = z.shape
