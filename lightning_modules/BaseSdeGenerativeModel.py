@@ -166,10 +166,9 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                                       probability_flow=probability_flow,
                                       snr=snr, 
                                       denoise=denoise, 
-                                      adaptive_steps=adaptive_steps,
-                                      starting_T=starting_T)
+                                      adaptive_steps=adaptive_steps)
 
-        return sampling_fn(self.score_model, show_evolution=show_evolution)
+        return sampling_fn(self.score_model, show_evolution=show_evolution, starting_T=starting_T)
 
     def configure_optimizers(self):
         class scheduler_lambda_function:

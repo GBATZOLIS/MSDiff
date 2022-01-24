@@ -19,8 +19,7 @@ def get_sampling_fn(config, sde, shape, eps,
                     probability_flow='default',
                     snr='default', 
                     denoise='default', 
-                    adaptive_steps=None,
-                    starting_T='default'):
+                    adaptive_steps=None):
 
   """Create a sampling function.
   Args:
@@ -75,8 +74,7 @@ def get_sampling_fn(config, sde, shape, eps,
                                  corrector=corrector,
                                  snr=snr,
                                  p_steps=p_steps,
-                                 c_steps=c_steps,
-                                 starting_T=starting_T, 
+                                 c_steps=c_steps, 
                                  probability_flow=probability_flow,
                                  continuous=config.training.continuous,
                                  denoise=denoise,
@@ -172,7 +170,7 @@ def get_ode_sampler(sde, shape,
 
 
 def get_pc_sampler(sde, shape, predictor, corrector, snr, 
-                   p_steps, c_steps, starting_T, probability_flow=False, continuous=False,
+                   p_steps, c_steps, probability_flow=False, continuous=False,
                    denoise=True, eps=1e-3, adaptive_steps=None):
 
   """Create a Predictor-Corrector (PC) sampler.
@@ -207,7 +205,7 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
                                           n_steps=c_steps)
 
 
-  def pc_sampler(model, show_evolution=False):
+  def pc_sampler(model, show_evolution=False, starting_T='default'):
     """ The PC sampler funciton.
     Args:
       model: A score model.
