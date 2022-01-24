@@ -206,6 +206,7 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
                                           snr=snr,
                                           n_steps=c_steps)
 
+  
   def pc_sampler(model, show_evolution=False):
     """ The PC sampler funciton.
     Args:
@@ -216,13 +217,15 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
     if show_evolution:
       evolution = []
 
+    print(starting_T)
+    
     with torch.no_grad():
       # Initial sample
       x = sde.prior_sampling(shape, starting_T).to(model.device).type(torch.float32)
 
       if starting_T == 'default':
         starting_T = sde.T
-        
+
       if adaptive_steps is None:
         timesteps = torch.linspace(starting_T, eps, p_steps+1, device=model.device)
       else:
