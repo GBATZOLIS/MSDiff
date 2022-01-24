@@ -45,7 +45,7 @@ def get_config():
   sampling.adaptive = False
   #provide the directory where the information needed for calculating the adaptive steps is saved.
   sampling.kl_profile = None
-  sampling.lipschitz_profile = None
+  sampling.lipschitz_profile = '/home/gb511/projects/fast_sampling/vp_celebA_smld_weighting/Lip_constant/info.pkl'
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
