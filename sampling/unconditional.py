@@ -232,7 +232,7 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
         timesteps = adaptive_steps.to(model.device)
       
       p_steps = timesteps.size(0)-1
-      for i in range(p_steps):
+      for i in tqdm(range(p_steps)):
         t = timesteps[i]
         vec_t = torch.ones(shape[0], device=t.device) * t
         x, x_mean = corrector_update_fn(x=x, t=vec_t, model=model)
