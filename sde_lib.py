@@ -351,11 +351,17 @@ class VESDE(SDE):
         diffused_mean = self.diffused_mean.unsqueeze(0).repeat(repeat_tuple)
         return torch.randn(*shape) * self.sigma_max + diffused_mean
       else:
-        std = sigma_min * (sigma_max / sigma_min) ** T
-        return torch.randn(*shape) * std
+        return torch.randn(*shape) * self.sigma_max
     
     else:
-      return torch.randn(*shape)*
+      sigma_T = self.sigma_min * (self.sigma_max / self.sigma_min) ** T
+
+      if self.diffused_mean is not None:
+        repeat_tuple = tuple([shape[0]]+[1 for _ in shape[1:]])
+        diffused_mean = self.diffused_mean.unsqueeze(0).repeat(repeat_tuple)
+        return torch.randn(*shape) * sigma_T + diffused_mean
+      else:
+        return torch.randn(*shape) * sigma_T
 
   def prior_logp(self, z):
     shape = z.shape
@@ -405,13 +411,25 @@ class cVESDE(cSDE):
     mean = x
     return mean, std
 
-  def prior_sampling(self, shape):
-    if self.diffused_mean is not None:
-      repeat_tuple = tuple([shape[0]]+[1 for _ in shape[1:]])
-      diffused_mean = self.diffused_mean.unsqueeze(0).repeat(repeat_tuple)
-      return torch.randn(*shape) * self.sigma_max + diffused_mean
+  def prior_sampling(self, shape, T='default'):
+    if T=='default':
+      if self.diffused_mean is not None:
+        repeat_tuple = tuple([shape[0]]+[1 for _ in shape[1:]])
+        diffused_mean = self.diffused_mean.unsqueeze(0).repeat(repeat_tuple)
+        return torch.randn(*shape) * self.sigma_max + diffused_mean
+      else:
+        return torch.randn(*shape) * self.sigma_max
+    
     else:
-      return torch.randn(*shape) * self.sigma_max
+      sigma_T = self.sigma_min * (self.sigma_max / self.sigma_min) ** T
+
+      if self.diffused_mean is not None:
+        repeat_tuple = tuple([shape[0]]+[1 for _ in shape[1:]])
+        diffused_mean = self.diffused_mean.unsqueeze(0).repeat(repeat_tuple)
+        return torch.randn(*shape) * sigma_T + diffused_mean
+      else:
+        return torch.randn(*shape) * sigma_T
+
 
   def prior_logp(self, z):
     shape = z.shape
