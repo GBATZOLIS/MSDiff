@@ -19,7 +19,8 @@ def get_sampling_fn(config, sde, shape, eps,
                     probability_flow='default',
                     snr='default', 
                     denoise='default', 
-                    adaptive_steps=None):
+                    adaptive_steps=None,
+                    starting_T='default'):
 
   """Create a sampling function.
   Args:
@@ -79,7 +80,8 @@ def get_sampling_fn(config, sde, shape, eps,
                                  continuous=config.training.continuous,
                                  denoise=denoise,
                                  eps=eps,
-                                 adaptive_steps=adaptive_steps)
+                                 adaptive_steps=adaptive_steps,
+                                 starting_T=starting_T)
   else:
     raise ValueError(f"Sampler name {sampler_name} unknown.")
 
@@ -171,7 +173,7 @@ def get_ode_sampler(sde, shape,
 
 def get_pc_sampler(sde, shape, predictor, corrector, snr, 
                    p_steps, c_steps, probability_flow=False, continuous=False,
-                   denoise=True, eps=1e-3, adaptive_steps=None):
+                   denoise=True, eps=1e-3, adaptive_steps=None, starting_T='default'):
 
   """Create a Predictor-Corrector (PC) sampler.
   Args:
@@ -204,17 +206,23 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
                                           snr=snr,
                                           n_steps=c_steps)
 
-
-  def pc_sampler(model, show_evolution=False, starting_T='default'):
+  def pc_sampler(model, show_evolution=False):
     """ The PC sampler funciton.
     Args:
       model: A score model.
     Returns:
       Samples, number of function evaluations.
     """
+    
+    #declare non-local variables
+    nonlocal starting_T
+    nonlocal adaptive_steps
+    nonlocal p_steps
+    nonlocal c_steps
+
     if show_evolution:
       evolution = []
-
+    
     with torch.no_grad():
       # Initial sample
       x = sde.prior_sampling(shape, starting_T).to(model.device).type(torch.float32)
@@ -228,7 +236,7 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
         timesteps = adaptive_steps.to(model.device)
       
       p_steps = timesteps.size(0)-1
-      for i in tqdm(range(p_steps)):
+      for i in range(p_steps):
         t = timesteps[i]
         vec_t = torch.ones(shape[0], device=t.device) * t
         x, x_mean = corrector_update_fn(x=x, t=vec_t, model=model)
