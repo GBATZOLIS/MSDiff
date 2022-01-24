@@ -172,6 +172,7 @@ class ImageVisualizationCallback(Callback):
         save_dir = os.path.join(self.save_samples_dir, 
         'eq(%s)-p(%s)-c(%s)' % (eq, pl_module.config.eval.predictor, pl_module.config.eval.corrector), 
         self.adaptive_method, 'T_%.2f' % starting_T, 'alpha_%.2f' % alpha, adaptive_name)
+        Path(save_dir).mkdir(parents=True, exist_ok=True)
 
         with open(self.config.sampling.lipschitz_profile, 'rb') as f:
             info = pickle.load(f)
