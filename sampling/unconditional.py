@@ -75,13 +75,13 @@ def get_sampling_fn(config, sde, shape, eps,
                                  corrector=corrector,
                                  snr=snr,
                                  p_steps=p_steps,
-                                 c_steps=c_steps, 
+                                 c_steps=c_steps,
+                                 starting_T=starting_T, 
                                  probability_flow=probability_flow,
                                  continuous=config.training.continuous,
                                  denoise=denoise,
                                  eps=eps,
-                                 adaptive_steps=adaptive_steps,
-                                 starting_T=starting_T)
+                                 adaptive_steps=adaptive_steps)
   else:
     raise ValueError(f"Sampler name {sampler_name} unknown.")
 
@@ -172,8 +172,8 @@ def get_ode_sampler(sde, shape,
 
 
 def get_pc_sampler(sde, shape, predictor, corrector, snr, 
-                   p_steps, c_steps, probability_flow=False, continuous=False,
-                   denoise=True, eps=1e-3, adaptive_steps=None, starting_T='default'):
+                   p_steps, c_steps, starting_T, probability_flow=False, continuous=False,
+                   denoise=True, eps=1e-3, adaptive_steps=None):
 
   """Create a Predictor-Corrector (PC) sampler.
   Args:
@@ -217,17 +217,15 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
     if show_evolution:
       evolution = []
 
-    T_start = starting_T
-
     with torch.no_grad():
       # Initial sample
-      x = sde.prior_sampling(shape, T_start).to(model.device).type(torch.float32)
+      x = sde.prior_sampling(shape, starting_T).to(model.device).type(torch.float32)
 
-      if T_start == 'default':
-        T_start = sde.T
+      if starting_T == 'default':
+        starting_T = sde.T
 
       if adaptive_steps is None:
-        timesteps = torch.linspace(T_start, eps, p_steps+1, device=model.device)
+        timesteps = torch.linspace(starting_T, eps, p_steps+1, device=model.device)
       else:
         timesteps = adaptive_steps.to(model.device)
       

@@ -154,7 +154,6 @@ class BaseSdeGenerativeModel(pl.LightningModule):
         else:
             adaptive_steps = None
 
-        print(starting_T)
         sampling_shape = [num_samples] + self.config.data.shape
         sampling_fn = get_sampling_fn(config=self.config, 
                                       sde=self.sde, 
