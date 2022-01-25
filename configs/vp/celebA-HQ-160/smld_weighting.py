@@ -7,13 +7,13 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path = '/home/gb511/projects/fast_sampling' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp' 
+  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp' #'/home/gb511/projects/fast_sampling'
   config.experiment_name = 'vp_celebA_smld_weighting'
 
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'base'
-  training.batch_size = 50 #128 
+  training.batch_size = 250
   training.num_nodes = 1
   training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
@@ -45,7 +45,7 @@ def get_config():
   sampling.adaptive = False
   #provide the directory where the information needed for calculating the adaptive steps is saved.
   sampling.kl_profile = None
-  sampling.lipschitz_profile = '/home/gb511/projects/fast_sampling/vp_celebA_smld_weighting/Lip_constant/info.pkl'
+  sampling.lipschitz_profile = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/Lip_constant/info.pkl' #'/home/gb511/projects/fast_sampling/vp_celebA_smld_weighting/Lip_constant/info.pkl'
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
@@ -63,11 +63,11 @@ def get_config():
   evaluate.alpha = [1.] #used for lipschitz-adaptive method
   evaluate.starting_T = [1.]
   evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
-  evaluate.num_samples = 50 #10000
+  evaluate.num_samples = 10000
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
+  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
   data.dataset = 'celebA-HQ-160'
   data.use_data_mean = False
   data.datamodule = 'unpaired_PKLDataset'
@@ -84,7 +84,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/saved_checkpoints/fast_sampling/vp/celebA-HQ-160/64/smld/epoch=324-step=413399.ckpt' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/version_0/checkpoints/epoch=324-step=413399.ckpt' 
+  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/version_0/checkpoints/epoch=324-step=413399.ckpt' #'/home/gb511/saved_checkpoints/fast_sampling/vp/celebA-HQ-160/64/smld/epoch=324-step=413399.ckpt'
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
