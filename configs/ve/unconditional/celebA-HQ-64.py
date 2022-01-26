@@ -63,7 +63,7 @@ def get_config():
   evaluate.adaptive = [False] #[True, False] 
   evaluate.adaptive_method = 'lipschitz' #options: [kl, lipschitz]
   evaluate.alpha = [0.4] #used for lipschitz-adaptive method
-  evaluate.starting_T = [0.7] #[1., 0.7]
+  evaluate.starting_T = [0.5] #[1., 0.7]
   evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
   evaluate.num_samples = 50
 
