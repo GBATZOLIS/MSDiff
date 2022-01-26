@@ -57,7 +57,7 @@ class Predictor(abc.ABC):
 class DDIMPredictor(Predictor):
   def __init__(self, sde, score_fn, probability_flow=False, discretisation=None):
     super().__init__(sde, score_fn, probability_flow, discretisation)
-    assert isinstance(sde, sde_lib.VPSDE), 'ddim sampler is supported only for the VPSDE currently.'
+    #assert isinstance(sde, sde_lib.VPSDE), 'ddim sampler is supported only for the VPSDE currently.'
 
   def update_fn(self, z_t, t):
     #compute the negative timestep
