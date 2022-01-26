@@ -180,7 +180,7 @@ class ImageVisualizationCallback(Callback):
         adaptive_discretisation_fn = get_adaptive_discretisation_fn(info['t'], info['Lip_constant'], alpha, 'lipschitz')
         T_start = pl_module.sde.T if starting_T == 'default' else starting_T
         num_adaptive_steps = torch.tensor(adaptive_discretisation_fn(T_start)).size(0) - 1
-
+        
         num_generated_samples = 0
         while num_generated_samples < self.num_samples:
             samples, info = pl_module.sample(show_evolution=False,
