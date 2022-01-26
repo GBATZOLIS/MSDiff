@@ -55,7 +55,7 @@ def get_config():
   evaluate.batch_size = training.batch_size
   evaluate.callback = 'base'
   evaluate.predictor = 'euler_maruyama' #'ddim'
-  evaluate.corrector = 'langevin'
+  evaluate.corrector = 'none'
   evaluate.p_steps = [100] #[100, 200, 400, 800] #np.arange(100, 1100, step=100)
   evaluate.c_steps = 1
   evaluate.probability_flow = True
@@ -65,7 +65,7 @@ def get_config():
   evaluate.alpha = [0.4] #used for lipschitz-adaptive method
   evaluate.starting_T = [1.] #[1., 0.7]
   evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
-  evaluate.num_samples = 250
+  evaluate.num_samples = 50
 
   # data
   config.data = data = ml_collections.ConfigDict()
