@@ -54,8 +54,8 @@ def get_config():
   evaluate.workers = 4*training.gpus
   evaluate.batch_size = training.batch_size
   evaluate.callback = 'base'
-  evaluate.predictor = 'reverse_diffusion' #'ddim'
-  evaluate.corrector = 'none'
+  evaluate.predictor = 'euler_maruyama' #'ddim'
+  evaluate.corrector = 'langevin'
   evaluate.p_steps = [100] #[100, 200, 400, 800] #np.arange(100, 1100, step=100)
   evaluate.c_steps = 1
   evaluate.probability_flow = True
