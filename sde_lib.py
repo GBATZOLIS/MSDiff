@@ -323,7 +323,7 @@ class VESDE(SDE):
     sigma_min = torch.tensor(self.sigma_min).type_as(t)
     sigma_max = torch.tensor(self.sigma_max).type_as(t)
     sigma_t = sigma_min * (sigma_max / sigma_min) ** t
-    a_t = torch.ones(t)
+    a_t = torch.ones_like(t)
     return a_t, sigma_t
 
   def marginal_prob(self, x, t): #perturbation kernel P(X(t)|X(0)) parameters
