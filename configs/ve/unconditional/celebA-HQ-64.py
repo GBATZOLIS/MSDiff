@@ -13,7 +13,7 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'base'
-  training.batch_size = 250
+  training.batch_size = 350
   training.num_nodes = 1
   training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
@@ -54,7 +54,7 @@ def get_config():
   evaluate.workers = 4*training.gpus
   evaluate.batch_size = training.batch_size
   evaluate.callback = 'base'
-  evaluate.predictor = 'euler_maruyama' #'ddim'
+  evaluate.predictor = 'ddim' #'ddim'
   evaluate.corrector = 'none'
   evaluate.p_steps = [100] #[100, 200, 400, 800] #np.arange(100, 1100, step=100)
   evaluate.c_steps = 1

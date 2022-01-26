@@ -319,6 +319,13 @@ class VESDE(SDE):
     diffusion = sigma * torch.sqrt(torch.tensor(2 * (np.log(self.sigma_max) - np.log(self.sigma_min))).type_as(t))
     return drift, diffusion
 
+  def perturbation_coefficients(self, t):
+    sigma_min = torch.tensor(self.sigma_min).type_as(t)
+    sigma_max = torch.tensor(self.sigma_max).type_as(t)
+    sigma_t = sigma_min * (sigma_max / sigma_min) ** t
+    a_t = torch.ones(t)
+    return a_t, sigma_t
+
   def marginal_prob(self, x, t): #perturbation kernel P(X(t)|X(0)) parameters
     sigma_min = torch.tensor(self.sigma_min).type_as(t)
     sigma_max = torch.tensor(self.sigma_max).type_as(t)
