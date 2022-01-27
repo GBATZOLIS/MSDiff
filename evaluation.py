@@ -290,6 +290,15 @@ def get_stats_from_activations(activations):
     return stats
 
 def run_unconditional_evaluation_pipeline(config):
+    def return_fid(path, config):
+        dataset = SynthesizedDataset(path=path)
+        dataloader = DataLoader(dataset, batch_size = config.eval.batch_size, shuffle=False, num_workers=config.eval.workers)
+        activations = get_activations(dataloader, activation_fn, device)
+        stats = get_stats_from_activations(activations)
+        fid = calculate_frechet_distance(mu1=gt_stats['mu'], sigma1=gt_stats['sigma'], 
+                                            mu2=stats['mu'], sigma2=stats['sigma'])
+        return fid
+
     #set up the inception model
     device='cuda'
     dims = 2048
@@ -300,8 +309,8 @@ def run_unconditional_evaluation_pipeline(config):
 
     DataModule = create_lightning_datamodule(config)
     DataModule.setup()
-    test_dataloader = DataModule.test_dataloader()
-    gt_activations = get_activations(test_dataloader, activation_fn, device)
+    train_dataloader = DataModule.train_dataloader()
+    gt_activations = get_activations(train_dataloader, activation_fn, device)
     gt_stats = get_stats_from_activations(gt_activations)
 
     eq = 'ode' if config.eval.probability_flow else 'sde'
@@ -309,22 +318,28 @@ def run_unconditional_evaluation_pipeline(config):
     'samples', 'eq(%s)-p(%s)-c(%s)' % (eq, config.eval.predictor, config.eval.corrector), config.eval.adaptive_method)
     
     results = {}
-    for starting_T in config.eval.starting_T:
-        results[starting_T]={}
-        for alpha in config.eval.alpha:
-            results[starting_T][alpha]={}
-            for adaptive in config.eval.adaptive:
-                adaptive_name = 'adaptive' if adaptive else 'uniform'
-                path = os.path.join(base_path, 'T_%.2f' % starting_T, 'alpha_%.2f' % alpha, adaptive_name)
-                
-                dataset = SynthesizedDataset(path=path)
-                dataloader = DataLoader(dataset, batch_size = config.eval.batch_size, shuffle=False, num_workers=config.eval.workers)
-                activations = get_activations(dataloader, activation_fn, device)
-                stats = get_stats_from_activations(activations)
-                fid = calculate_frechet_distance(mu1=gt_stats['mu'], sigma1=gt_stats['sigma'], 
-                                                mu2=stats['mu'], sigma2=stats['sigma'])
-                
-                results[starting_T][alpha][adaptive_name] = fid
+
+    if config.eval.adaptive_method == 'lipschitz':
+        for starting_T in config.eval.starting_T:
+            results[starting_T]={}
+            for alpha in config.eval.alpha:
+                results[starting_T][alpha]={}
+                for adaptive in config.eval.adaptive:
+                    adaptive_name = 'adaptive' if adaptive else 'uniform'
+                    path = os.path.join(base_path, 'T_%.2f' % starting_T, 'alpha_%.2f' % alpha, adaptive_name)
+                    fid = return_fid(path, config)
+                    results[starting_T][alpha][adaptive_name] = fid
+    
+    elif config.eval.adaptive_method == 'T':
+        T_values = [0.7, 1.]
+        p_values = {0.7:[700, 1000], 1.:[1000]}
+
+        for starting_T in T_values:
+            results[starting_T]={}
+            for p_steps in p_values[starting_T]:
+                path = os.path.join(base_path, 'T_%.2f' % starting_T, '%d' % p_steps)
+                fid = return_fid(path, config)
+                results[starting_T][p_steps] = fid
 
     #create the evaluation log file
     evaluation_log_path = os.path.join(config.base_log_path, 

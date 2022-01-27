@@ -13,7 +13,7 @@ def get_config():
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'base'
-  training.batch_size = 50
+  training.batch_size = 200
   training.num_nodes = 1
   training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
@@ -61,11 +61,11 @@ def get_config():
   evaluate.probability_flow = False
   evaluate.denoise = True
   evaluate.adaptive = [False] #[True, False] 
-  evaluate.adaptive_method = 'lipschitz' #options: [kl, lipschitz]
+  evaluate.adaptive_method = 'T' #options: [kl, lipschitz, T]
   evaluate.alpha = [0.4] #used for lipschitz-adaptive method
   evaluate.starting_T = [0.5] #[1., 0.7]
   evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
-  evaluate.num_samples = 50
+  evaluate.num_samples = 10000
 
   # data
   config.data = data = ml_collections.ConfigDict()
