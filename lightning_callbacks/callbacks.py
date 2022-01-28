@@ -284,8 +284,11 @@ class ImageVisualizationCallback(Callback):
                             self.generate_lipschitz_synthetic_dataset(pl_module, adaptive, alpha, start_T)
 
             elif self.adaptive_method == 'T':
-                T_values = [0.7, 1.]
-                p_values = {0.7:[700, 1000], 1.:[1000]}
+                #T_values = [0.7, 1.]
+                #p_values = {0.7:[700, 1000], 1.:[1000]}
+
+                T_values = [0.8, 0.9]
+                p_values = {0.8:[800, 1000], 0.9:[900, 1000]}
 
                 for starting_T in T_values:
                     for p_steps in p_values[starting_T]:

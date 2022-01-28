@@ -331,8 +331,12 @@ def run_unconditional_evaluation_pipeline(config):
                     results[starting_T][alpha][adaptive_name] = fid
     
     elif config.eval.adaptive_method == 'T':
-        T_values = [0.7, 1.]
-        p_values = {0.7:[700, 1000], 1.:[1000]}
+        T_values = [0.7, 0.8, 0.9, 1.]
+
+        p_values = {0.7:[700, 1000],
+                    0.8:[800, 1000],
+                    0.9:[900, 1000],
+                     1.:[1000]}
 
         for starting_T in T_values:
             results[starting_T]={}
