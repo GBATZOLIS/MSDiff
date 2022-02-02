@@ -25,7 +25,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
         self.score_model = {}
 
         self.num_scales = 0
-        for config in self.configs:
+        for config in configs:
             self.score_model[config.data.scale_name] = mutils.create_model(config)
             self.config[config.data.scale_name] = config
             self.num_scales += 1
