@@ -67,7 +67,8 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
         # Setup SDEs for every configuration
         self.sde = {}
         self.sampling_eps = 1e-3
-        for config in configs:
+        for config_name in configs.keys():
+            config = configs[config_name]
             scale_name = config.data.scale_name
             self.sde[scale_name] = sde_lib.VPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
     

@@ -22,8 +22,9 @@ def get_callback_by_name(name):
     return _CALLBACKS[name]
 
 def get_callbacks(config, phase='train'):
-    callbacks=[get_callback_by_name('ema')()] #check if this works for testing as well.
-
+    #callbacks=[get_callback_by_name('ema')()] #check if this works for testing as well.
+    callbacks = []
+    
     if phase=='test':
       callbacks.append(get_callback_by_name(config.eval.callback)(config))
     else:
