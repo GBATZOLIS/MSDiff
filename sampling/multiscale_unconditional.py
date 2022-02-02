@@ -17,12 +17,12 @@ def get_sampling_fn(config, sde, shape, eps,
                     p_steps='default', 
                     c_steps='default', 
                     probability_flow='default',
-                    snr='default',
-                    show_evolution=False,
+                    snr='default', 
                     denoise='default', 
                     adaptive_steps=None,
                     starting_T='default',
-                    ending_T='default'):
+                    ending_T='default',
+                    scale=1):
 
   """Create a sampling function.
   Args:
@@ -80,32 +80,17 @@ def get_sampling_fn(config, sde, shape, eps,
                                  c_steps=c_steps, 
                                  probability_flow=probability_flow,
                                  continuous=config.training.continuous,
-                                 show_evolution = show_evolution,
                                  denoise=denoise,
                                  eps=eps,
                                  adaptive_steps=adaptive_steps,
                                  starting_T=starting_T,
-                                 ending_T = ending_T)
+                                 ending_T=ending_T,
+                                 scale=scale)
   else:
     raise ValueError(f"Sampler name {sampler_name} unknown.")
 
   return sampling_fn
 
-
-def get_inpainting_fn(config, sde, eps, n_steps_each=1):
-  '''create the inpainting function'''
-  predictor = get_predictor(config.sampling.predictor.lower())
-  corrector = get_corrector(config.sampling.corrector.lower())
-  sampling_fn = get_pc_inpainter(sde=sde, 
-                                 predictor=predictor, 
-                                 corrector=corrector, 
-                                 snr=config.sampling.snr,
-                                 n_steps=n_steps_each, 
-                                 probability_flow=config.sampling.probability_flow, 
-                                 continuous=config.training.continuous,
-                                 denoise=config.sampling.noise_removal, 
-                                 eps=eps)
-  return sampling_fn
 
 def get_ode_sampler(sde, shape,
                     denoise=False, rtol=1e-5, atol=1e-5,
@@ -177,8 +162,8 @@ def get_ode_sampler(sde, shape,
 
 def get_pc_sampler(sde, shape, predictor, corrector, snr, 
                    p_steps, c_steps, probability_flow=False, continuous=False,
-                   show_evolution=False, denoise=True, eps=1e-3, 
-                   adaptive_steps=None, starting_T='default', ending_T = 'default'):
+                   denoise=True, eps=1e-3, adaptive_steps=None, 
+                   starting_T='default', ending_T='default', scale=1):
 
   """Create a Predictor-Corrector (PC) sampler.
   Args:
@@ -211,7 +196,7 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
                                           snr=snr,
                                           n_steps=c_steps)
 
-  def pc_sampler(model, x=None, new_scale_name=None):
+  def pc_sampler(model, x=None, show_evolution=False):
     """ The PC sampler funciton.
     Args:
       model: A score model.
@@ -220,177 +205,61 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
     """
     
     #declare non-local variables
-    nonlocal show_evolution
-    nonlocal ending_T
+    nonlocal scale
     nonlocal starting_T
+    nonlocal ending_T
     nonlocal adaptive_steps
     nonlocal p_steps
     nonlocal c_steps
 
     if show_evolution:
       evolution = []
-
+    
     if starting_T == 'default':
         starting_T = sde.T
     
     if ending_T == 'default':
-      ending_T = eps
+        ending_T = eps
 
     with torch.no_grad():
-      # Initial sample
-      if x is None:
-        if isinstance(sde, dict):
-          x={}
-          x[new_scale_name] = sde[new_scale_name].prior_sampling(shape, starting_T).to(model.device).type(torch.float32)
+        #Generate the initial sample
+        if x is None:
+            #if x is not provided, then we generate the random seed of the approximation coefficient at the deepest scale
+            x = {'a%d' % scale: sde['a%d' % scale].prior_sampling(shape, starting_T).to(model.device).type(torch.float32)}
         else:
-          x = sde.prior_sampling(shape, starting_T).to(model.device).type(torch.float32)
-      else:
-        x[new_scale_name] = sde[new_scale_name].prior_sampling(shape, starting_T).to(model.device).type(torch.float32)
-        
-      if adaptive_steps is None:
-        total_discrete_points = p_steps+1
-        timesteps = torch.linspace(starting_T, ending_T, total_discrete_points, device=model.device)
-      else:
-        timesteps = adaptive_steps.to(model.device)
-        p_steps = timesteps.size(0) - 1
-      
-      for i in tqdm(range(p_steps)):
-        t = timesteps[i]
-        vec_t = torch.ones(shape[0], device=t.device) * t
-        #x, x_mean = corrector_update_fn(x=x, t=vec_t, model=model)
-        x, x_mean = predictor_update_fn(x=x, t=vec_t, model=model, discretisation=timesteps)
-        
-        if show_evolution:
-          evolution.append(x.cpu())
+            #if x is provided, then we generate the the random seed of the detail coefficient at the provided scale
+            detail_shape = derive_detail_coeff_shape(shape, x.shape)
+            detail_coeff = sde['d%d' % scale].prior_sampling(detail_shape, starting_T).to(model.device).type(torch.float32)
+            x['d%d' % scale] = detail_coeff
 
-      samples = x_mean if denoise else x
+        if adaptive_steps is None:
+            total_discrete_points = p_steps+1
+            timesteps = torch.linspace(starting_T, ending_T, total_discrete_points, device=model.device)
+        else:
+            timesteps = adaptive_steps.to(model.device)
+            p_steps = timesteps.size(0) - 1
+        
+        for i in tqdm(range(p_steps)):
+            t = timesteps[i]
+            vec_t = torch.ones(shape[0], device=t.device) * t
+            x, x_mean = corrector_update_fn(x=x, t=vec_t, model=model)
+            x, x_mean = predictor_update_fn(x=x, t=vec_t, model=model, discretisation=timesteps)
+            
+            if show_evolution:
+                evolution.append(x.cpu())
 
-      if show_evolution:
+        samples = x_mean if denoise else x
+
+    if show_evolution:
         sampling_info = {'evolution': torch.stack(evolution), 
-                        'times':timesteps, 'steps': p_steps}
+                            'times':timesteps, 'steps': p_steps}
         return samples, sampling_info
-      else:
+    else:
         sampling_info = {'times':timesteps, 'steps': p_steps}
         return samples, sampling_info
 
   return pc_sampler
 
-def get_pc_inpainter(sde, predictor, corrector, snr,
-                     n_steps=1, probability_flow=False, continuous=False,
-                     denoise=True, eps=1e-5):
-  """Create an image inpainting function that uses PC samplers.
-  Args:
-    sde: An `sde_lib.SDE` object that represents the forward SDE.
-    predictor: A subclass of `sampling.Predictor` that represents a predictor algorithm.
-    corrector: A subclass of `sampling.Corrector` that represents a corrector algorithm.
-    snr: A `float` number. The signal-to-noise ratio for the corrector.
-    n_steps: An integer. The number of corrector steps per update of the corrector.
-    probability_flow: If `True`, predictor solves the probability flow ODE for sampling.
-    continuous: `True` indicates that the score-based model was trained with continuous time.
-    denoise: If `True`, add one-step denoising to final samples.
-    eps: A `float` number. The reverse-time SDE/ODE is integrated to `eps` for numerical stability.
-  Returns:
-    An inpainting function.
-  """
-  # Define predictor & corrector
-  predictor_update_fn = functools.partial(shared_predictor_update_fn,
-                                          sde=sde,
-                                          predictor=predictor,
-                                          probability_flow=probability_flow,
-                                          continuous=continuous)
-  corrector_update_fn = functools.partial(shared_corrector_update_fn,
-                                          sde=sde,
-                                          corrector=corrector,
-                                          continuous=continuous,
-                                          snr=snr,
-                                          n_steps=n_steps)
-
-  def get_inpaint_update_fn(update_fn):
-    """Modify the update function of predictor & corrector to incorporate data information."""
-
-    def inpaint_update_fn(model, data, mask, x, t):
-      with torch.no_grad():
-        vec_t = torch.ones(data.shape[0]).type_as(data) * t
-        x, x_mean = update_fn(x, vec_t, model=model)
-        
-        masked_data_mean, std = sde.marginal_prob(data, vec_t)
-        masked_data = masked_data_mean + torch.randn_like(x) * std[(...,) + (None,) * len(x.shape[1:])]
-        x = x * (1. - mask) + masked_data * mask
-        x_mean = x * (1. - mask) + masked_data_mean * mask
-
-        return x, x_mean
-
-    return inpaint_update_fn
-
-  projector_inpaint_update_fn = get_inpaint_update_fn(predictor_update_fn)
-  corrector_inpaint_update_fn = get_inpaint_update_fn(corrector_update_fn)
-
-  def pc_inpainter(model, data, mask, show_evolution=False):
-    """Predictor-Corrector (PC) sampler for image inpainting.
-    Args:
-      model: A score model.
-      data: A PyTorch tensor that represents a mini-batch of images to inpaint.
-      mask: A 0-1 tensor with the same shape of `data`. Value `1` marks known pixels,
-        and value `0` marks pixels that require inpainting.
-    Returns:
-      Inpainted (complete) images.
-    """
-
-    '''
-    def corrections_steps(i):
-      changing_points = [500, 750, 875, 937, 969, 985, 992]
-      if i < changing_points[0]:
-        return 1
-      elif i >= changing_points[-1]:
-        return 2**len(changing_points)
-      else:
-        for j in range(len(changing_points)-1):
-          if i >= changing_points[j] and i<changing_points[j+1]:
-            break
-        exp = j+1
-        return 2**exp
-    '''
-
-    def corrections_steps(i):
-      return 1
-
-
-    with torch.no_grad():
-      # Initial sample
-
-      #GB suggestion:
-      #vec_t = torch.ones(data.shape[0], device=data.device) * sde.T
-      #masked_data_mean, std = sde.marginal_prob(data, vec_t)
-      #masked_data = masked_data_mean + torch.randn_like(x) * std[:, None, None, None]
-      #x = masked_data * mask + sde.prior_sampling(data.shape).to(data.device) * (1. - mask)
-      #
-      #Song code:
-      #x = data * mask + sde.prior_sampling(data.shape).to(data.device) * (1. - mask) 
-
-      x = data * mask + sde.prior_sampling(data.shape).type_as(data) * (1. - mask) 
-      
-      if show_evolution:
-        evolution = [x.cpu()]
-
-      timesteps = torch.linspace(sde.T, eps, sde.N)
-      for i in tqdm(range(sde.N)):
-        t = timesteps[i]
-
-        for _ in range(corrections_steps(i)):
-          x, x_mean = corrector_inpaint_update_fn(model, data, mask, x, t)
-
-        x, x_mean = projector_inpaint_update_fn(model, data, mask, x, t)
-
-        if show_evolution:
-          evolution.append(x.cpu())
-      
-      if show_evolution:
-        sampling_info = {'evolution': torch.stack(evolution)}
-        return x_mean if denoise else x, sampling_info
-      else:
-        return x_mean if denoise else x, {}
-
-  return pc_inpainter
 
 def shared_predictor_update_fn(x, t, sde, model, predictor, probability_flow, continuous, discretisation):
   """A wrapper that configures and returns the update function of predictors."""
@@ -413,3 +282,13 @@ def shared_corrector_update_fn(x, t, sde, model, corrector, continuous, snr, n_s
   else:
     corrector_obj = corrector(sde, score_fn, snr, n_steps)
   return corrector_obj.update_fn(x, t)
+
+def derive_detail_coeff_shape(current_shape, deeper_shape):
+    detail_coeff_shape = []
+    for dim_current, dim_deeper in zip(current_shape, deeper_shape):
+        if dim_current == dim_deeper:
+            detail_coeff_shape.append(dim_current)
+        else:
+            detail_coeff_shape.append(dim_current - dim_deeper)
+
+    return tuple(detail_coeff_shape)

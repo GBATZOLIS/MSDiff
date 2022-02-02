@@ -156,7 +156,7 @@ def get_sde_loss_fn(sde, train, reduce_mean=True, continuous=True, likelihood_we
 
   return loss_fn
 
-def get_general_sde_loss_fn(sde, train, conditional=False, reduce_mean=True, continuous=True, likelihood_weighting=True, eps=1e-5):
+def get_general_sde_loss_fn(sde, train, conditional=False, multiscale=False, reduce_mean=True, continuous=True, likelihood_weighting=True, eps=1e-5):
   """Create a loss function for training with arbirary SDEs.
   Args:
     sde: An `sde_lib.SDE` object that represents the forward SDE.
@@ -265,31 +265,75 @@ def get_general_sde_loss_fn(sde, train, conditional=False, reduce_mean=True, con
         return loss
 
   else:
-    def loss_fn(model, batch):
-      """Compute the loss function.
-      Args:
-        model: A score model.
-        batch: A mini-batch of training data.
-      Returns:
-        loss: A scalar that represents the average loss value across the mini-batch.
-      """
-      score_fn = mutils.get_score_fn(sde, model, conditional=conditional, train=train, continuous=continuous)
-      t = torch.rand(batch.shape[0]).type_as(batch) * (sde.T - eps) + eps
-      z = torch.randn_like(batch)
-      mean, std = sde.marginal_prob(batch, t)
-      perturbed_data = mean + std[(...,) + (None,) * len(batch.shape[1:])] * z
-      score = score_fn(perturbed_data, t)
+    if multiscale:
+      def loss_fn(model, batch, Τ_start, Τ_end):
+        """Compute the loss function.
+        Args:
+          model: A score model.
+          batch: A mini-batch of training data.
+        Returns:
+          loss: A scalar that represents the average loss value across the mini-batch.
+        """
 
-      if not likelihood_weighting:
-        losses = torch.square(score * std[(...,) + (None,) * len(batch.shape[1:])] + z)
-        losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1)
-      else:
-        g2 = sde.sde(torch.zeros_like(batch), t)[1] ** 2
-        losses = torch.square(score + z / std[(...,) + (None,) * len(batch.shape[1:])])
-        losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1) * g2
+        score_fn = mutils.get_score_fn(sde, model, conditional=conditional, train=train, continuous=continuous, multiscale=True) #this will be modified -> things inside this function to account for the multiscale setting.
+        
+        rkey = list(batch.keys())[0]
+        t = torch.rand(batch[rkey].shape[0]).type_as(batch[rkey]) * (Τ_end - Τ_start) + Τ_start
 
-      loss = torch.mean(losses)
-      return loss
+        perturbed_data = {}
+        noise = {}
+        pertubation_std = {}
+        for member_name in batch.keys():
+          z = torch.randn_like(batch[member_name])
+          noise[member_name] = z
+          mean, std = sde[member_name].marginal_prob(batch[member_name], t)
+          pertubation_std[member_name] = std
+          perturbed_member = mean + std[(...,) + (None,) * len(batch[member_name].shape[1:])] * z
+          perturbed_data[member_name] = perturbed_member
+
+        score = score_fn(perturbed_data, t)
+
+        losses = []
+        for member_name in batch.keys():
+          g2_member = sde[member_name].sde(torch.zeros_like(perturbed_data[member_name]), t)[1] ** 2
+          
+          member_loss = torch.square(score[member_name] + noise[member_name] / pertubation_std[member_name][(...,) + (None,) * len(perturbed_data[member_name].shape[1:])])*g2_member[(...,) + (None,) * len(perturbed_data[member_name].shape[1:])]
+          member_loss = member_loss.reshape(member_loss.shape[0], -1)
+
+          losses.append(member_loss)
+
+        losses = torch.cat(losses, dim=-1)
+        losses = reduce_op(losses, dim=-1)
+        loss = torch.mean(losses)
+        return loss
+    
+    else:
+      def loss_fn(model, batch):
+        """Compute the loss function.
+        Args:
+          model: A score model.
+          batch: A mini-batch of training data.
+        Returns:
+          loss: A scalar that represents the average loss value across the mini-batch.
+        """
+        score_fn = mutils.get_score_fn(sde, model, conditional=conditional, train=train, continuous=continuous)
+        t = torch.rand(batch.shape[0]).type_as(batch) * (sde.T - eps) + eps
+        z = torch.randn_like(batch)
+        mean, std = sde.marginal_prob(batch, t)
+        perturbed_data = mean + std[(...,) + (None,) * len(batch.shape[1:])] * z
+        score = score_fn(perturbed_data, t)
+
+        if not likelihood_weighting:
+          losses = torch.square(score * std[(...,) + (None,) * len(batch.shape[1:])] + z)
+          losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1)
+        else:
+          g2 = sde.sde(torch.zeros_like(batch), t)[1] ** 2
+          losses = torch.square(score + z / std[(...,) + (None,) * len(batch.shape[1:])])
+          losses = reduce_op(losses.reshape(losses.shape[0], -1), dim=-1) * g2
+
+        loss = torch.mean(losses)
+        return loss
+
 
   return loss_fn
 

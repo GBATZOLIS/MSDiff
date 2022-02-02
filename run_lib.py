@@ -15,7 +15,7 @@ from lightning_callbacks.utils import get_callbacks
 from lightning_data_modules import HaarDecomposedDataset, ImageDatasets, PairedDataset, SyntheticDataset, SRDataset, SRFLOWDataset, DUALGLOWDataset #needed for datamodule registration
 from lightning_data_modules.utils import create_lightning_datamodule
 
-from lightning_modules import DistillationModel, BaseSdeGenerativeModel, HaarMultiScaleSdeGenerativeModel, ConditionalSdeGenerativeModel #need for lightning module registration
+from lightning_modules import MultiScaleSdeGenerativeModel, DistillationModel, BaseSdeGenerativeModel, HaarMultiScaleSdeGenerativeModel, ConditionalSdeGenerativeModel #need for lightning module registration
 from lightning_modules.utils import create_lightning_module
 
 from torchvision.transforms import RandomCrop, CenterCrop, ToTensor, Resize
@@ -80,6 +80,36 @@ def run_distillation(config):
     Dmodule.TeacherModule.load_state_dict(Dmodule.StudentModule.state_dict())
     Dmodule.N = Dmodule.N // 2
 
+def train_multiscale(configs):
+  base_config = configs.d1
+  DataModule = create_lightning_datamodule(base_config)
+  callbacks = get_callbacks(base_config)
+
+  LightningModule = create_lightning_module(configs)
+
+  if base_config.experiment_name is None:
+      experiment_name = 'lightning_logs'
+  else:
+      experiment_name = base_config.experiment_name
+
+  if base_config.base_log_path is not None:
+      log_path = base_config.base_log_path
+  
+  logger = pl.loggers.TensorBoardLogger(log_path, name=experiment_name)
+
+  checkpoint_path = base_config.model.checkpoint_path
+
+  trainer = pl.Trainer(gpus=base_config.training.gpus,
+                          num_nodes = base_config.training.num_nodes,
+                          accelerator = base_config.training.accelerator,
+                          accumulate_grad_batches = base_config.training.accumulate_grad_batches,
+                          gradient_clip_val = base_config.optim.grad_clip,
+                          max_steps=base_config.training.n_iters, 
+                          callbacks=callbacks, 
+                          logger = logger,
+                          resume_from_checkpoint=checkpoint_path)
+
+  trainer.fit(LightningModule, datamodule=DataModule)
 
 def train(config, log_path, checkpoint_path):
     if config.data.create_dataset:

@@ -44,7 +44,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
 
     def configure_loss_fn(self, config, train):
         if config.training.continuous:
-            loss_fn = get_general_sde_loss_fn(self.sde, train, reduce_mean=config.training.reduce_mean,
+            loss_fn = get_general_sde_loss_fn(sde=self.sde, train=train, reduce_mean=config.training.reduce_mean,
                                     continuous=True, likelihood_weighting=config.training.likelihood_weighting)
         else:
             if isinstance(self.sde, VESDE):
@@ -70,9 +70,9 @@ class BaseSdeGenerativeModel(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         return 
     
-    def sample(self, show_evolution=False, num_samples=None, predictor='default', 
+    def sample(self, num_samples=None, predictor='default', 
                     corrector='default', p_steps='default', c_steps='default', probability_flow='default',
-                    snr='default', denoise='default', adaptive='default', gamma=0., alpha=1., starting_T='default'):
+                    snr='default', show_evolution=False, denoise='default', adaptive='default', gamma=0., alpha=1., starting_T='default'):
         
         if num_samples is None:
             num_samples = self.config.eval.batch_size
@@ -164,12 +164,13 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                                       p_steps=p_steps, 
                                       c_steps=c_steps, 
                                       probability_flow=probability_flow,
-                                      snr=snr, 
+                                      snr=snr,
+                                      show_evolution=show_evolution,
                                       denoise=denoise, 
                                       adaptive_steps=adaptive_steps,
                                       starting_T=starting_T)
 
-        return sampling_fn(self.score_model, show_evolution=show_evolution)
+        return sampling_fn(self.score_model)
 
     def configure_optimizers(self):
         class scheduler_lambda_function:
