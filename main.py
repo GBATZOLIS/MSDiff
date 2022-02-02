@@ -19,7 +19,8 @@ flags.DEFINE_enum("mode", "train", \
   'unconditional_evaluation_pipeline', \
   'compute_fast_sampling_scheme',
   'distillation', 
-  'compute_lipschitz_constant'], \
+  'compute_lipschitz_constant', 
+  'train_multiscale'], \
 
   "Running mode: train or test")
 flags.DEFINE_string("eval_folder", "eval",
@@ -46,6 +47,8 @@ def main(argv):
     run_lib.run_distillation(FLAGS.config)
   elif FLAGS.mode == 'compute_lipschitz_constant':
     run_lib.compute_lipschitz_constant(FLAGS.config)
+  elif FLAGS.mode == 'train_multiscale':
+    run_lib.train_multiscale(FLAGS.config)
 
 if __name__ == "__main__":
   app.run(main)
