@@ -25,6 +25,7 @@ import pytorch_lightning as pl
 from . import utils, layers, normalization
 from torchvision.transforms.functional import InterpolationMode
 from torchvision.transforms import Resize
+from iunets.layers import InvertibleDownsampling2D
 
 RefineBlock = layers.RefineBlock
 ResidualBlock = layers.ResidualBlock
