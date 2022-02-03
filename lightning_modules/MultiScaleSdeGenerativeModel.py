@@ -84,9 +84,9 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
         else:
             return (scale_index-1)/self.num_scales, scale_index/self.num_scales
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx, optimizer_idx):
         batch = self.convert_to_haar_space(batch, max_depth=self.num_scales-1)
-        
+
         scale_index = batch_idx % self.num_scales + 1
         self.get_relevant_scales_from_batch(batch, scale_index)
         T1, T2 = self.compute_interval(scale_index)
