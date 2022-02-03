@@ -86,7 +86,8 @@ def get_sampling_fn(config, sde, shape, eps,
                                  eps=eps,
                                  adaptive_steps=adaptive_steps,
                                  starting_T=starting_T,
-                                 ending_T = ending_T)
+                                 ending_T = ending_T,
+                                 multiscale=multiscale)
   else:
     raise ValueError(f"Sampler name {sampler_name} unknown.")
 
