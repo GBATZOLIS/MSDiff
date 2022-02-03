@@ -91,7 +91,7 @@ def get_config():
   config.model = model = ml_collections.ConfigDict()
 
   #multiscale settings
-  model.max_haar_depth = data.max_haar_depth - (data.scale_depth-1)
+  model.max_haar_depth = 0
   model.beta_min = 0.1
   model.T_k = data.scale_depth/data.num_scales
   target = np.exp(-1/4*(20-0.1)-1/2*0.1)
@@ -105,7 +105,7 @@ def get_config():
   model.embedding_type = 'fourier'
 
   # model architecture
-  model.name = 'ddpm'
+  model.name = 'ddpm_multi_speed_haar'
   model.scale_by_sigma = False
   model.ema_rate = 0.9999
   model.normalization = 'GroupNorm'

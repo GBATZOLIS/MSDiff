@@ -239,7 +239,7 @@ class DDPM_multi_speed_haar(DDPM):
   def convert_to_haar_space(self, x, max_depth=None):
       if max_depth is None:
         max_depth = self.max_haar_depth
-      
+
       haar_x = {}
       for i in range(max_depth):
         x = self.haar_forward(x)
@@ -262,8 +262,8 @@ class DDPM_multi_speed_haar(DDPM):
   def convert_to_image_space(self, haar_x):
     depth = self.detect_haar_depth(haar_x)
 
-    a = haar_x['a%d'%depth]
-    for i in range(depth):
+    a = haar_x['a%d' % depth]
+    for i in range(self.max_haar_depth):
       d = haar_x['d%d'%(depth-i)]
       concat = torch.cat((a,d), dim=1)
       a = self.haar_backward(concat)
@@ -271,10 +271,15 @@ class DDPM_multi_speed_haar(DDPM):
     return a
 
   def forward(self, haar_x:dict, labels):
+    depth = self.detect_haar_depth(haar_x)
     x = self.convert_to_image_space(haar_x)
     image_output = super().forward(x, labels)
-    haar_output = self.convert_to_haar_space(image_output)
-    return haar_output
+    
+    if self.max_haar_depth == 0: #'a case'
+      return {'a%d'%depth: image_output}
+    else:
+      haar_output = self.convert_to_haar_space(image_output)
+      return haar_output
 
 @utils.register_model(name='ddpm_paired_SR3')
 class DDPM_paired_SR3(DDPM):
