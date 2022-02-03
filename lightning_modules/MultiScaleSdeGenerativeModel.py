@@ -35,6 +35,9 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
         self.scale_name_to_index = self.get_scale_name_to_index()
         self.index_to_scale_name = self.get_index_to_scale_name()
 
+        self.reverse_scale_order = self.get_scale_order(direction='reverse')
+        self.forward_scale_order = self.get_scale_order(direction='forward')
+
     def get_scale_name_to_index(self, ):
         forward_scale_order = self.get_scale_order(direction='forward')
         scale_name_to_index = {}
@@ -170,8 +173,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
                 gamma=0., alpha=1., 
                 starting_T='default', ending_T='default'):
         
-        scale_sampling_order = self.get_scale_order()
-        print(scale_sampling_order)
+        scale_sampling_order = self.reverse_scale_order
         x=None
         aggregate_sampling_information = {}
         for new_scale_name in scale_sampling_order:
