@@ -245,6 +245,7 @@ class DDPM_multi_speed_haar(DDPM):
         x = self.haar_forward(x)
         if i < max_depth - 1:
           haar_x['d%d'%(i+1)] = x[:,3:,::]
+          x = x[:,:3,::]
         elif i == max_depth - 1:
           haar_x['d%d'%(i+1)] = x[:,3:,::]
           haar_x['a%d'%(i+1)] = x[:,:3,::]
