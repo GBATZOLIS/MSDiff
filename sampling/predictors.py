@@ -118,7 +118,7 @@ class EulerMaruyamaPredictor(Predictor):
     for name in x.keys():
       f_drift, f_diffusion = self.sde[name].sde(x[name], t)
 
-      r_drift = f_drift - f_diffusion[(..., ) + (None, ) * len(x.shape[1:])] ** 2 * score[name] * (0.5 if self.probability_flow else 1.)
+      r_drift = f_drift - f_diffusion[(..., ) + (None, ) * len(x[name].shape[1:])] ** 2 * score[name] * (0.5 if self.probability_flow else 1.)
       r_diffusion = 0. if self.probability_flow else f_diffusion
 
       x_name_mean = x[name] + r_drift * dt
