@@ -149,18 +149,18 @@ class MultiscaleImageVisualizationCallback(Callback):
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         if batch_idx == 0:
-            samples, sampling_info = pl_module.sample()
+            samples, sampling_info = pl_module.sample(p_steps=1000/pl_module.num_scales)
             self.visualise_samples(samples, pl_module)
 
             #log sampling times for each scale
             for scale_name in sampling_info.keys():
-                pl_module.logger.experiment.add_scalar('sampling_time_for_scale_%s' %scale_name, sampling_info[scale_name]['time'], step=pl_module.global_step)
+                pl_module.logger.experiment.add_scalar('sampling_time_for_scale_%s' %scale_name, sampling_info[scale_name]['time'], pl_module.global_step)
 
     def visualise_samples(self, samples, pl_module):
         # log sampled images
         sample_imgs =  samples.cpu()
         grid_images = torchvision.utils.make_grid(sample_imgs, normalize=True, scale_each=True)
-        pl_module.logger.experiment.add_image('generated_samples_%d' % pl_module.global_step, grid_images, step=pl_module.global_step)
+        pl_module.logger.experiment.add_image('generated_samples_%d' % pl_module.global_step, grid_images, pl_module.global_step)
     
 
 @utils.register_callback(name='base')
