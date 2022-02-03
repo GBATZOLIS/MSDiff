@@ -248,6 +248,8 @@ class DDPM_multi_speed_haar(DDPM):
         elif i == max_depth - 1:
           haar_x['d%d'%(i+1)] = x[:,3:,::]
           haar_x['a%d'%(i+1)] = x[:,:3,::]
+      
+      return haar_x
   
   def detect_haar_depth(self, haar_x : dict):
     for key in haar_x.keys():

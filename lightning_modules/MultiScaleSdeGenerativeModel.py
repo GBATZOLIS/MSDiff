@@ -13,6 +13,8 @@ from fast_sampling.computation_utils import get_adaptive_discretisation_fn
 import pickle 
 import numpy as np
 from timeit import default_timer as timer
+import torch.nn as nn
+from iunets.layers import InvertibleDownsampling2D
 
 @utils.register_lightning_module(name='multiscale_base')
 class MultiScaleSdeGenerativeModel(pl.LightningModule):
@@ -22,7 +24,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
         self.config = {}
 
         # Initialize the score model
-        self.score_model = {}
+        self.score_model = nn.ModuleDict()
 
         self.num_scales = 0
         for config_name, config in configs.items():
@@ -83,6 +85,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
             return (scale_index-1)/self.num_scales, scale_index/self.num_scales
 
     def training_step(self, batch, batch_idx):
+        batch = self.convert_to_haar_space(batch, max_depth=self.num_scales-1)
         scale_index = batch_idx % self.num_scales + 1
         T1, T2 = self.compute_interval(scale_index)
         scale_name = self.index_to_scale_name[scale_index]
@@ -91,6 +94,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
         return loss
     
     def validation_step(self, batch, batch_idx):
+        batch = self.convert_to_haar_space(batch, max_depth=self.num_scales-1)
         scale_index = np.random.randint(low=1, high=self.num_scales+1)
         T1, T2 = self.compute_interval(scale_index)
         scale_name = self.index_to_scale_name[scale_index]
@@ -101,6 +105,52 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         return 
     
+    def haar_forward(self, x):
+        haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
+        x = haar_transform(x)
+        x = self.permute_channels(x)
+        return x
+
+    def permute_channels(self, haar_image, forward=True):
+        permuted_image = torch.zeros_like(haar_image)
+        if forward:
+            for i in range(4):
+                if i == 0:
+                    k = 1
+                elif i == 1:
+                    k = 0
+                else:
+                    k = i
+                for j in range(3):
+                    permuted_image[:, 3*k+j, :, :] = haar_image[:, 4*j+i, :, :]
+        else:
+            for i in range(4):
+                if i == 0:
+                    k = 1
+                elif i == 1:
+                    k = 0
+                else:
+                    k = i
+                
+                for j in range(3):
+                    permuted_image[:,4*j+k,:,:] = haar_image[:, 3*i+j, :, :]
+        return permuted_image
+
+    def convert_to_haar_space(self, x, max_depth=None):
+        if max_depth is None:
+            max_depth = self.max_haar_depth
+      
+        haar_x = {}
+        for i in range(max_depth):
+            x = self.haar_forward(x)
+            if i < max_depth - 1:
+                haar_x['d%d'%(i+1)] = x[:,3:,::]
+            elif i == max_depth - 1:
+                haar_x['d%d'%(i+1)] = x[:,3:,::]
+                haar_x['a%d'%(i+1)] = x[:,:3,::]
+        
+        return haar_x
+
     def sample(self, num_samples=None, predictor='default', 
                 corrector='default', p_steps='default', 
                 c_steps='default', probability_flow='default',
