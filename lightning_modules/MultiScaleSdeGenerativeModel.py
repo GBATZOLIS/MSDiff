@@ -136,10 +136,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
                     permuted_image[:,4*j+k,:,:] = haar_image[:, 3*i+j, :, :]
         return permuted_image
 
-    def convert_to_haar_space(self, x, max_depth=None):
-        if max_depth is None:
-            max_depth = self.max_haar_depth
-      
+    def convert_to_haar_space(self, x, max_depth):
         haar_x = {}
         for i in range(max_depth):
             x = self.haar_forward(x)

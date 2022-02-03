@@ -293,6 +293,7 @@ def get_general_sde_loss_fn(sde, train, conditional=False, multiscale=False, red
 
         score = score_fn(perturbed_data, t)
 
+        print(score.keys())
         losses = []
         for member_name in batch.keys():
           g2_member = sde[member_name].sde(torch.zeros_like(perturbed_data[member_name]), t)[1] ** 2
