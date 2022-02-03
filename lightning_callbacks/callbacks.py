@@ -149,7 +149,7 @@ class MultiscaleImageVisualizationCallback(Callback):
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         if batch_idx == 0:
-            samples, sampling_info = pl_module.sample(p_steps=1000/pl_module.num_scales)
+            samples, sampling_info = pl_module.sample(p_steps=1000//pl_module.num_scales)
             self.visualise_samples(samples, pl_module)
 
             #log sampling times for each scale
