@@ -276,7 +276,7 @@ class DDPM_multi_speed_haar(DDPM):
     image_output = super().forward(x, labels)
     
     if self.max_haar_depth == 0: #'a case'
-      return {'a%d'%depth: image_output}
+      return {'a%d' % depth: image_output}
     else:
       haar_output = self.convert_to_haar_space(image_output)
       return haar_output

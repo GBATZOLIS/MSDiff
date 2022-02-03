@@ -86,7 +86,9 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         batch = self.convert_to_haar_space(batch, max_depth=self.num_scales-1)
+        
         scale_index = batch_idx % self.num_scales + 1
+        self.get_relevant_scales_from_batch(batch, scale_index)
         T1, T2 = self.compute_interval(scale_index)
         scale_name = self.index_to_scale_name[scale_index]
         loss = self.train_loss_fn(self.score_model[scale_name], batch, T1, T2)
@@ -95,7 +97,9 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
     
     def validation_step(self, batch, batch_idx):
         batch = self.convert_to_haar_space(batch, max_depth=self.num_scales-1)
+
         scale_index = np.random.randint(low=1, high=self.num_scales+1)
+        self.get_relevant_scales_from_batch(batch, scale_index)
         T1, T2 = self.compute_interval(scale_index)
         scale_name = self.index_to_scale_name[scale_index]
         loss = self.eval_loss_fn(self.score_model[scale_name], batch, T1, T2)
@@ -105,6 +109,13 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         return 
     
+    def get_relevant_scales_from_batch(self, batch, scale_index):
+        for i in range(1, self.num_scales+1):
+            if i < scale_index:
+                key = self.index_to_scale_name[i]
+                del batch[key]
+
+
     def haar_forward(self, x):
         haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False).to(self.device)
         x = haar_transform(x)
