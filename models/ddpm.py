@@ -218,7 +218,8 @@ class DDPM_multi_speed_haar(DDPM):
   def __init__(self, config, *args, **kwargs):
       super().__init__(config)
       self.haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
-      self.max_haar_depth = config.model.max_haar_depth
+      self.scale_max_haar_depth = config.model.max_haar_depth
+      self.max_haar_depth = config.data.max_haar_depth
   
   def haar_forward(self, x):
       x = self.haar_transform(x)
@@ -236,12 +237,12 @@ class DDPM_multi_speed_haar(DDPM):
   def get_hf_coefficients(self, x):
       return self.haar_forward(x)[:,3:,::]
 
-  def convert_to_haar_space(self, x, max_depth=None):
-      if max_depth is None:
-        max_depth = self.max_haar_depth
-
+  def convert_to_haar_space(self, x):
+      starting_scale = self.max_haar_depth - self.scale_max_haar_depth
+      max_depth = self.scale_max_haar_depth
+      
       haar_x = {}
-      for i in range(max_depth):
+      for i in range(starting_scale, starting_scale+max_depth):
         x = self.haar_forward(x)
         if i < max_depth - 1:
           haar_x['d%d'%(i+1)] = x[:,3:,::]
