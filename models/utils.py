@@ -279,7 +279,7 @@ def get_score_fn(sde, model, conditional=False, train=False, continuous=False, m
       assert continuous, 'You use discrete training.'
         
       def score_fn(x, t):
-        labels = t * (sde.N - 1)
+        labels = t * (sde['d1'].N - 1)
         score = model_fn(x, labels)
         score = divide_by_sigmas(score, t, sde, continuous)
         return score
