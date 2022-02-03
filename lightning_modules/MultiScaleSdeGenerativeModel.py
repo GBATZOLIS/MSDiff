@@ -64,6 +64,8 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
             return forward_order.reverse()
         elif direction == 'forward':
             return forward_order
+        else:
+            return NotImplementedError('direction can only be reverse or forward.')
 
     def configure_sde(self, configs):
         # Setup SDEs for every configuration
@@ -169,7 +171,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
                 starting_T='default', ending_T='default'):
         
         scale_sampling_order = self.get_scale_order(direction='reverse')
-        print(print)
+        print(scale_sampling_order)
         x=None
         aggregate_sampling_information = {}
         for new_scale_name in scale_sampling_order:
