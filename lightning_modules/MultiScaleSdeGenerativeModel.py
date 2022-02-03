@@ -170,7 +170,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
                 gamma=0., alpha=1., 
                 starting_T='default', ending_T='default'):
         
-        scale_sampling_order = self.get_scale_order(direction='reverse')
+        scale_sampling_order = self.get_scale_order()
         print(scale_sampling_order)
         x=None
         aggregate_sampling_information = {}
