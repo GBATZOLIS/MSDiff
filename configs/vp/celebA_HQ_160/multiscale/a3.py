@@ -105,7 +105,7 @@ def get_config():
   model.embedding_type = 'fourier'
 
   # model architecture
-  model.name = 'ddpm_multi_speed_haar'
+  model.name = 'ddpm'
   model.scale_by_sigma = False
   model.ema_rate = 0.9999
   model.normalization = 'GroupNorm'
