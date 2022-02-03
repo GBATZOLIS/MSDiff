@@ -143,9 +143,11 @@ class MultiscaleImageVisualizationCallback(Callback):
         super().__init__()
         self.config = config
     
-    def on_validation_epoch_end(self, trainer, pl_module):
-        global_step = pl_module.global_step
-        if global_step != 0 and global_step % 10 == 0:
+    #def on_validation_epoch_end(self, trainer, pl_module):
+        #global_step = pl_module.global_step
+        #if global_step != 0 and global_step % 10 == 0:
+
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
             samples, sampling_info = pl_module.sample()
             self.visualise_samples(samples, pl_module)
 
