@@ -242,12 +242,12 @@ class DDPM_multi_speed_haar(DDPM):
       max_depth = self.scale_max_haar_depth
       
       haar_x = {}
-      for i in range(starting_scale, starting_scale+max_depth):
+      for i in range(starting_scale, self.max_haar_depth):
         x = self.haar_forward(x)
-        if i < max_depth - 1:
+        if i < self.max_haar_depth - 1:
           haar_x['d%d'%(i+1)] = x[:,3:,::]
           x = x[:,:3,::]
-        elif i == max_depth - 1:
+        elif i == self.max_haar_depth - 1:
           haar_x['d%d'%(i+1)] = x[:,3:,::]
           haar_x['a%d'%(i+1)] = x[:,:3,::]
       
