@@ -274,7 +274,7 @@ def get_general_sde_loss_fn(sde, train, conditional=False, multiscale=False, red
         Returns:
           loss: A scalar that represents the average loss value across the mini-batch.
         """
-        print(batch.keys())
+        
         score_fn = mutils.get_score_fn(sde, model, conditional=conditional, train=train, continuous=continuous, multiscale=True) #this will be modified -> things inside this function to account for the multiscale setting.
         
         rkey = list(batch.keys())[0]
@@ -292,7 +292,7 @@ def get_general_sde_loss_fn(sde, train, conditional=False, multiscale=False, red
           perturbed_data[member_name] = perturbed_member
 
         score = score_fn(perturbed_data, t)
-        print(score.keys())
+        
 
         losses = []
         for member_name in batch.keys():
