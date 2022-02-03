@@ -148,7 +148,7 @@ class MultiscaleImageVisualizationCallback(Callback):
         #if global_step != 0 and global_step % 10 == 0:
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        if batch_idx == 2:
+        if batch_idx == 0:
             samples, sampling_info = pl_module.sample()
             self.visualise_samples(samples, pl_module)
 
