@@ -304,7 +304,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
                                       starting_T = starting_T,
                                       ending_T = ending_T)
 
-        return sampling_fn(self.score_model, x, new_scale_name)
+        return sampling_fn(self.score_model[new_scale_name], x, new_scale_name)
 
     def configure_optimizers(self):
         class scheduler_lambda_function:
