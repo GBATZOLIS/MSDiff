@@ -22,7 +22,8 @@ def get_sampling_fn(config, sde, shape, eps,
                     denoise='default', 
                     adaptive_steps=None,
                     starting_T='default',
-                    ending_T='default'):
+                    ending_T='default',
+                    multiscale=False):
 
   """Create a sampling function.
   Args:
@@ -178,7 +179,7 @@ def get_ode_sampler(sde, shape,
 def get_pc_sampler(sde, shape, predictor, corrector, snr, 
                    p_steps, c_steps, probability_flow=False, continuous=False,
                    show_evolution=False, denoise=True, eps=1e-3, 
-                   adaptive_steps=None, starting_T='default', ending_T = 'default'):
+                   adaptive_steps=None, starting_T='default', ending_T = 'default', multiscale=False):
 
   """Create a Predictor-Corrector (PC) sampler.
   Args:
@@ -202,14 +203,16 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
                                           sde=sde,
                                           predictor=predictor,
                                           probability_flow=probability_flow,
-                                          continuous=continuous)
+                                          continuous=continuous,
+                                          multiscale=multiscale)
   
   corrector_update_fn = functools.partial(shared_corrector_update_fn,
                                           sde=sde,
                                           corrector=corrector,
                                           continuous=continuous,
                                           snr=snr,
-                                          n_steps=c_steps)
+                                          n_steps=c_steps,
+                                          multiscale=multiscale)
 
   def pc_sampler(model, x=None, new_scale_name=None):
     """ The PC sampler funciton.
@@ -246,7 +249,7 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
           x = sde.prior_sampling(shape, starting_T).to(model.device).type(torch.float32)
       else:
         x[new_scale_name] = sde[new_scale_name].prior_sampling(shape, starting_T).to(model.device).type(torch.float32)
-        
+
       if adaptive_steps is None:
         total_discrete_points = p_steps+1
         timesteps = torch.linspace(starting_T, ending_T, total_discrete_points, device=model.device)
@@ -392,9 +395,9 @@ def get_pc_inpainter(sde, predictor, corrector, snr,
 
   return pc_inpainter
 
-def shared_predictor_update_fn(x, t, sde, model, predictor, probability_flow, continuous, discretisation):
+def shared_predictor_update_fn(x, t, sde, model, predictor, probability_flow, continuous, discretisation, multiscale=False):
   """A wrapper that configures and returns the update function of predictors."""
-  score_fn = mutils.get_score_fn(sde, model, conditional=False, train=False, continuous=continuous)
+  score_fn = mutils.get_score_fn(sde, model, conditional=False, train=False, continuous=continuous, multiscale=multiscale)
 
   if predictor is None:
     # Corrector-only sampler
@@ -403,9 +406,9 @@ def shared_predictor_update_fn(x, t, sde, model, predictor, probability_flow, co
     predictor_obj = predictor(sde, score_fn, probability_flow, discretisation)
   return predictor_obj.update_fn(x, t)
 
-def shared_corrector_update_fn(x, t, sde, model, corrector, continuous, snr, n_steps):
+def shared_corrector_update_fn(x, t, sde, model, corrector, continuous, snr, n_steps, multiscale=False):
   """A wrapper that configures and returns the update function of correctors."""
-  score_fn = mutils.get_score_fn(sde, model, conditional=False, train=False, continuous=continuous)
+  score_fn = mutils.get_score_fn(sde, model, conditional=False, train=False, continuous=continuous, multiscale=multiscale)
 
   if corrector is None:
     # Predictor-only sampler

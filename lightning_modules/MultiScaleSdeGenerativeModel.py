@@ -302,7 +302,8 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
                                       denoise=denoise, 
                                       adaptive_steps=adaptive_steps,
                                       starting_T = starting_T,
-                                      ending_T = ending_T)
+                                      ending_T = ending_T,
+                                      multiscale=True)
 
         return sampling_fn(self.score_model[new_scale_name], x, new_scale_name)
 
