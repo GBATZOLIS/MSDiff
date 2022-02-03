@@ -106,7 +106,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
         return 
     
     def haar_forward(self, x):
-        haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False)
+        haar_transform = InvertibleDownsampling2D(3, stride=2, method='cayley', init='haar', learnable=False).to(self.device)
         x = haar_transform(x)
         x = self.permute_channels(x)
         return x
