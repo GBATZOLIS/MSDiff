@@ -264,7 +264,7 @@ class DDPM_multi_speed_haar(DDPM):
     depth = self.detect_haar_depth(haar_x)
 
     a = haar_x['a%d' % depth]
-    for i in range(self.max_haar_depth):
+    for i in range(self.scale_max_haar_depth):
       d = haar_x['d%d'%(depth-i)]
       concat = torch.cat((a,d), dim=1)
       a = self.haar_backward(concat)
