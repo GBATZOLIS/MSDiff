@@ -65,6 +65,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
             if scale == self.num_scales-1:
                 forward_order.append('a%d' % scale)
 
+        print(forward_order)
         if direction == 'reverse':
             return forward_order.reverse()
         elif direction == 'forward':
