@@ -37,6 +37,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
 
         self.reverse_scale_order = self.get_scale_order(direction='reverse')
         self.forward_scale_order = self.get_scale_order(direction='forward')
+        print(self.reverse_scale_order)
 
     def get_scale_name_to_index(self, ):
         forward_scale_order = self.get_scale_order(direction='forward')
