@@ -151,6 +151,11 @@ class MultiscaleImageVisualizationCallback(Callback):
                 samples, sampling_info = pl_module.sample(p_steps=psteps_per_scale, predictor=predictor)
                 self.visualise_samples(samples, pl_module, steps_per_scale=psteps_per_scale, predictor=predictor)
 
+            predictor = 'reverse_diffusion'
+            psteps_per_scale = 2000//pl_module.num_scales
+            samples, sampling_info = pl_module.sample(p_steps=psteps_per_scale, predictor=predictor)
+            self.visualise_samples(samples, pl_module, steps_per_scale=psteps_per_scale, predictor=predictor)
+
             #log sampling times for each scale
             #for scale_name in sampling_info.keys():
             #    pl_module.logger.experiment.add_scalar('sampling_time_for_scale_%s' % scale_name, sampling_info[scale_name]['time'], current_epoch)
