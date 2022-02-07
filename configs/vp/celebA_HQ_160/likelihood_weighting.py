@@ -45,12 +45,19 @@ def get_config():
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
   evaluate.batch_size = training.batch_size
-  evaluate.enable_sampling = True
+  evaluate.callback = 'base'
+  evaluate.predictor = 'reverse_diffusion'
+  evaluate.corrector = 'none'
+  evaluate.p_steps = [100] 
+  evaluate.c_steps = 1
+  evaluate.probability_flow = True
+  evaluate.denoise = True
+  evaluate.adaptive = [False, True] 
+  evaluate.adaptive_method = 'lipschitz' #options: [kl, lipschitz]
+  evaluate.alpha = [1.] #used for lipschitz-adaptive method
+  evaluate.starting_T = [1.]
+  evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
   evaluate.num_samples = 50000
-  evaluate.enable_loss = True
-  evaluate.enable_bpd = False
-  evaluate.bpd_dataset = 'test'
-  evaluate.adaptive = True
 
   # data
   config.data = data = ml_collections.ConfigDict()
