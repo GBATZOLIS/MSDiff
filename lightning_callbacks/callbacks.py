@@ -331,8 +331,6 @@ class ImageVisualizationCallback(Callback):
                     for p_steps in p_values[starting_T]:
                         self.generate_comparison_dataset(pl_module, p_steps, starting_T)
 
-
-
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
         if current_epoch >= 2 and current_epoch % 5 == 0:
