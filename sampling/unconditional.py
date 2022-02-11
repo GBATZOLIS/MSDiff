@@ -340,21 +340,6 @@ def get_pc_inpainter(sde, predictor, corrector, snr,
       Inpainted (complete) images.
     """
 
-    '''
-    def corrections_steps(i):
-      changing_points = [500, 750, 875, 937, 969, 985, 992]
-      if i < changing_points[0]:
-        return 1
-      elif i >= changing_points[-1]:
-        return 2**len(changing_points)
-      else:
-        for j in range(len(changing_points)-1):
-          if i >= changing_points[j] and i<changing_points[j+1]:
-            break
-        exp = j+1
-        return 2**exp
-    '''
-
     def corrections_steps(i):
       return 1
 

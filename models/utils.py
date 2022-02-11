@@ -281,7 +281,7 @@ def get_score_fn(sde, model, conditional=False, train=False, continuous=False, m
       def score_fn(x, t):
         labels = t * (sde['d1'].N - 1)
         score = model_fn(x, labels)
-        score = divide_by_sigmas(score, t, sde, continuous)
+        #score = divide_by_sigmas(score, t, sde, continuous)
         return score
 
   return score_fn

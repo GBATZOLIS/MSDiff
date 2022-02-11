@@ -8,7 +8,7 @@ def get_config():
 
   #logging
   config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale' #'/home/gb511/projects/fast_sampling' 
-  config.experiment_name = 'vp_ema'
+  config.experiment_name = 'vp_correct_weighting'
 
   # training
   config.training = training = ml_collections.ConfigDict()
@@ -97,7 +97,7 @@ def get_config():
   target = np.exp(-1/4*(20-0.1)-1/2*0.1)
   model.beta_max = (1-2/model.T_k)*model.beta_min -4/model.T_k**2 * np.log(target/2**(data.scale_depth-1))
   
-  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/vp_ema/version_0/checkpoints/epoch=225-step=574943.ckpt'
+  model.checkpoint_path = None #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/vp_ema/version_0/checkpoints/epoch=225-step=574943.ckpt'
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
