@@ -101,7 +101,7 @@ def get_config():
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
-  model.dropout = 0.
+  model.dropout = 0.1
   model.embedding_type = 'fourier'
 
   # model architecture
@@ -111,7 +111,7 @@ def get_config():
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 128
-  model.ch_mult = (1, 2)
+  model.ch_mult = (1, 1, 2)
   model.num_res_blocks = 2
   model.attn_resolutions = (16,)
   model.resamp_with_conv = True
@@ -124,8 +124,9 @@ def get_config():
 
   optim.weight_decay = 0
   optim.optimizer = 'Adam'
-  optim.lr = 2e-5
+  optim.lr = 2e-4
   optim.beta1 = 0.9
+  optim.beta2 = 0.99
   optim.eps = 1e-8
   optim.warmup = 5000 #set it to 0 if you do not want to use warm up.
   optim.grad_clip = 1 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.

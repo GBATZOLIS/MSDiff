@@ -77,7 +77,9 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
         for config_name in configs.keys():
             config = configs[config_name]
             scale_name = config.data.scale_name
-            self.sde[scale_name] = sde_lib.VPSDE(beta_min=config.model.beta_min, beta_max=config.model.beta_max, N=config.model.num_scales)
+            scale_index = self.scale_name_to_index[scale_name]
+            T_scale = scale_index/self.num_scales
+            self.sde[scale_name] = sde_lib.SNR_VP_SDE(N=1000, gamma=None, a=2, b=0., c=0., eps=self.sampling_eps, T=T_scale)
     
     def configure_loss_fn(self, configs, train):
         loss_fn = get_general_sde_loss_fn(self.sde, train, multiscale=True, reduce_mean=True, continuous=True, likelihood_weighting=True)

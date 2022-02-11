@@ -452,3 +452,53 @@ class cVESDE(cSDE):
     f = torch.zeros_like(x)
     G = torch.sqrt(sigma ** 2 - adjacent_sigma ** 2)
     return f, G
+
+class SNR_VP_SDE(SDE):
+  def __init__(self, N, gamma=None, a=2, b=3, c=6, log_snr_max=10, log_snr_min=-10, eps=1e-5, T=1):
+    super().__init__(N)
+    self._T = T
+
+    if gamma is None:
+      gamma = lambda t: a * t + b * t**c
+      d_gamma = lambda t: a + b * c * t**(c-1)
+    else:
+      #Use autograd if gamma function is a neural network -> learn the forward process
+      pass
+    
+    gamma_eps = -log_snr_max
+    gamma_T = -log_snr_min
+    # Gamma has to be normalized to have correct start and end points (cf. Appendix D of VDM paper)
+    normalizing_consant = (gamma_T - gamma_eps)/(gamma(T)-gamma(eps))
+    self.log_SNR = log_SNR = lambda t: - (gamma_eps +  normalizing_consant * (gamma(t) - gamma(eps)))
+    self.d_log_SNR = lambda t: -normalizing_consant * d_gamma(t)
+    self.SNR = lambda t: torch.exp(self.log_SNR(t))
+  
+  @property
+  def T(self):
+    #diffusion time limit
+    return self._T
+
+  def sde(self, x, t):
+    SNR = self.SNR
+    d_log_SNR = self.d_log_SNR
+    std = torch.sqrt(1 / (1 + SNR(t)))
+    drift = 0.5 * std[(...,)+(None,)*len(x.shape[1:])]**2 * d_log_SNR(t)[(...,)+(None,)*len(x.shape[1:])] * x
+    diffusion_squared = - std**2 * d_log_SNR(t)
+    diffusion = torch.sqrt(diffusion_squared)
+    return drift, diffusion
+
+  def marginal_prob(self, x, t): 
+    SNR = self.SNR
+    alpha = torch.sqrt(SNR(t) / (1 + SNR(t)))[(...,)+(None,)*len(x.shape[1:])]
+    mean = x * alpha
+    std = torch.sqrt(1 / (1 + SNR(t)))
+    return mean, std
+
+  def prior_sampling(self, shape):
+    return torch.randn(*shape)
+
+  def prior_logp(self, z):
+    shape = z.shape
+    N = np.prod(shape[1:])
+    logps = -N / 2. * np.log(2 * np.pi) - torch.sum(z ** 2, dim=(1, 2, 3)) / 2.
+    return logps

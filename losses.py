@@ -26,7 +26,12 @@ from sde_lib import VESDE, VPSDE, cVESDE
 def get_optimizer(config, params):
   """Returns a flax optimizer object based on `config`."""
   if config.optim.optimizer == 'Adam':
-    optimizer = optim.Adam(params, lr=config.optim.lr, betas=(config.optim.beta1, 0.999), eps=config.optim.eps,
+    try:
+      beta2 = config.optim.beta2
+    except AttributeError:
+      beta2 = 0.999
+
+    optimizer = optim.Adam(params, lr=config.optim.lr, betas=(config.optim.beta1, beta2), eps=config.optim.eps,
                            weight_decay=config.optim.weight_decay)
   else:
     raise NotImplementedError(
