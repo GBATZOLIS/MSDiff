@@ -494,7 +494,7 @@ class SNR_VP_SDE(SDE):
     std = torch.sqrt(1 / (1 + SNR(t)))
     return mean, std
 
-  def prior_sampling(self, shape):
+  def prior_sampling(self, shape, T='default'):
     return torch.randn(*shape)
 
   def prior_logp(self, z):

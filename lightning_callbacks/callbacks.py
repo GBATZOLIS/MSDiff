@@ -146,7 +146,7 @@ class MultiscaleImageVisualizationCallback(Callback):
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
         if current_epoch !=0 and current_epoch % 5 == 0:
-            for predictor in ['euler_maruyama', 'reverse_diffusion', 'ddim']:
+            for predictor in ['euler_maruyama', 'reverse_diffusion']:
                 psteps_per_scale = 1000//pl_module.num_scales
                 samples, sampling_info = pl_module.sample(p_steps=psteps_per_scale, predictor=predictor)
                 self.visualise_samples(samples, pl_module, steps_per_scale=psteps_per_scale, predictor=predictor)
