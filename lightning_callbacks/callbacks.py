@@ -335,7 +335,7 @@ class ImageVisualizationCallback(Callback):
         current_epoch = pl_module.current_epoch
         if current_epoch >= 2 and current_epoch % 5 == 0:
             if self.show_evolution:
-                samples, sampling_info = pl_module.sample(show_evolution=True)
+                samples, sampling_info = pl_module.sample(show_evolution=True, predictor='reverse_diffusion', psteps=300)
                 evolution = sampling_info['evolution']
                 self.visualise_evolution(evolution, pl_module)
             else:

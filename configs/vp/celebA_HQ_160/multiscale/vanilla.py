@@ -8,7 +8,7 @@ def get_config():
 
   #logging
   config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale' #'/home/gb511/projects/fast_sampling' 
-  config.experiment_name = 'loglinear_vanilla'
+  config.experiment_name = 'loglinear_vanilla2'
 
   # training
   config.training = training = ml_collections.ConfigDict()
@@ -90,7 +90,7 @@ def get_config():
   model.sigma_min = 0.01
   model.beta_min = 0.1
   model.beta_max = 20.
-  model.dropout = 0.
+  model.dropout = 0.1
   model.embedding_type = 'fourier'
 
    # model architecture
