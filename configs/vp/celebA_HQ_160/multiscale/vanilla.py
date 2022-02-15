@@ -118,7 +118,7 @@ def get_config():
   optim.beta2 = 0.99
   optim.eps = 1e-8
   optim.warmup = 5000 #set it to 0 if you do not want to use warm up.
-  optim.grad_clip = 1 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.
+  optim.grad_clip = 0. #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.
   config.seed = 42
 
   # distillation
