@@ -237,6 +237,9 @@ def get_score_fn(sde, model, conditional=False, train=False, continuous=False, m
         def score_fn(x, t):
             labels = t * (sde.N - 1)
             score = model_fn(x, labels)
+            
+            std = sde.marginal_prob(torch.zeros_like(x), t)[1]
+            score = score / std[(...,)+(None,)*len(x.shape[1:])]
             return score
 
       elif isinstance(sde, sde_lib.VESDE) or isinstance(sde, sde_lib.cVESDE):
