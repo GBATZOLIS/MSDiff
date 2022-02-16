@@ -7,8 +7,8 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale' #'/home/gb511/projects/fast_sampling' 
-  config.experiment_name = 'loglinear_vanilla_beta_linear'
+  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/debug_vanilla' #'/home/gb511/projects/fast_sampling' 
+  config.experiment_name = 'loglinear_128'
 
   # training
   config.training = training = ml_collections.ConfigDict()
@@ -29,7 +29,7 @@ def get_config():
   training.likelihood_weighting = True
   training.continuous = True
   training.reduce_mean = True 
-  training.sde = 'vpsde'
+  training.sde = 'snrvpsde'
   
   # sampling
   config.sampling = sampling = ml_collections.ConfigDict()
