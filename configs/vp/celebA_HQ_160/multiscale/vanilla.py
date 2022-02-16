@@ -8,7 +8,7 @@ def get_config():
 
   #logging
   config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/debug_vanilla' #'/home/gb511/projects/fast_sampling' 
-  config.experiment_name = 'loglinear_128'
+  config.experiment_name = 'loglinear_64'
 
   # training
   config.training = training = ml_collections.ConfigDict()
@@ -73,7 +73,7 @@ def get_config():
   data.datamodule = 'unpaired_PKLDataset'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
-  data.image_size = 128
+  data.image_size = 64 #128
   data.effective_image_size = data.image_size
   data.shape = [3, data.image_size, data.image_size]
   data.centered = False
@@ -100,7 +100,7 @@ def get_config():
   model.normalization = 'GroupNorm'
   model.nonlinearity = 'swish'
   model.nf = 128
-  model.ch_mult = (1, 1, 2, 2, 4, 4)
+  model.ch_mult = (1, 1, 2, 2, 4) #(1, 1, 2, 2, 4, 4)
   model.num_res_blocks = 2
   model.attn_resolutions = (16,)
   model.resamp_with_conv = True
