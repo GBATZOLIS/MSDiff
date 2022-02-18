@@ -478,6 +478,12 @@ class SNR_VP_SDE(SDE):
     #diffusion time limit
     return self._T
 
+  def perturbation_coefficients(self, t):
+    SNR = self.SNR
+    a_t = torch.sqrt(SNR(t) / (1 + SNR(t)))
+    sigma_t = torch.sqrt(1 / (1 + SNR(t)))
+    return a_t, sigma_t
+
   def sde(self, x, t):
     SNR = self.SNR
     d_log_SNR = self.d_log_SNR

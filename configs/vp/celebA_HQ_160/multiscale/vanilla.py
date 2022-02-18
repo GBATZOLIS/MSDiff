@@ -34,7 +34,7 @@ def get_config():
   # sampling
   config.sampling = sampling = ml_collections.ConfigDict()
   sampling.method = 'pc'
-  sampling.predictor = 'reverse_diffusion'
+  sampling.predictor = 'ddim'
   sampling.corrector = 'none'
   sampling.n_steps_each = 1
   sampling.noise_removal = True
