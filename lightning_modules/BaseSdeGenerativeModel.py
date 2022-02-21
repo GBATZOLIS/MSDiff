@@ -41,7 +41,7 @@ class BaseSdeGenerativeModel(pl.LightningModule):
             self.sampling_eps = 1e-5
         elif config.training.sde.lower() == 'snrvpsde':
             self.sampling_eps = 1e-3
-            self.sde = sde_lib.SNR_VP_SDE(N=1000, gamma=None, a=2, b=0., c=0., eps=self.sampling_eps, T=1)
+            self.sde = sde_lib.SNR_VP_SDE(N=config.model.num_scales, log_snr_max=10., log_snr_min=-5, eps=self.sampling_eps, T=1.)
         else:
             raise NotImplementedError(f"SDE {config.training.sde} unknown.")
 
