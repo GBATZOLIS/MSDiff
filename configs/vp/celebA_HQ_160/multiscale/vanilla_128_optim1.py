@@ -84,7 +84,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/debug_vanilla/loglinear_128/version_1/checkpoints/epoch=124-step=317999.ckpt'
+  model.checkpoint_path = None
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
