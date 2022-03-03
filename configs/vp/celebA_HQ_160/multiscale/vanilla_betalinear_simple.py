@@ -20,7 +20,7 @@ def get_config():
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
   training.num_epochs = 10000
-  training.n_iters = 2000000 
+  training.n_iters = 1577487 
   training.visualization_callback = 'base'
   training.show_evolution = False
   
