@@ -20,7 +20,7 @@ def get_config():
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
   training.num_epochs = 10000
-  training.n_iters = 1000000 
+  training.n_iters = 2000000 
   training.visualization_callback = 'base'
   training.show_evolution = False
   
@@ -84,7 +84,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/debug_vanilla/128/betalinear_optim1_simple/version_3/checkpoints/epoch=341-step=870047.ckpt'
+  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/debug_vanilla/128/betalinear_optim1_simple/version_4/checkpoints/epoch=393-step=999999.ckpt'
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
