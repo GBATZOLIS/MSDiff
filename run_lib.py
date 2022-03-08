@@ -111,6 +111,34 @@ def train_multiscale(configs):
 
   trainer.fit(LightningModule, datamodule=DataModule)
 
+def test_multiscale(configs):
+    base_config = configs.d1
+    DataModule = create_lightning_datamodule(base_config)
+    DataModule.setup()
+
+    callbacks = get_callbacks(base_config, phase='test')
+
+    eval_log_path = base_config.base_log_path
+    Path(eval_log_path).mkdir(parents=True, exist_ok=True)
+    logger = pl.loggers.TensorBoardLogger(save_dir=eval_log_path, name='test_metrics')
+
+    checkpoint_path = base_config.model.checkpoint_path
+    LightningModule = create_lightning_module(configs)
+    trainer = pl.Trainer(gpus = base_config.training.gpus,
+                          num_nodes = base_config.training.num_nodes,
+                          accelerator = base_config.training.accelerator,
+                          accumulate_grad_batches = base_config.training.accumulate_grad_batches,
+                          gradient_clip_val = base_config.optim.grad_clip,
+                          max_steps=base_config.training.n_iters, 
+                          callbacks=callbacks, 
+                          logger = logger,
+                          resume_from_checkpoint=checkpoint_path)
+    
+    trainer.test(LightningModule, test_dataloaders = DataModule.test_dataloader())
+
+    #evaluate FID scores on the generated samples
+    unconditional_evaluation_pipeline(base_config)
+    
 def train(config, log_path, checkpoint_path):
     if config.data.create_dataset:
       create_dataset.create_dataset(config)

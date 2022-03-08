@@ -142,7 +142,23 @@ class MultiscaleImageVisualizationCallback(Callback):
     def __init__(self, config):
         super().__init__()
         self.config = config
+
+        #evaluation configuration
+        self.num_samples = config.eval.num_samples
+        self.predictor = config.eval.predictor
+        self.corrector = config.eval.corrector
+        self.p_steps = config.eval.p_steps
+        self.c_steps = config.eval.c_steps
+        self.probability_flow = config.eval.probability_flow
+        self.denoise = config.eval.denoise
+        self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
     
+    def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
+        if batch_idx == 0:
+            for predictor in self.predictor:
+                for p_steps in self.p_steps:
+                    self.generate_dataset(pl_module, predictor, p_steps)
+
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
         if current_epoch !=0 and current_epoch % 5 == 0:
@@ -160,15 +176,6 @@ class MultiscaleImageVisualizationCallback(Callback):
             #for scale_name in sampling_info.keys():
             #    pl_module.logger.experiment.add_scalar('sampling_time_for_scale_%s' % scale_name, sampling_info[scale_name]['time'], current_epoch)
             
-            '''
-            psteps_per_scale = 2000//pl_module.num_scales
-            samples, sampling_info = pl_module.sample(p_steps=psteps_per_scale)
-            self.visualise_samples(samples, pl_module, steps_per_scale=psteps_per_scale)
-
-            psteps_per_scale = 4000//pl_module.num_scales
-            samples, sampling_info = pl_module.sample(p_steps=psteps_per_scale)
-            self.visualise_samples(samples, pl_module, steps_per_scale=psteps_per_scale)
-            '''
             
     def visualise_samples(self, samples, pl_module, steps_per_scale, predictor):
         # log sampled images
@@ -176,6 +183,45 @@ class MultiscaleImageVisualizationCallback(Callback):
         grid_images = torchvision.utils.make_grid(sample_imgs, normalize=True, scale_each=True)
         pl_module.logger.experiment.add_image('generated_samples_%d_psteps_per_scale_%d_predictor_%s' % (pl_module.global_step, steps_per_scale, predictor), grid_images, pl_module.current_epoch)
     
+    def generate_dataset(self, pl_module, predictor, p_steps):
+        eq = 'ode' if self.probability_flow else 'sde'
+
+        p_step_dir = os.path.join(self.save_samples_dir, 'eq(%s)-p(%s)-c(%s)' % (eq, pl_module.config.eval.predictor, pl_module.config.eval.corrector), '%d' % p_steps)
+        Path(p_step_dir).mkdir(parents=True, exist_ok=True)
+
+        num_generated_samples = 0
+        while num_generated_samples < self.num_samples:
+            psteps_per_scale = p_steps // pl_module.num_scales
+            samples, info = pl_module.sample(predictor=predictor,
+                                            corrector=self.corrector,
+                                            p_steps=psteps_per_scale,
+                                            c_steps=self.c_steps,
+                                            probability_flow=self.probability_flow,
+                                            denoise=self.denoise)
+            if num_generated_samples == 0:
+                timing_information = {}
+                for scale_name in info.keys():
+                    scale_time = info[scale_name]['time']
+                    timing_information[scale_name] = scale_time
+                
+                f = open(os.path.join(p_step_dir, 'timing_information.pkl'), "wb")
+                pickle.dump(timing_information, f)
+                f.close()
+
+            samples = torch.clamp(samples, min=0, max=1)
+
+            batch_size = samples.size(0)
+            if num_generated_samples+batch_size <= self.num_samples:
+                for i in range(samples.size(0)):
+                    fp = os.path.join(p_step_dir, '%d.png' % (num_generated_samples+i+1))
+                    save_image(samples[i, :, :, :], fp)
+            elif num_generated_samples+batch_size > self.num_samples:
+                for i in range(self.num_samples - num_generated_samples): #add what is missing to fill the basket.
+                    fp = os.path.join(p_step_dir, '%d.png' % (num_generated_samples+i+1))
+                    save_image(samples[i, :, :, :], fp)
+
+            num_generated_samples+=samples.size(0)
+
 
 @utils.register_callback(name='base')
 class ImageVisualizationCallback(Callback):
@@ -204,99 +250,28 @@ class ImageVisualizationCallback(Callback):
 
     def on_test_start(self, trainer, pl_module):
         self.update_config(pl_module)
-    
-    def generate_comparison_dataset(self, pl_module, p_steps, starting_T):
+
+    def generate_dataset(self, pl_module, predictor, p_steps):
         eq = 'ode' if self.probability_flow else 'sde'
 
-        save_dir = os.path.join(self.save_samples_dir, 
-        'eq(%s)-p(%s)-c(%s)' % (eq, pl_module.config.eval.predictor, pl_module.config.eval.corrector), 
-        self.adaptive_method, 'T_%.2f' % starting_T, '%d' % p_steps)
-        Path(save_dir).mkdir(parents=True, exist_ok=True)
-
-        num_generated_samples = 0
-        while num_generated_samples < self.num_samples:
-            samples, info = pl_module.sample(predictor=self.predictor,
-                                            corrector=self.corrector,
-                                            p_steps=p_steps,
-                                            c_steps=self.c_steps,
-                                            probability_flow=self.probability_flow,
-                                            denoise=self.denoise,
-                                            adaptive=False,
-                                            starting_T=starting_T)
-        
-            samples = torch.clamp(samples, min=0, max=1)
-
-            batch_size = samples.size(0)
-            if num_generated_samples+batch_size <= self.num_samples:
-                for i in range(samples.size(0)):
-                    fp = os.path.join(save_dir, '%d.png' % (num_generated_samples+i+1))
-                    save_image(samples[i, :, :, :], fp)
-            elif num_generated_samples+batch_size > self.num_samples:
-                for i in range(self.num_samples - num_generated_samples): #add what is missing to fill the basket.
-                    fp = os.path.join(save_dir, '%d.png' % (num_generated_samples+i+1))
-                    save_image(samples[i, :, :, :], fp)
-
-            num_generated_samples+=samples.size(0)
-
-    def generate_lipschitz_synthetic_dataset(self, pl_module, adaptive, alpha, starting_T):
-        eq = 'ode' if self.probability_flow else 'sde'
-        adaptive_name = 'adaptive' if adaptive else 'uniform'
-
-        save_dir = os.path.join(self.save_samples_dir, 
-        'eq(%s)-p(%s)-c(%s)' % (eq, pl_module.config.eval.predictor, pl_module.config.eval.corrector), 
-        self.adaptive_method, 'T_%.2f' % starting_T, 'alpha_%.2f' % alpha, adaptive_name)
-        Path(save_dir).mkdir(parents=True, exist_ok=True)
-
-        with open(self.config.sampling.lipschitz_profile, 'rb') as f:
-            info = pickle.load(f)
-
-        adaptive_discretisation_fn = get_adaptive_discretisation_fn(info['t'], info['Lip_constant'], alpha, 'lipschitz')
-        T_start = pl_module.sde.T if starting_T == 'default' else starting_T
-        num_adaptive_steps = torch.tensor(adaptive_discretisation_fn(T_start)).size(0) - 1
-
-        num_generated_samples = 0
-        while num_generated_samples < self.num_samples:
-            samples, info = pl_module.sample(predictor=self.predictor,
-                                            corrector=self.corrector,
-                                            p_steps=num_adaptive_steps,
-                                            c_steps=self.c_steps,
-                                            probability_flow=self.probability_flow,
-                                            denoise=self.denoise,
-                                            adaptive=adaptive,
-                                            alpha=alpha, 
-                                            starting_T=starting_T)
-        
-            samples = torch.clamp(samples, min=0, max=1)
-
-            batch_size = samples.size(0)
-            if num_generated_samples+batch_size <= self.num_samples:
-                for i in range(samples.size(0)):
-                    fp = os.path.join(save_dir, '%d.png' % (num_generated_samples+i+1))
-                    save_image(samples[i, :, :, :], fp)
-            elif num_generated_samples+batch_size > self.num_samples:
-                for i in range(self.num_samples - num_generated_samples): #add what is missing to fill the basket.
-                    fp = os.path.join(save_dir, '%d.png' % (num_generated_samples+i+1))
-                    save_image(samples[i, :, :, :], fp)
-
-            num_generated_samples+=samples.size(0)
-
-    def generate_kl_synthetic_dataset(self, pl_module, p_steps, adaptive, gamma):
-        adaptive_name = 'KL-adaptive' if adaptive else 'uniform'
-        eq = 'ode' if self.probability_flow else 'sde'
-        p_step_dir = os.path.join(self.save_samples_dir, 'eq(%s)-p(%s)-c(%s)' % (eq, pl_module.config.eval.predictor, pl_module.config.eval.corrector), adaptive_name, '%.2f' % gamma, '%d' % p_steps)
+        p_step_dir = os.path.join(self.save_samples_dir, 'eq(%s)-p(%s)-c(%s)' % (eq, pl_module.config.eval.predictor, pl_module.config.eval.corrector), '%d' % p_steps)
         Path(p_step_dir).mkdir(parents=True, exist_ok=True)
 
         num_generated_samples=0
         while num_generated_samples < self.num_samples:
-            samples, info = pl_module.sample(predictor=self.predictor,
+            samples, info = pl_module.sample(predictor=predictor,
                                             corrector=self.corrector,
                                             p_steps=p_steps,
                                             c_steps=self.c_steps,
                                             probability_flow=self.probability_flow,
-                                            denoise=self.denoise,
-                                            adaptive=adaptive,
-                                            gamma=gamma)
+                                            denoise=self.denoise)
             
+            if num_generated_samples==0:
+                timing_information = {'sampling_time': info['time']}
+                f = open(os.path.join(p_step_dir, 'timing_information.pkl'), "wb")
+                pickle.dump(timing_information, f)
+                f.close()
+
             samples = torch.clamp(samples, min=0, max=1)
 
             batch_size = samples.size(0)
@@ -311,25 +286,11 @@ class ImageVisualizationCallback(Callback):
 
             num_generated_samples+=samples.size(0)
             
-            
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         if batch_idx == 0:
-            if self.adaptive_method == 'lipschitz':
-                for start_T in self.starting_T:
-                    for alpha in self.alpha:
-                        for adaptive in self.adaptive:
-                            self.generate_lipschitz_synthetic_dataset(pl_module, adaptive, alpha, start_T)
-
-            elif self.adaptive_method == 'T':
-                #T_values = [0.7, 1.]
-                #p_values = {0.7:[700, 1000], 1.:[1000]}
-
-                T_values = [0.8, 0.9]
-                p_values = {0.8:[800, 1000], 0.9:[900, 1000]}
-
-                for starting_T in T_values:
-                    for p_steps in p_values[starting_T]:
-                        self.generate_comparison_dataset(pl_module, p_steps, starting_T)
+            for predictor in self.predictor:
+                for p_steps in self.p_steps:
+                    self.generate_dataset(pl_module, predictor, p_steps)
 
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch

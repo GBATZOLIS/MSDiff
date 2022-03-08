@@ -45,13 +45,19 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
-  evaluate.batch_size = training.batch_size
-  evaluate.enable_sampling = True
-  evaluate.num_samples = 50000
-  evaluate.enable_loss = True
-  evaluate.enable_bpd = False
-  evaluate.bpd_dataset = 'test'
+  evaluate.batch_size = 128
+  evaluate.callback = training.visualization_callback
+
+  evaluate.num_samples = 10000
+  evaluate.probability_flow = False
+  evaluate.predictor = ['reverse_diffusion', 'ddim']
+  evaluate.corrector = 'none'
+  evaluate.p_steps = [64, 128, 256, 512, 1024, 2048]
+  evaluate.c_steps = 1
+  evaluate.denoise = True
+
   evaluate.adaptive = False
+
 
   # data
   config.data = data = ml_collections.ConfigDict()
@@ -97,7 +103,7 @@ def get_config():
   target = np.exp(-1/4*(20-0.1)-1/2*0.1)
   model.beta_max = (1-2/model.T_k)*model.beta_min -4/model.T_k**2 * np.log(target/2**(data.scale_depth-1))
   
-  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/loglinear_profile/version_5/checkpoints/epoch=702-step=1786095.ckpt'
+  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/loglinear_profile/version_5/checkpoints/epoch=620-step=1577487.ckpt'
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01

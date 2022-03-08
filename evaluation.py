@@ -68,7 +68,7 @@ def sort_files_based_on_basename(path_list):
 
 class SynthesizedDataset(Dataset):
     def __init__(self, path):
-        self.filenames = listdir_nothidden_paths(path)
+        self.filenames = listdir_nothidden_paths(path, filetype='png')
     
     def __getitem__(self, index):
         img = ToTensor()(Image.open(self.filenames[index]).convert('RGB'))
@@ -313,44 +313,22 @@ def run_unconditional_evaluation_pipeline(config):
     gt_activations = get_activations(train_dataloader, activation_fn, device)
     gt_stats = get_stats_from_activations(gt_activations)
 
-    eq = 'ode' if config.eval.probability_flow else 'sde'
-    base_path = os.path.join(config.base_log_path, config.experiment_name, \
-    'samples', 'eq(%s)-p(%s)-c(%s)' % (eq, config.eval.predictor, config.eval.corrector), config.eval.adaptive_method)
-    
     results = {}
 
-    if config.eval.adaptive_method == 'lipschitz':
-        for starting_T in config.eval.starting_T:
-            results[starting_T]={}
-            for alpha in config.eval.alpha:
-                results[starting_T][alpha]={}
-                for adaptive in config.eval.adaptive:
-                    adaptive_name = 'adaptive' if adaptive else 'uniform'
-                    path = os.path.join(base_path, 'T_%.2f' % starting_T, 'alpha_%.2f' % alpha, adaptive_name)
-                    fid = return_fid(path, config)
-                    results[starting_T][alpha][adaptive_name] = fid
-    
-    elif config.eval.adaptive_method == 'T':
-        T_values = [0.7, 0.8, 0.9, 1.]
+    eq = 'ode' if config.eval.probability_flow else 'sde'
+    for predictor in config.eval.predictor:
+        results[predictor]={}
+        for p_steps in config.eval.p_steps:
+            path = os.path.join(config.base_log_path, config.experiment_name, \
+                'samples', 'eq(%s)-p(%s)-c(%s)' % (eq, config.eval.predictor, config.eval.corrector), '%d' % p_steps)
+            fid = return_fid(path, config)
+            results[predictor][p_steps] = fid
 
-        p_values = {0.7:[700, 1000],
-                    0.8:[800, 1000],
-                    0.9:[900, 1000],
-                     1.:[1000]}
-
-        for starting_T in T_values:
-            results[starting_T]={}
-            for p_steps in p_values[starting_T]:
-                path = os.path.join(base_path, 'T_%.2f' % starting_T, '%d' % p_steps)
-                fid = return_fid(path, config)
-                results[starting_T][p_steps] = fid
 
     #create the evaluation log file
     evaluation_log_path = os.path.join(config.base_log_path, 
                                        config.experiment_name, 
-                                        'evaluation', 
-    'eq(%s)-p(%s)-c(%s)' % (eq, config.eval.predictor, config.eval.corrector), 
-                                        config.eval.adaptive_method)
+                                        'evaluation')
     
     Path(evaluation_log_path).mkdir(parents=True, exist_ok=True)
 

@@ -11,7 +11,7 @@ import os
 import torch
 from fast_sampling.computation_utils import get_adaptive_discretisation_fn
 import pickle 
-
+from timeit import default_timer as timer
 
 @utils.register_lightning_module(name='base')
 class BaseSdeGenerativeModel(pl.LightningModule):
@@ -158,6 +158,8 @@ class BaseSdeGenerativeModel(pl.LightningModule):
             adaptive_steps = None
 
         sampling_shape = [num_samples] + self.config.data.shape
+
+        start_time = timer()
         sampling_fn = get_sampling_fn(config=self.config, 
                                       sde=self.sde, 
                                       shape=sampling_shape, 
@@ -172,8 +174,13 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                                       denoise=denoise, 
                                       adaptive_steps=adaptive_steps,
                                       starting_T=starting_T)
+        end_time = timer()
+        sampling_time = end_time - start_time
 
-        return sampling_fn(self.score_model)
+        sample, info = sampling_fn(self.score_model)
+        info['time'] = sampling_time
+        
+        return sample, info
 
     def configure_optimizers(self):
         class scheduler_lambda_function:

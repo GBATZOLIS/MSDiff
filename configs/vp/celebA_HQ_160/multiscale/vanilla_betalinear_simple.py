@@ -50,20 +50,23 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
-  evaluate.batch_size = training.batch_size
+  evaluate.batch_size = 128
   evaluate.callback = 'base'
-  evaluate.predictor = 'euler_maruyama'
-  evaluate.corrector = 'none'
-  evaluate.p_steps = [100] #[100, 200, 400, 800] #np.arange(100, 1100, step=100)
-  evaluate.c_steps = 1
-  evaluate.probability_flow = True
-  evaluate.denoise = True
-  evaluate.adaptive = [False, True] 
-  evaluate.adaptive_method = 'lipschitz' #options: [kl, lipschitz]
-  evaluate.alpha = [1.] #used for lipschitz-adaptive method
-  evaluate.starting_T = [1.]
-  evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
+
   evaluate.num_samples = 10000
+  evaluate.probability_flow = False
+  evaluate.predictor = ['reverse_diffusion', 'ddim']
+  evaluate.corrector = 'none'
+  evaluate.p_steps = [64, 128, 256, 512, 1024] 
+  evaluate.c_steps = 1
+  evaluate.denoise = True
+
+  evaluate.adaptive = False
+  #evaluate.adaptive_method = 'lipschitz' #options: [kl, lipschitz]
+  #evaluate.alpha = [1.] #used for lipschitz-adaptive method
+  #evaluate.starting_T = [1.]
+  #evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
+  
 
   # data
   config.data = data = ml_collections.ConfigDict()
@@ -84,7 +87,7 @@ def get_config():
 
   # model
   config.model = model = ml_collections.ConfigDict()
-  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/debug_vanilla/128/betalinear_optim1_simple/version_6/checkpoints/epoch=567-step=1442655.ckpt'
+  model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/debug_vanilla/128/betalinear_optim1_simple/version_7/checkpoints/epoch=620-step=1577486.ckpt'
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
