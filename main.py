@@ -50,6 +50,8 @@ def main(argv):
     run_lib.compute_lipschitz_constant(FLAGS.config)
   elif FLAGS.mode == 'train_multiscale':
     run_lib.train_multiscale(FLAGS.config)
+  elif FLAGS.mode == 'test_multiscale':
+    run_lib.test_multiscale(FLAGS.config)
 
 if __name__ == "__main__":
   app.run(main)

@@ -62,10 +62,10 @@ def get_config():
   evaluate.denoise = True
 
   evaluate.adaptive = False
-  #evaluate.adaptive_method = 'lipschitz' #options: [kl, lipschitz]
-  #evaluate.alpha = [1.] #used for lipschitz-adaptive method
-  #evaluate.starting_T = [1.]
-  #evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
+  evaluate.adaptive_method = 'lipschitz' #options: [kl, lipschitz]
+  evaluate.alpha = [1.] #used for lipschitz-adaptive method
+  evaluate.starting_T = [1.]
+  evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
   
 
   # data
