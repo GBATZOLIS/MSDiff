@@ -123,7 +123,8 @@ def test_multiscale(configs):
     logger = pl.loggers.TensorBoardLogger(save_dir=eval_log_path, name='test_metrics')
 
     checkpoint_path = base_config.model.checkpoint_path
-    LightningModule = create_lightning_module(configs)
+    LightningModule = create_lightning_module(configs, checkpoint_path)
+    
     trainer = pl.Trainer(gpus = base_config.training.gpus,
                           num_nodes = base_config.training.num_nodes,
                           accelerator = base_config.training.accelerator,
@@ -131,14 +132,13 @@ def test_multiscale(configs):
                           gradient_clip_val = base_config.optim.grad_clip,
                           max_steps=base_config.training.n_iters, 
                           callbacks=callbacks, 
-                          logger = logger,
-                          resume_from_checkpoint=checkpoint_path)
+                          logger = logger)
     
     trainer.test(LightningModule, test_dataloaders = DataModule.test_dataloader())
 
     #evaluate FID scores on the generated samples
     unconditional_evaluation_pipeline(base_config)
-    
+
 def train(config, log_path, checkpoint_path):
     if config.data.create_dataset:
       create_dataset.create_dataset(config)

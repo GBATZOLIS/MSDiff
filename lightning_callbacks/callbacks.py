@@ -136,6 +136,16 @@ class EMACallback(Callback):
 
     def on_train_epoch_start(self, trainer, pl_module):
         pl_module.ema.restore(pl_module.parameters())
+    
+    '''
+    def on_test_epoch_start(self, trainer, pl_module):
+        pl_module.ema.store(pl_module.parameters())
+        pl_module.ema.copy_to(pl_module.parameters())
+    
+    def on_test_epoch_end(self, trainer, pl_module):
+        pl_module.ema.restore(pl_module.parameters())
+    '''
+        
 
 @utils.register_callback(name='multiscale_base')
 class MultiscaleImageVisualizationCallback(Callback):
