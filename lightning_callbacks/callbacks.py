@@ -200,7 +200,7 @@ class MultiscaleImageVisualizationCallback(Callback):
         while num_generated_samples < self.num_samples:
             psteps_per_scale = p_steps // pl_module.num_scales
             samples, info = pl_module.sample(
-                                            num_samples=self.config.eval.nun_samples,
+                                            num_samples=self.config.eval.num_samples,
                                             predictor=predictor,
                                             corrector=self.corrector,
                                             p_steps=psteps_per_scale,
