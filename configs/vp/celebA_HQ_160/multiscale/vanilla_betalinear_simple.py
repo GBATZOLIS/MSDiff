@@ -50,7 +50,7 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
-  evaluate.batch_size = 128
+  evaluate.batch_size = 64
   evaluate.callback = 'base'
 
   evaluate.num_samples = 10000
