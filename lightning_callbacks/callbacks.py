@@ -186,7 +186,7 @@ class MultiscaleImageVisualizationCallback(Callback):
     def generate_dataset(self, pl_module, predictor, p_steps):
         eq = 'ode' if self.probability_flow else 'sde'
 
-        p_step_dir = os.path.join(self.save_samples_dir, 'eq(%s)-p(%s)-c(%s)' % (eq, pl_module.config.eval.predictor, pl_module.config.eval.corrector), '%d' % p_steps)
+        p_step_dir = os.path.join(self.save_samples_dir, 'eq(%s)-p(%s)-c(%s)' % (eq, self.config.eval.predictor, self.config.eval.corrector), '%d' % p_steps)
         Path(p_step_dir).mkdir(parents=True, exist_ok=True)
 
         num_generated_samples = 0
