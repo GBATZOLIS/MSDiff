@@ -320,7 +320,7 @@ def run_unconditional_evaluation_pipeline(config):
         results[predictor]={}
         for p_steps in config.eval.p_steps:
             path = os.path.join(config.base_log_path, config.experiment_name, \
-                'samples', 'eq(%s)-p(%s)-c(%s)' % (eq, config.eval.predictor, config.eval.corrector), '%d' % p_steps)
+                'samples', 'eq(%s)-p(%s)-c(%s)' % (eq, predictor, config.eval.corrector), '%d' % p_steps)
             fid = return_fid(path, config)
             results[predictor][p_steps] = fid
 
