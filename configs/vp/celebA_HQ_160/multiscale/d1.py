@@ -52,7 +52,7 @@ def get_config():
   evaluate.probability_flow = False
   evaluate.predictor = ['reverse_diffusion', 'ddim']
   evaluate.corrector = 'none'
-  evaluate.p_steps = [100] #[64, 128, 256, 512, 1024, 2048]
+  evaluate.p_steps = [64, 128, 256, 512, 1024, 2048]
   evaluate.c_steps = 1
   evaluate.denoise = True
 
