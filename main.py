@@ -20,7 +20,8 @@ flags.DEFINE_enum("mode", "train", \
   'compute_fast_sampling_scheme',
   'distillation', 
   'compute_lipschitz_constant', 
-  'train_multiscale'], \
+  'train_multiscale', 
+  'test_multiscale'], \
 
   "Running mode: train or test")
 flags.DEFINE_string("eval_folder", "eval",
