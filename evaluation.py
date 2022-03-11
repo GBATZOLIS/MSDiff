@@ -317,8 +317,10 @@ def run_unconditional_evaluation_pipeline(config):
 
     eq = 'ode' if config.eval.probability_flow else 'sde'
     for predictor in config.eval.predictor:
+        print('predictor: %s' % predictor)
         results[predictor]={}
         for p_steps in config.eval.p_steps:
+            print('psteps: %d' % p_steps)
             path = os.path.join(config.base_log_path, config.experiment_name, \
                 'samples', 'eq(%s)-p(%s)-c(%s)' % (eq, predictor, config.eval.corrector), '%d' % p_steps)
             fid = return_fid(path, config)
