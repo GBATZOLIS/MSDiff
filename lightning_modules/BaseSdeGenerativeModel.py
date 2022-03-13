@@ -159,7 +159,6 @@ class BaseSdeGenerativeModel(pl.LightningModule):
 
         sampling_shape = [num_samples] + self.config.data.shape
 
-        start_time = timer()
         sampling_fn = get_sampling_fn(config=self.config, 
                                       sde=self.sde, 
                                       shape=sampling_shape, 
@@ -174,12 +173,8 @@ class BaseSdeGenerativeModel(pl.LightningModule):
                                       denoise=denoise, 
                                       adaptive_steps=adaptive_steps,
                                       starting_T=starting_T)
-        end_time = timer()
-        sampling_time = end_time - start_time
 
         sample, info = sampling_fn(self.score_model)
-        info['time'] = sampling_time
-        
         return sample, info
 
     def configure_optimizers(self):

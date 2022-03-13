@@ -10,6 +10,7 @@ from scipy import integrate
 import sde_lib
 from models import utils as mutils
 import pickle 
+from timeit import default_timer as timer
 
 def get_sampling_fn(config, sde, shape, eps,
                     predictor='default', 
@@ -222,7 +223,8 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
     Returns:
       Samples, number of function evaluations.
     """
-    
+    start_time = timer()
+
     #declare non-local variables
     nonlocal show_evolution
     nonlocal ending_T
@@ -269,12 +271,15 @@ def get_pc_sampler(sde, shape, predictor, corrector, snr,
 
       samples = x_mean if denoise else x
 
+      end_time = timer()
+      sampling_time = end_time - start_time
+
       if show_evolution:
         sampling_info = {'evolution': torch.stack(evolution), 
                         'times':timesteps, 'steps': p_steps}
         return samples, sampling_info
       else:
-        sampling_info = {'times':timesteps, 'steps': p_steps}
+        sampling_info = {'times':timesteps, 'steps': p_steps, 'time':sampling_time}
         return samples, sampling_info
 
   return pc_sampler

@@ -265,8 +265,9 @@ class ImageVisualizationCallback(Callback):
         self.gamma = config.eval.gamma
         self.alpha = config.eval.alpha
         self.starting_T = config.eval.starting_T
-        self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
-    
+        #self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
+        self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples-time') #this will be removed - just to calculate the sampling times
+
     def update_config(self, pl_module):
         pl_module.config = self.config
 

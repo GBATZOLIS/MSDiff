@@ -53,7 +53,7 @@ def get_config():
   evaluate.batch_size = 64
   evaluate.callback = 'base'
 
-  evaluate.num_samples = 10000
+  evaluate.num_samples = 64 #10000
   evaluate.probability_flow = False
   evaluate.predictor = ['reverse_diffusion', 'ddim']
   evaluate.corrector = 'none'
