@@ -112,7 +112,7 @@ class PC_Adams_11_Predictor(Predictor):
     if isinstance(self.sde, dict):
       score = self.score_fn(x, t)
       f = {}
-      for name in self.sde.keys():
+      for name in x.keys():
         f_drift, f_diffusion = self.sde[name].sde(x[name], t)
         r_drift = f_drift - f_diffusion[(..., ) + (None, ) * len(x[name].shape[1:])] ** 2 * score[name] * 0.5
         f[name] = r_drift
@@ -126,7 +126,7 @@ class PC_Adams_11_Predictor(Predictor):
   def predict(self, x, f_0, h):
     if isinstance(self.sde, dict):
       prediction = {}
-      for name in self.sde.keys():
+      for name in x.keys():
         prediction[name] = x[name] + f_0[name] * h
     else:
       prediction = x + f_0 * h
@@ -136,7 +136,7 @@ class PC_Adams_11_Predictor(Predictor):
   def correct(self, x_1, f_1, f_0, h):
     if isinstance(self.sde, dict):
       correction={}
-      for name in self.sde.keys():
+      for name in x_1.keys():
         correction[name] = x_1[name] + h/2 * (f_1[name] + f_0[name])
     else:
       correction = x_1 + h/2 * (f_1 + f_0)
