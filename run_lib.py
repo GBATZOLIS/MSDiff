@@ -114,7 +114,7 @@ def train_multiscale(configs):
 def test_multiscale(configs):
     base_config = configs.d1
 
-    '''
+    
     DataModule = create_lightning_datamodule(base_config)
     DataModule.setup()
 
@@ -137,8 +137,8 @@ def test_multiscale(configs):
                           logger = logger)
     
     trainer.test(LightningModule, test_dataloaders = DataModule.test_dataloader())
-    '''
     
+
     #evaluate FID scores on the generated samples
     unconditional_evaluation_pipeline(base_config)
 
