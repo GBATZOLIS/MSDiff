@@ -150,10 +150,11 @@ class PC_Adams_11_Predictor(Predictor):
       #predict
       x_1 = self.predict(x, f_0, h)
       #evaluate
-      f_1 = self.f(x_1, t+h)
+      #f_1 = self.f(x_1, t+h)
       #correct once
-      x_2 = self.correct(x_1, f_1, f_0, h)
-
+      #x_2 = self.correct(x_1, f_1, f_0, h)
+      x_2=x_1
+      
       return x_2, x_2
 
 
