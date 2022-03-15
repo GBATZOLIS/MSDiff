@@ -226,9 +226,9 @@ class MultiscaleImageVisualizationCallback(Callback):
                 pickle.dump(timing_information, f)
                 f.close()
 
-            grid_images = torchvision.utils.make_grid(samples.to('cpu'), normalize=True, scale_each=True)
-            fp = os.path.join(p_step_dir, 'grid.png')
-            save_image(grid_images, fp)
+            #grid_images = torchvision.utils.make_grid(samples.to('cpu'), normalize=True, scale_each=True)
+            #fp = os.path.join(p_step_dir, 'grid.png')
+            #save_image(grid_images, fp)
 
             samples = torch.clamp(samples, min=0, max=1)
 
