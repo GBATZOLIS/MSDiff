@@ -49,10 +49,10 @@ def get_config():
   evaluate.callback = training.visualization_callback
 
   evaluate.num_samples = 10000
-  evaluate.probability_flow = False
-  evaluate.predictor = ['heun'] #['reverse_diffusion', 'ddim']
+  evaluate.probability_flow = True
+  evaluate.predictor = ['euler_maruyama'] #['heun'] #['reverse_diffusion', 'ddim']
   evaluate.corrector = 'none'
-  evaluate.p_steps = [32, 64, 128, 256, 512, 1024] #[64, 128, 256, 512, 1024, 2048] 
+  evaluate.p_steps = [64, 128, 256, 512, 1024, 2048] #[32, 64, 128, 256, 512, 1024]
   evaluate.c_steps = 1
   evaluate.denoise = True
 
