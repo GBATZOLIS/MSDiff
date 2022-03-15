@@ -133,13 +133,13 @@ class PC_Adams_11_Predictor(Predictor):
 
     return prediction
   
-  def correct(self, x_1, f_1, f_0, h):
+  def correct(self, x, f_1, f_0, h):
     if isinstance(self.sde, dict):
-      correction={}
-      for name in x_1.keys():
-        correction[name] = x_1[name] + h/2 * (f_1[name] + f_0[name])
+      correction = {}
+      for name in x.keys():
+        correction[name] = x[name] + h/2 * (f_1[name] + f_0[name])
     else:
-      correction = x_1 + h/2 * (f_1 + f_0)
+      correction = x + h/2 * (f_1 + f_0)
     return correction
 
   def update_fn(self, x, t):
@@ -150,11 +150,10 @@ class PC_Adams_11_Predictor(Predictor):
       #predict
       x_1 = self.predict(x, f_0, h)
       #evaluate
-      #f_1 = self.f(x_1, t+h)
+      f_1 = self.f(x_1, t+h)
       #correct once
-      #x_2 = self.correct(x_1, f_1, f_0, h)
-      x_2=x_1
-      
+      x_2 = self.correct(x, f_1, f_0, h)
+
       return x_2, x_2
 
 
