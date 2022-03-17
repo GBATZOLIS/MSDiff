@@ -156,6 +156,59 @@ class PC_Adams_11_Predictor(Predictor):
 
       return x_2, x_2
 
+@register_predictor(name='euler_trapezoidal_s_2_a_0')
+class Euler_Trapezoidal_s_2_a_0_Predictor(PC_Adams_11_Predictor):
+  def __init__(self, sde, score_fn, probability_flow=True, discretisation=None):
+    super().__init__(sde, score_fn, probability_flow, discretisation)
+    self.a1 = 0.
+
+  def update_fn(self, x, t):
+      h = torch.tensor(self.inverse_step_fn(t[0].cpu().item())).type_as(t)
+      
+      #evaluate
+      f_0 = self.f(x, t)
+      #predict
+      x_1 = self.predict(x, f_0, h)
+
+      #evaluate
+      f_1 = self.f(x_1, t+h)
+      #correct
+      pece_1 = self.correct(x, f_1, f_0, h)
+
+      #evaluate 
+      f_1 = self.f(pece_1, t+h)
+      #correct
+      pece_2 = self.correct(x, f_1, f_0, h)
+
+      weighted_correction = self.a1 * pece_1 + (1-self.a1) * pece_2
+      return weighted_correction, weighted_correction
+
+@register_predictor(name='euler_trapezoidal_s_2_a_7e-1')
+class Euler_Trapezoidal_s_2_a_7_Predictor(PC_Adams_11_Predictor):
+  def __init__(self, sde, score_fn, probability_flow=True, discretisation=None):
+    super().__init__(sde, score_fn, probability_flow, discretisation)
+    self.a1 = 0.7
+
+  def update_fn(self, x, t):
+      h = torch.tensor(self.inverse_step_fn(t[0].cpu().item())).type_as(t)
+      
+      #evaluate
+      f_0 = self.f(x, t)
+      #predict
+      x_1 = self.predict(x, f_0, h)
+
+      #evaluate
+      f_1 = self.f(x_1, t+h)
+      #correct
+      pece_1 = self.correct(x, f_1, f_0, h)
+
+      #evaluate 
+      f_1 = self.f(pece_1, t+h)
+      #correct
+      pece_2 = self.correct(x, f_1, f_0, h)
+
+      weighted_correction = self.a1 * pece_1 + (1-self.a1) * pece_2
+      return weighted_correction, weighted_correction
 
 @register_predictor(name='euler_maruyama')
 class EulerMaruyamaPredictor(Predictor):

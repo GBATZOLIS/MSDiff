@@ -335,7 +335,7 @@ def run_unconditional_evaluation_pipeline(config):
     Path(evaluation_log_path).mkdir(parents=True, exist_ok=True)
 
     #log the results dictionary
-    f = open(os.path.join(evaluation_log_path, 'results.pkl'), "wb")
+    f = open(os.path.join(evaluation_log_path, 'pece_results.pkl'), "wb")
     pickle.dump(results, f)
     f.close()
 
