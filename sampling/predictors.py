@@ -162,6 +162,16 @@ class Euler_Trapezoidal_s_2_a_0_Predictor(PC_Adams_11_Predictor):
     super().__init__(sde, score_fn, probability_flow, discretisation)
     self.a1 = 0.
 
+  def weighted_correction_fn(self, pece_1, pece_2):
+    if isinstance(self.sde, dict):
+      weighted_correction = {}
+      for name in pece_1.keys():
+        weighted_correction[name] = self.a1 * pece_1[name] + (1-self.a1) * pece_2[name]
+    else:
+      weighted_correction = self.a1 * pece_1 + (1-self.a1) * pece_2
+    
+    return weighted_correction
+    
   def update_fn(self, x, t):
       h = torch.tensor(self.inverse_step_fn(t[0].cpu().item())).type_as(t)
       
@@ -180,7 +190,8 @@ class Euler_Trapezoidal_s_2_a_0_Predictor(PC_Adams_11_Predictor):
       #correct
       pece_2 = self.correct(x, f_1, f_0, h)
 
-      weighted_correction = self.a1 * pece_1 + (1-self.a1) * pece_2
+      weighted_correction = self.weighted_correction_fn(pece_1, pece_2)
+
       return weighted_correction, weighted_correction
 
 @register_predictor(name='euler_trapezoidal_s_2_a_7e-1')
@@ -189,6 +200,16 @@ class Euler_Trapezoidal_s_2_a_7_Predictor(PC_Adams_11_Predictor):
     super().__init__(sde, score_fn, probability_flow, discretisation)
     self.a1 = 0.7
 
+  def weighted_correction_fn(self, pece_1, pece_2):
+    if isinstance(self.sde, dict):
+      weighted_correction = {}
+      for name in pece_1.keys():
+        weighted_correction[name] = self.a1 * pece_1[name] + (1-self.a1) * pece_2[name]
+    else:
+      weighted_correction = self.a1 * pece_1 + (1-self.a1) * pece_2
+    
+    return weighted_correction
+    
   def update_fn(self, x, t):
       h = torch.tensor(self.inverse_step_fn(t[0].cpu().item())).type_as(t)
       
@@ -207,7 +228,8 @@ class Euler_Trapezoidal_s_2_a_7_Predictor(PC_Adams_11_Predictor):
       #correct
       pece_2 = self.correct(x, f_1, f_0, h)
 
-      weighted_correction = self.a1 * pece_1 + (1-self.a1) * pece_2
+      weighted_correction = self.weighted_correction_fn(pece_1, pece_2)
+
       return weighted_correction, weighted_correction
 
 @register_predictor(name='euler_maruyama')
