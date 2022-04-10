@@ -6,9 +6,14 @@ import numpy as np
 def get_config():
   config = ml_collections.ConfigDict()
   image_size = 64
+  server = 'hpc' #Options:['abg', 'hpc']
 
   #logging
-  config.base_log_path = '/home/gb511/projects/fast_sampling/ImageNet/%d' % image_size #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/%d' % image_size
+  if server == 'hpc':
+    config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/%d' % image_size 
+  elif server == 'abg':
+    config.base_log_path = '/home/gb511/projects/fast_sampling/ImageNet/%d' % image_size
+    
   config.experiment_name = 'vanilla'
 
   # training
@@ -71,7 +76,12 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = '/home/gb511/datasets/ILSVRC/Data' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets'
+
+  if server == 'hpc':
+    data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
+  elif server == 'abg':
+    data.base_dir =  '/home/gb511/datasets/ILSVRC/Data'
+
   data.datamodule = 'ImageNet'
   data.image_size = image_size
   data.dataset = 'ImageNet_%d' % image_size

@@ -6,9 +6,14 @@ import numpy as np
 def get_config():
   config = ml_collections.ConfigDict()
   image_size = 128
+  server = 'hpc' #Options:['abg', 'hpc']
 
   #logging
-  config.base_log_path = '/home/gb511/projects/fast_sampling/ImageNet/%d' % image_size #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/%d' % image_size
+  if server == 'hpc':
+    config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/%d' % image_size 
+  elif server == 'abg':
+    config.base_log_path = '/home/gb511/projects/fast_sampling/ImageNet/%d' % image_size
+
   config.experiment_name = 'vanilla'
 
   # training
@@ -16,7 +21,7 @@ def get_config():
   config.training.lightning_module = 'base'
   training.num_nodes = 1
   training.gpus = 1
-  training.batch_size = 2 #256 // (training.num_nodes*training.gpus)
+  training.batch_size = 256 // (training.num_nodes*training.gpus)
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -71,7 +76,12 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir =  '/home/gb511/datasets/ILSVRC/Data' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
+  
+  if server == 'hpc':
+    data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
+  elif server == 'abg':
+    data.base_dir =  '/home/gb511/datasets/ILSVRC/Data'
+ 
   data.datamodule = 'ImageNet'
   data.image_size = image_size
   data.dataset = 'ImageNet_%d' % image_size
@@ -98,7 +108,7 @@ def get_config():
   
   # model architecture
   model.name = 'guided_diffusion_UNET'
-  model.model_channels = 256 #128
+  model.model_channels = 256
   model.input_channels = data.num_channels
   model.output_channels = data.num_channels
   model.num_res_blocks = 2
