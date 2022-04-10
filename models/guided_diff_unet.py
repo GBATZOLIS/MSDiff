@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from . import utils
 from iunets.layers import InvertibleDownsampling2D
+import pytorch_lightning as pl
 
 """
 Various utilities for neural networks.
@@ -543,7 +544,7 @@ class QKVAttention(nn.Module):
         return count_flops_attn(model, _x, y)
 
 @utils.register_model(name='guided_diffusion_UNET')
-class UNetModel(nn.Module):
+class UNetModel(pl.LightningModule):
     """
     The full UNet model with attention and timestep embedding.
     :param in_channels: channels in the input Tensor.
