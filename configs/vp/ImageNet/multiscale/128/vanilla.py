@@ -21,7 +21,7 @@ def get_config():
   config.training.lightning_module = 'base'
   training.num_nodes = 1
   training.gpus = 1
-  training.batch_size = 256 // (training.num_nodes*training.gpus)
+  training.batch_size = 64 #256 // (training.num_nodes*training.gpus)
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -76,7 +76,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  
+
   if server == 'hpc':
     data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
   elif server == 'abg':
