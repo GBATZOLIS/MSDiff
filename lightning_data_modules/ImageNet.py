@@ -28,11 +28,11 @@ class ImageNetDataset(Dataset):
                         transforms.Resize(size=(res_x, res_y))])
             
         self.image_paths = load_file_paths(path, phase)
+        print(self.image_paths[:10])
 
     def __getitem__(self, index):
         image = Image.open(self.image_paths[index]).convert('RGB')
         image = self.transform(image)
-        print(image)
         return image
 
     def __len__(self):
