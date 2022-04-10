@@ -8,7 +8,7 @@ import glob
 
 def load_file_paths(dataset_base_dir, phase):
     if phase in ['val', 'test']:
-        listOfFiles = [os.path.join(dataset_base_dir, phase, f) for f in os.listdir(dataset_base_dir)]
+        listOfFiles = [os.path.join(dataset_base_dir, phase, f) for f in os.listdir(dataset_base_dir, phase)]
     elif phase == 'train':
         listOfFiles = []
         for class_folder in os.listdir(os.path.join(dataset_base_dir, phase)):
