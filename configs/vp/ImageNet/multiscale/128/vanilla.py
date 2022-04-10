@@ -71,7 +71,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
+  data.base_dir =  '/home/gb511/datasets/ILSVRC/Data' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
   data.datamodule = 'ImageNet'
   data.image_size = image_size
   data.dataset = 'ImageNet_%d' % image_size
@@ -98,7 +98,7 @@ def get_config():
   
   # model architecture
   model.name = 'guided_diffusion_UNET'
-  model.model_channels = 256
+  model.model_channels = 128 #256
   model.input_channels = data.num_channels
   model.output_channels = data.num_channels
   model.num_res_blocks = 2
