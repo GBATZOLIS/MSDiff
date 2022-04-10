@@ -597,7 +597,7 @@ class UNetModel(pl.LightningModule):
         self.num_classes = config.model.num_classes
 
         self.use_checkpoint = use_checkpoint = False #config.model.use_checkpoint
-        self.dtype = th.float32 #th.float16 if use_fp16 else th.float32
+        #self.dtype = th.float32 #th.float16 if use_fp16 else th.float32
 
         self.num_heads = config.model.num_heads
         self.num_head_channels = config.model.num_head_channels
@@ -845,7 +845,7 @@ class EncoderUNetModel(nn.Module):
         self.channel_mult = channel_mult
         self.conv_resample = conv_resample
         self.use_checkpoint = use_checkpoint
-        self.dtype = th.float16 if use_fp16 else th.float32
+        #self.dtype = th.float16 if use_fp16 else th.float32
         self.num_heads = num_heads
         self.num_head_channels = num_head_channels
         self.num_heads_upsample = num_heads_upsample
