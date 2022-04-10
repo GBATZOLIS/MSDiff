@@ -172,6 +172,7 @@ def train(config, log_path, checkpoint_path):
                           max_steps=config.training.n_iters, 
                           callbacks=callbacks, 
                           logger = logger,
+                          precision=16, amp_backend="native",
                           resume_from_checkpoint=checkpoint_path)
     else:  
       trainer = pl.Trainer(gpus=config.training.gpus,
@@ -181,6 +182,7 @@ def train(config, log_path, checkpoint_path):
                           gradient_clip_val = config.optim.grad_clip,
                           max_steps=config.training.n_iters,
                           callbacks=callbacks,
+                          precision=16, amp_backend="native",
                           logger = logger                          
                           )
 
