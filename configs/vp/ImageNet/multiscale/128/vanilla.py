@@ -98,7 +98,7 @@ def get_config():
   
   # model architecture
   model.name = 'guided_diffusion_UNET'
-  model.model_channels = 128 #256
+  model.model_channels = 256 #128
   model.input_channels = data.num_channels
   model.output_channels = data.num_channels
   model.num_res_blocks = 2
