@@ -28,7 +28,8 @@ class SiLU(nn.Module):
 
 class GroupNorm32(nn.GroupNorm):
     def forward(self, x):
-        return super().forward(x.float()).type(x.dtype)
+        #return super().forward(x.float()).type(x.dtype)
+        return super().forward(x.float())
 
 
 def conv_nd(dims, *args, **kwargs):
@@ -396,7 +397,8 @@ class ResBlock(TimestepBlock):
             h = in_conv(h)
         else:
             h = self.in_layers(x)
-        emb_out = self.emb_layers(emb).type(h.dtype)
+        #emb_out = self.emb_layers(emb).type(h.dtype)
+        emb_out = self.emb_layers(emb)
         while len(emb_out.shape) < len(h.shape):
             emb_out = emb_out[..., None]
         if self.use_scale_shift_norm:
@@ -501,7 +503,8 @@ class QKVAttentionLegacy(nn.Module):
         weight = th.einsum(
             "bct,bcs->bts", q * scale, k * scale
         )  # More stable with f16 than dividing afterwards
-        weight = th.softmax(weight.float(), dim=-1).type(weight.dtype)
+        #weight = th.softmax(weight.float(), dim=-1).type(weight.dtype)
+        weight = th.softmax(weight.float(), dim=-1)
         a = th.einsum("bts,bcs->bct", weight, v)
         return a.reshape(bs, -1, length)
 
@@ -535,7 +538,8 @@ class QKVAttention(nn.Module):
             (q * scale).view(bs * self.n_heads, ch, length),
             (k * scale).view(bs * self.n_heads, ch, length),
         )  # More stable with f16 than dividing afterwards
-        weight = th.softmax(weight.float(), dim=-1).type(weight.dtype)
+        #weight = th.softmax(weight.float(), dim=-1).type(weight.dtype)
+        weight = th.softmax(weight.float(), dim=-1)
         a = th.einsum("bts,bcs->bct", weight, v.reshape(bs * self.n_heads, ch, length))
         return a.reshape(bs, -1, length)
 
@@ -770,7 +774,8 @@ class UNetModel(pl.LightningModule):
             assert y.shape == (x.shape[0],)
             emb = emb + self.label_emb(y)
 
-        h = x.type(self.dtype)
+        #h = x.type(self.dtype)
+        h = x
         for module in self.input_blocks:
             h = module(h, emb)
             hs.append(h)
@@ -778,7 +783,7 @@ class UNetModel(pl.LightningModule):
         for module in self.output_blocks:
             h = th.cat([h, hs.pop()], dim=1)
             h = module(h, emb)
-        h = h.type(x.dtype)
+        #h = h.type(x.dtype)
         return self.out(h)
 
 
@@ -981,18 +986,21 @@ class EncoderUNetModel(nn.Module):
         emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
 
         results = []
-        h = x.type(self.dtype)
+        #h = x.type(self.dtype)
+        h = x
         for module in self.input_blocks:
             h = module(h, emb)
             if self.pool.startswith("spatial"):
-                results.append(h.type(x.dtype).mean(dim=(2, 3)))
+                #results.append(h.type(x.dtype).mean(dim=(2, 3)))
+                results.append(h.mean(dim=(2, 3)))
         h = self.middle_block(h, emb)
         if self.pool.startswith("spatial"):
-            results.append(h.type(x.dtype).mean(dim=(2, 3)))
+            #results.append(h.type(x.dtype).mean(dim=(2, 3)))
+            results.append(h.mean(dim=(2, 3)))
             h = th.cat(results, axis=-1)
             return self.out(h)
         else:
-            h = h.type(x.dtype)
+            #h = h.type(x.dtype)
             return self.out(h)
 
 def permute_channels(haar_image, forward=True):
