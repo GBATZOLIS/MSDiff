@@ -33,6 +33,9 @@ def get_optimizer(config, params):
 
     optimizer = optim.Adam(params, lr=config.optim.lr, betas=(config.optim.beta1, beta2), eps=config.optim.eps,
                            weight_decay=config.optim.weight_decay)
+  elif config.optim.optimizer == 'AdamW':
+    optimizer = optim.AdamW(params, lr=config.optim.lr, betas=(config.optim.beta1, beta2), eps=config.optim.eps, 
+                            weight_decay=config.optim.weight_decay)
   else:
     raise NotImplementedError(
       f'Optimizer {config.optim.optimizer} not supported yet!')
