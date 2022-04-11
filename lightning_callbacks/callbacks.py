@@ -142,30 +142,13 @@ class MultiscaleImageVisualizationCallback(Callback):
                 for p_steps in self.p_steps:
                     self.generate_dataset(pl_module, predictor, p_steps)
 
-    def on_validation_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
-        if batch_idx == 0:
-            for predictor in ['ddim', 'reverse_diffusion']:
-                psteps_per_scale = 1000//pl_module.num_scales
-                samples, sampling_info = pl_module.sample(p_steps=psteps_per_scale, predictor=predictor)
-                self.visualise_samples(samples, pl_module, steps_per_scale=psteps_per_scale, predictor=predictor)
-    '''       
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
-        if current_epoch !=0 and current_epoch % 5 == 0:
-            for predictor in ['ddim', 'reverse_diffusion']:
+        if current_epoch % 5 == 0 and current_epoch != 0:
+            for predictor in ['reverse_diffusion']:
                 psteps_per_scale = 1000//pl_module.num_scales
                 samples, sampling_info = pl_module.sample(p_steps=psteps_per_scale, predictor=predictor)
                 self.visualise_samples(samples, pl_module, steps_per_scale=psteps_per_scale, predictor=predictor)
-
-            predictor = 'ddim'
-            psteps_per_scale = 2000//pl_module.num_scales
-            samples, sampling_info = pl_module.sample(p_steps=psteps_per_scale, predictor=predictor)
-            self.visualise_samples(samples, pl_module, steps_per_scale=psteps_per_scale, predictor=predictor)
-
-            #log sampling times for each scale
-            #for scale_name in sampling_info.keys():
-            #    pl_module.logger.experiment.add_scalar('sampling_time_for_scale_%s' % scale_name, sampling_info[scale_name]['time'], current_epoch)
-    '''     
             
     def visualise_samples(self, samples, pl_module, steps_per_scale, predictor):
         # log sampled images

@@ -92,23 +92,29 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
             return (scale_index-1)/self.num_scales, scale_index/self.num_scales
 
     def training_step(self, batch, batch_idx, optimizer_idx):
-        batch = self.convert_to_haar_space(batch, max_depth=self.num_scales-1)
-
         scale_index = batch_idx % self.num_scales + 1
-        self.get_relevant_scales_from_batch(batch, scale_index)
-        T1, T2 = self.compute_interval(scale_index)
         scale_name = self.index_to_scale_name[scale_index]
+
+        #use the relevant batchsize (deeper scales are trained with bigger batchsizes because of the memory advantage)
+        batch = batch[:self.config[scale_name].training.batch_size, ::]
+
+        batch = self.convert_to_haar_space(batch, max_depth=self.num_scales-1)        
+        self.get_relevant_scales_from_batch(batch, scale_index)
+
+        T1, T2 = self.compute_interval(scale_index)
         loss = self.train_loss_fn(self.score_model[scale_name], batch, T1, T2)
+
         self.log('train_loss_scale_%s' % scale_name, loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss
     
     def validation_step(self, batch, batch_idx):
-        batch = self.convert_to_haar_space(batch, max_depth=self.num_scales-1)
-
-        scale_index = np.random.randint(low=1, high=self.num_scales+1)
-        self.get_relevant_scales_from_batch(batch, scale_index)
-        T1, T2 = self.compute_interval(scale_index)
+        scale_index = batch_idx % self.num_scales + 1
         scale_name = self.index_to_scale_name[scale_index]
+
+        batch = self.convert_to_haar_space(batch, max_depth=self.num_scales-1)        
+        self.get_relevant_scales_from_batch(batch, scale_index)
+
+        T1, T2 = self.compute_interval(scale_index)
         loss = self.eval_loss_fn(self.score_model[scale_name], batch, T1, T2)
         self.log('eval_loss_scale_%s' % scale_name, loss, on_epoch=True, prog_bar=True, logger=True)
         return loss

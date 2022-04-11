@@ -29,7 +29,7 @@ def get_callbacks(config, phase='train'):
     callbacks = []
 
     #check if this works for testing as well.
-    callbacks.append(get_callback_by_name('ema')(decay=config.model.ema_rate, ema_device='cpu')) 
+    #callbacks.append(get_callback_by_name('ema')(decay=config.model.ema_rate, ema_device='cpu')) 
     
     if config.training.checkpointing_strategy == 'mixed':
       #save all the checkpoints every K iterations (for post training evaluation)

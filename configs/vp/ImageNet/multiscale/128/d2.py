@@ -14,7 +14,7 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'multiscale_base'
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 2
   training.batch_size = 256 // (training.num_nodes*training.gpus)
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
@@ -105,8 +105,8 @@ def get_config():
   model.embedding_type = 'fourier'
 
   # model architecture
-  model.name = 'guided_diffusion_UNET'
-  model.model_channels = 192
+  model.name = 'guided_diffusion_UNET_multi_speed_haar'
+  model.model_channels = 160
   model.input_channels = data.num_channels
   model.output_channels = data.num_channels
   model.num_res_blocks = 2
@@ -128,11 +128,11 @@ def get_config():
   # optimization
   config.optim = optim = ml_collections.ConfigDict()
 
-  optim.weight_decay = 0
+  optim.weight_decay = 0.
   optim.optimizer = 'Adam'
-  optim.lr = 2e-4
+  optim.lr = 1e-4
   optim.beta1 = 0.9
-  optim.beta2 = 0.99
+  optim.beta2 = 0.999
   optim.eps = 1e-8
   optim.warmup = 0 #set it to 0 if you do not want to use warm up.
   optim.grad_clip = 0 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.

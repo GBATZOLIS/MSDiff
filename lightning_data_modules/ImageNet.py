@@ -28,7 +28,7 @@ class ImageNetDataset(Dataset):
                         transforms.Resize(size=(res_x, res_y))])
             
         self.image_paths = load_file_paths(path, phase)
-        print(self.image_paths[:10])
+        #print(self.image_paths[:10])
 
     def __getitem__(self, index):
         image = Image.open(self.image_paths[index]).convert('RGB')
@@ -37,7 +37,6 @@ class ImageNetDataset(Dataset):
 
     def __len__(self):
         return len(self.image_paths)
-
 
 @utils.register_lightning_datamodule(name='ImageNet')
 class ImageDataModule(pl.LightningDataModule):
@@ -60,10 +59,40 @@ class ImageDataModule(pl.LightningDataModule):
         self.test_data = ImageNetDataset(self.config, 'test')
 
     def train_dataloader(self):
-        return DataLoader(self.train_data, batch_size = self.train_batch, num_workers=self.train_workers) 
+        return DataLoader(self.train_data, batch_size = self.train_batch, num_workers=self.train_workers, shuffle=True) 
   
     def val_dataloader(self):
-        return DataLoader(self.valid_data, batch_size = self.val_batch, num_workers=self.val_workers) 
+        return DataLoader(self.valid_data, batch_size = self.val_batch, num_workers=self.val_workers, shuffle=False) 
   
     def test_dataloader(self): 
-        return DataLoader(self.test_data, batch_size = self.test_batch, num_workers=self.test_workers) 
+        return DataLoader(self.test_data, batch_size = self.test_batch, num_workers=self.test_workers, shuffle=False) 
+
+
+@utils.register_lightning_datamodule(name='multiscale_ImageNet')
+class ImageDataModule(pl.LightningDataModule):
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+
+        #DataLoader arguments
+        self.train_workers = config.training.workers
+        self.val_workers = config.eval.workers
+        self.test_workers = config.eval.workers
+
+        self.train_batch = config.training.batch_size * 2 ** config.data.max_haar_depth
+        self.val_batch = config.eval.batch_size
+        self.test_batch = config.eval.batch_size
+
+    def setup(self, stage=None): 
+        self.train_data = ImageNetDataset(self.config, 'train')
+        self.valid_data = ImageNetDataset(self.config, 'val')
+        self.test_data = ImageNetDataset(self.config, 'test')
+
+    def train_dataloader(self):
+        return DataLoader(self.train_data, batch_size = self.train_batch, num_workers=self.train_workers, shuffle=True) 
+  
+    def val_dataloader(self):
+        return DataLoader(self.valid_data, batch_size = self.val_batch, num_workers=self.val_workers, shuffle=False) 
+  
+    def test_dataloader(self): 
+        return DataLoader(self.test_data, batch_size = self.test_batch, num_workers=self.test_workers, shuffle=False) 

@@ -20,7 +20,7 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'multiscale_base'
   training.num_nodes = 1
-  training.gpus = 4
+  training.gpus = 2
   training.batch_size = 128 // (training.num_nodes*training.gpus)
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
@@ -29,6 +29,11 @@ def get_config():
   training.n_iters = 1000000
   training.visualization_callback = 'multiscale_base'
   training.show_evolution = False
+
+  #Model checkpointing
+  training.checkpointing_strategy = 'mixed' #options: [mixed, last]
+  training.latest_save_every_n_train_steps = 5000 #replace
+  training.save_every_n_train_steps = 250000 #save all
   
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
@@ -40,7 +45,7 @@ def get_config():
   # sampling
   config.sampling = sampling = ml_collections.ConfigDict()
   sampling.method = 'pc'
-  sampling.predictor = 'ddim'
+  sampling.predictor = 'reverse_diffusion'
   sampling.corrector = 'none'
   sampling.n_steps_each = 1
   sampling.noise_removal = True
@@ -73,7 +78,7 @@ def get_config():
   elif server == 'abg':
     data.base_dir =  '/home/gb511/datasets/ILSVRC/Data'
 
-  data.dataset = 'ImageNet'
+  data.dataset = 'multiscale_ImageNet'
   data.use_data_mean = False
   data.datamodule = 'ImageNet_%d' % image_size
   data.create_dataset = False
@@ -122,8 +127,8 @@ def get_config():
   #model.embedding_type = 'fourier'
 
    # model architecture
-  model.name = 'guided_diffusion_UNET'
-  model.model_channels = 192
+  model.name = 'guided_diffusion_UNET_multi_speed_haar'
+  model.model_channels = 128
   model.input_channels = data.num_channels
   model.output_channels = data.num_channels
   model.num_res_blocks = 2
