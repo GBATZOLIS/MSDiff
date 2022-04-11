@@ -79,9 +79,9 @@ def get_config():
   elif server == 'abg':
     data.base_dir =  '/home/gb511/datasets/ILSVRC/Data'
 
-  data.dataset = 'multiscale_ImageNet'
+  data.datamodule = 'multiscale_ImageNet'
+  data.dataset = 'ImageNet_%d' % image_size
   data.use_data_mean = False
-  data.datamodule = 'ImageNet_%d' % image_size
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
   data.centered = False
