@@ -29,7 +29,7 @@ def get_config():
   training.n_iters = 1000000
   training.visualization_callback = 'multiscale_base'
   training.show_evolution = False
-  training.use_ema = True
+  training.use_ema = False
 
   #Model checkpointing
   training.checkpointing_strategy = 'mixed' #options: [mixed, last]
@@ -136,7 +136,7 @@ def get_config():
   model.num_res_blocks = 2
   model.attention_resolutions = (32, 16, 8)
   model.dropout = 0.
-  model.channel_mult =  (1, 1, 2, 3, 4)
+  model.channel_mult =  (1, 2, 3, 4) #(1, 1, 2, 3, 4)
   model.conv_resample = True
   model.num_classes = None
   model.num_heads = 4
