@@ -33,7 +33,7 @@ def get_config():
 
   #Model checkpointing
   training.checkpointing_strategy = 'mixed' #options: [mixed, last]
-  training.latest_save_every_n_train_steps = 100 #replace
+  training.latest_save_every_n_train_steps = 5000 #replace
   training.save_every_n_train_steps = 250000 #save all
   
   ## produce samples at each snapshot.
