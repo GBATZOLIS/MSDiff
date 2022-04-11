@@ -21,7 +21,7 @@ def get_config():
   config.training.lightning_module = 'base'
   training.num_nodes = 1
   training.gpus = 2
-  training.batch_size = 128 // (training.num_nodes*training.gpus)
+  training.batch_size = 2 // (training.num_nodes*training.gpus)
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -114,7 +114,7 @@ def get_config():
   
   # model architecture
   model.name = 'guided_diffusion_UNET'
-  model.model_channels = 160
+  model.model_channels = 128
   model.input_channels = data.num_channels
   model.output_channels = data.num_channels
   model.num_res_blocks = 2
