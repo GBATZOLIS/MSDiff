@@ -110,7 +110,7 @@ def get_config():
   model.model_channels = 128
   model.input_channels = data.num_channels
   model.output_channels = data.num_channels
-  model.num_res_blocks = 2
+  model.num_res_blocks = 4
   model.attention_resolutions = (16, 8)
   model.dropout = 0.
   model.channel_mult =  (1, 2)
