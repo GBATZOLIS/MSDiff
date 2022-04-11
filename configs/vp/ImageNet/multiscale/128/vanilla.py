@@ -20,8 +20,8 @@ def get_config():
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'base'
   training.num_nodes = 1
-  training.gpus = 2
-  training.batch_size = 64 // (training.num_nodes*training.gpus)
+  training.gpus = 4
+  training.batch_size = 128 // (training.num_nodes*training.gpus)
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -32,8 +32,8 @@ def get_config():
 
   #Model checkpointing
   training.checkpointing_strategy = 'mixed' #options: [mixed, last]
-  training.latest_save_every_n_train_steps = 100 #replace
-  training.save_every_n_train_steps = 500 #save all
+  training.latest_save_every_n_train_steps = 5000 #replace
+  training.save_every_n_train_steps = 250000 #save all
   
 
   ## produce samples at each snapshot.

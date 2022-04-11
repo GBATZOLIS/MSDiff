@@ -119,33 +119,6 @@ def get_deprecated_sigma_max_y_fn(reduction, reach_target_in_epochs, starting_tr
         raise NotImplementedError('Reduction type %s is not supported yet.' % reduction)
 
     return sigma_max_y
-                
-'''
-@utils.register_callback(name='ema')
-class EMACallback(Callback):
-    def on_fit_start(self, trainer, pl_module):
-        ema_rate = pl_module.config.model.ema_rate
-        pl_module.ema = ExponentialMovingAverage(pl_module.parameters(), decay=ema_rate)
-
-    def on_before_zero_grad(self, trainer, pl_module, optimizer):
-        pl_module.ema.update(pl_module.parameters())
-
-    def on_train_epoch_end(self, trainer, pl_module):
-        pl_module.ema.store(pl_module.parameters())
-        pl_module.ema.copy_to(pl_module.parameters())
-
-    def on_train_epoch_start(self, trainer, pl_module):
-        pl_module.ema.restore(pl_module.parameters())
-    
-    
-    #def on_test_epoch_start(self, trainer, pl_module):
-    #    pl_module.ema.store(pl_module.parameters())
-    #    pl_module.ema.copy_to(pl_module.parameters())
-    
-    #def on_test_epoch_end(self, trainer, pl_module):
-    #    pl_module.ema.restore(pl_module.parameters())
-    
-'''
 
 @utils.register_callback(name='multiscale_base')
 class MultiscaleImageVisualizationCallback(Callback):
