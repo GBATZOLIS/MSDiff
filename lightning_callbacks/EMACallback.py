@@ -67,7 +67,7 @@ class EMA(pl.Callback):
         with torch.no_grad():
             for key, value in self.get_state_dict(pl_module).items():
                 ema_value = self.ema_state_dict[key]
-                ema_value.copy_(self.decay * ema_value + (1. - self.decay) * value, non_blocking=True)
+                ema_value.copy_(self.decay * ema_value + (1. - self.decay) * value.to(self.ema_device), non_blocking=True)
 
     #@overrides
     def on_validation_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
