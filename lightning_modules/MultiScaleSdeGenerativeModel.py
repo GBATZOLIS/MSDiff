@@ -105,6 +105,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
         loss = self.train_loss_fn(self.score_model[scale_name], batch, T1, T2)
 
         self.log('train_loss_scale_%s' % scale_name, loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log('step', self.global_step, on_step=True)
         return loss
     
     def validation_step(self, batch, batch_idx):
