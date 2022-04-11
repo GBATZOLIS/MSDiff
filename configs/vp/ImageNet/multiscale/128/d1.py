@@ -29,6 +29,7 @@ def get_config():
   training.n_iters = 1000000
   training.visualization_callback = 'multiscale_base'
   training.show_evolution = False
+  training.use_ema = False
 
   #Model checkpointing
   training.checkpointing_strategy = 'mixed' #options: [mixed, last]

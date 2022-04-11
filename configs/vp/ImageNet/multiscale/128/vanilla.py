@@ -29,13 +29,13 @@ def get_config():
   training.n_iters = 1000000
   training.visualization_callback = 'base'
   training.show_evolution = False
+  training.use_ema = False
 
   #Model checkpointing
   training.checkpointing_strategy = 'mixed' #options: [mixed, last]
   training.latest_save_every_n_train_steps = 5000 #replace
   training.save_every_n_train_steps = 250000 #save all
   
-
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
   training.likelihood_weighting = False
