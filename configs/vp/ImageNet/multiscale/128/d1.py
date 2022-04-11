@@ -5,17 +5,23 @@ import numpy as np
 
 def get_config():
   config = ml_collections.ConfigDict()
+  image_size = 128
+  server = 'hpc' #Options:['abg', 'hpc']
 
   #logging
-  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/128' #'/home/gb511/projects/fast_sampling' 
+  if server == 'hpc':
+    config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/%d' % image_size 
+  elif server == 'abg':
+    config.base_log_path = '/home/gb511/projects/fast_sampling/ImageNet/%d' % image_size
+
   config.experiment_name = 'multiscale'
 
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'multiscale_base'
   training.num_nodes = 1
-  training.gpus = 1
-  training.batch_size = 256 // (training.num_nodes*training.gpus)
+  training.gpus = 4
+  training.batch_size = 128 // (training.num_nodes*training.gpus)
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -61,10 +67,15 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
+
+  if server == 'hpc':
+    data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
+  elif server == 'abg':
+    data.base_dir =  '/home/gb511/datasets/ILSVRC/Data'
+
   data.dataset = 'ImageNet'
   data.use_data_mean = False
-  data.datamodule = 'ImageNet'
+  data.datamodule = 'ImageNet_%d' % image_size
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
   data.centered = False
@@ -134,11 +145,11 @@ def get_config():
   # optimization
   config.optim = optim = ml_collections.ConfigDict()
 
-  optim.weight_decay = 0
+  optim.weight_decay = 0.
   optim.optimizer = 'Adam'
-  optim.lr = 2e-4
+  optim.lr = 1e-4
   optim.beta1 = 0.9
-  optim.beta2 = 0.99
+  optim.beta2 = 0.999
   optim.eps = 1e-8
   optim.warmup = 0 #set it to 0 if you do not want to use warm up.
   optim.grad_clip = 0 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.

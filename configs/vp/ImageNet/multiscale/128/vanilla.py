@@ -21,7 +21,7 @@ def get_config():
   config.training.lightning_module = 'base'
   training.num_nodes = 1
   training.gpus = 4
-  training.batch_size = 256 // (training.num_nodes*training.gpus)
+  training.batch_size = 128 // (training.num_nodes*training.gpus)
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
@@ -29,7 +29,13 @@ def get_config():
   training.n_iters = 1000000
   training.visualization_callback = 'base'
   training.show_evolution = False
+
+  #Model checkpointing
+  training.checkpointing_strategy = 'mixed' #options: [mixed, last]
+  training.latest_save_every_n_train_steps = 100 #replace
+  training.save_every_n_train_steps = 500 #save all
   
+
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
   training.likelihood_weighting = False
@@ -56,7 +62,7 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
-  evaluate.batch_size = training.batch_size // 2
+  evaluate.batch_size = training.batch_size
   evaluate.callback = 'base'
 
   evaluate.num_samples = 10000

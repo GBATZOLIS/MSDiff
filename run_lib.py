@@ -8,7 +8,7 @@ from torchvision.utils import make_grid
 from losses import get_distillation_loss_fn
 
 from lightning_callbacks.DistillationCallback import DistillationCallback
-from lightning_callbacks import callbacks, HaarMultiScaleCallback, PairedCallback #needed for callback registration
+from lightning_callbacks import EMACallback, callbacks, HaarMultiScaleCallback, PairedCallback #needed for callback registration
 from lightning_callbacks.HaarMultiScaleCallback import normalise_per_image, permute_channels, normalise, normalise_per_band, create_supergrid
 from lightning_callbacks.utils import get_callbacks
 
@@ -172,7 +172,6 @@ def train(config, log_path, checkpoint_path):
                           max_steps=config.training.n_iters, 
                           callbacks=callbacks, 
                           logger = logger,
-                          precision=16, amp_backend="native",
                           resume_from_checkpoint=checkpoint_path)
     else:  
       trainer = pl.Trainer(gpus=config.training.gpus,
@@ -182,7 +181,6 @@ def train(config, log_path, checkpoint_path):
                           gradient_clip_val = config.optim.grad_clip,
                           max_steps=config.training.n_iters,
                           callbacks=callbacks,
-                          precision=16, amp_backend="native",
                           logger = logger                          
                           )
 
