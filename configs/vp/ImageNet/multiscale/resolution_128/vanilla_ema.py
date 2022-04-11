@@ -6,7 +6,7 @@ import numpy as np
 def get_config():
   config = ml_collections.ConfigDict()
   image_size = 128
-  server = 'hpc' #Options:['abg', 'hpc']
+  server = 'abg' #Options:['abg', 'hpc']
 
   #logging
   if server == 'hpc':
