@@ -107,13 +107,13 @@ def get_config():
 
    # model architecture
   model.name = 'guided_diffusion_UNET_multi_speed_haar'
-  model.model_channels = 96
+  model.model_channels = 128
   model.input_channels = data.num_channels
   model.output_channels = data.num_channels
   model.num_res_blocks = 2
   model.attention_resolutions = (32, 16, 8)
   model.dropout = 0.
-  model.channel_mult =  (1, 2, 3)
+  model.channel_mult =  (1, 2) #(1, 2, 3)
   model.conv_resample = True
   model.num_classes = None
   model.num_heads = 4
