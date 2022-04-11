@@ -102,6 +102,7 @@ def get_config():
   data.image_size = data.target_image_size//2**(data.scale_depth-1)
   data.effective_image_size = data.image_size
   data.shape = [3, data.image_size, data.image_size]
+  data.dims = len(data.shape[1:])
   data.num_channels = data.shape[0] #the number of channels the model sees as input.
 
   #shapes for sampling the scale coefficients
