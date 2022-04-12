@@ -147,7 +147,8 @@ class MultiscaleImageVisualizationCallback(Callback):
         if current_epoch % 5 == 0 and current_epoch != 0:
             for predictor in ['reverse_diffusion']:
                 psteps_per_scale = 1000//pl_module.num_scales
-                samples, sampling_info = pl_module.sample(p_steps=psteps_per_scale, predictor=predictor)
+                samples, sampling_info = pl_module.sample(num_samples=pl_module.config['d1'].eval.batch_size, 
+                                                          p_steps=psteps_per_scale, predictor=predictor)
                 self.visualise_samples(samples, pl_module, steps_per_scale=psteps_per_scale, predictor=predictor)
             
     def visualise_samples(self, samples, pl_module, steps_per_scale, predictor):
