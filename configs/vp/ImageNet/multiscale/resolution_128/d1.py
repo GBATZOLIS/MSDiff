@@ -21,7 +21,7 @@ def get_config():
   training.multiscale = True
   training.lightning_module = 'multiscale_base'
   training.num_nodes = 1
-  training.gpus = 1
+  training.gpus = 2
   training.batch_size = 2 // (training.num_nodes*training.gpus) #128 // (training.num_nodes*training.gpus)
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
@@ -30,7 +30,7 @@ def get_config():
   training.n_iters = 1000000
   training.visualization_callback = 'multiscale_base'
   training.show_evolution = False
-  training.use_ema = True
+  training.use_ema = False
 
   #Model checkpointing
   training.checkpointing_strategy = 'mixed' #options: [mixed, last]
