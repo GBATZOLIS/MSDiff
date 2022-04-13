@@ -18,7 +18,7 @@ def get_config():
 
   # training
   config.training = training = ml_collections.ConfigDict()
-  training.multiscale = False
+  training.multiscale = True
   training.lightning_module = 'multiscale_base'
   training.num_nodes = 1
   training.gpus = 1
