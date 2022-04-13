@@ -54,11 +54,14 @@ class EMA(pl.Callback):
         # Only keep track of EMA weights in rank zero.
         if not self._ema_state_dict_ready and pl_module.global_rank == 0:
             self.ema_state_dict = deepcopy(self.get_state_dict(pl_module))
+            
             if self.ema_device:
                 self.ema_state_dict = {k: tensor.to(device=self.ema_device) for k, tensor in self.ema_state_dict.items()}
 
             if self.ema_device == "cpu" and self.ema_pin_memory:
                 self.ema_state_dict = {k: tensor.pin_memory() for k, tensor in self.ema_state_dict.items()}
+            
+            print(self.ema_state_dict.keys())
 
         self._ema_state_dict_ready = True
 
