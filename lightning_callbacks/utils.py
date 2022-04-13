@@ -41,11 +41,13 @@ def get_callbacks(config, phase='train'):
 
       #useful reminder message
       if config.training.gpus == 1:
+        ema_device = None
         print('EMA device should be set to the gpu_id to achieve faster training. CPU is used in this experiment.')
       else:
+        ema_device = 'cpu'
         print('EMA device: cpu')
 
-      callbacks.append(get_callback_by_name('ema')(decay=config.model.ema_rate, ema_device='cpu', multiscale=multiscale)) 
+      callbacks.append(get_callback_by_name('ema')(decay=config.model.ema_rate, ema_device=ema_device, multiscale=multiscale)) 
     
     if config.training.checkpointing_strategy == 'mixed':
       #save all the checkpoints every K iterations (for post training evaluation)
