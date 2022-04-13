@@ -6,7 +6,7 @@ import numpy as np
 def get_config():
   config = ml_collections.ConfigDict()
   image_size = 128
-  server = 'abg' #Options:['abg', 'hpc']
+  server = 'hpc' #Options:['abg', 'hpc']
 
   #logging
   if server == 'hpc':
@@ -14,20 +14,21 @@ def get_config():
   elif server == 'abg':
     config.base_log_path = '/home/gb511/projects/fast_sampling/ImageNet/%d' % image_size
 
-  config.experiment_name = 'vanilla_ema'
+  config.experiment_name = 'multiscale_ema'
 
   # training
   config.training = training = ml_collections.ConfigDict()
-  config.training.lightning_module = 'base'
+  training.multiscale = True
+  training.lightning_module = 'multiscale_base'
   training.num_nodes = 1
-  training.gpus = 2
-  training.batch_size = 2 // (training.num_nodes*training.gpus)
+  training.gpus = 1
+  training.batch_size = 64 // (training.num_nodes*training.gpus)
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
   training.num_epochs = 10000
-  training.n_iters = 1000000
-  training.visualization_callback = 'base'
+  training.n_iters = 2000000
+  training.visualization_callback = 'multiscale_base'
   training.show_evolution = False
   training.use_ema = True
 
@@ -38,10 +39,10 @@ def get_config():
   
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
-  training.likelihood_weighting = False
+  training.likelihood_weighting = True
   training.continuous = True
   training.reduce_mean = True 
-  training.sde = 'vpsde' #vpsde means beta-linear vp sde
+  training.sde = 'vpsde'
   
   # sampling
   config.sampling = sampling = ml_collections.ConfigDict()
@@ -52,33 +53,24 @@ def get_config():
   sampling.noise_removal = True
   sampling.probability_flow = False
   sampling.snr = 0.075 #0.15 in VE sde (you typically need to play with this term - more details in the main paper)
-  
-  #new additions for adaptive sampling
   sampling.adaptive = False
-  #provide the directory where the information needed for calculating the adaptive steps is saved.
-  sampling.kl_profile = None
-  sampling.lipschitz_profile = None
 
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
   evaluate.batch_size = training.batch_size
-  evaluate.callback = 'base'
+  evaluate.callback = training.visualization_callback
 
   evaluate.num_samples = 10000
   evaluate.probability_flow = True
-  evaluate.predictor = ['euler_trapezoidal_s_2_a_0']
+  evaluate.predictor = ['euler_trapezoidal_s_2_a_0', 'euler_trapezoidal_s_2_a_7e-1'] 
   evaluate.corrector = 'none'
-  evaluate.p_steps = [128] 
+  evaluate.p_steps = [20, 32, 64, 128, 256] #[32, 64, 128, 256, 512, 1024]
   evaluate.c_steps = 1
   evaluate.denoise = True
 
   evaluate.adaptive = False
-  evaluate.adaptive_method = 'lipschitz' #options: [kl, lipschitz]
-  evaluate.alpha = [1.] #used for lipschitz-adaptive method
-  evaluate.starting_T = [1.]
-  evaluate.gamma = [1.] #0->uniform, 1->KL-adaptive #used for the KL-adaptive method
-  
+
 
   # data
   config.data = data = ml_collections.ConfigDict()
@@ -87,40 +79,65 @@ def get_config():
     data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
   elif server == 'abg':
     data.base_dir =  '/home/gb511/datasets/ILSVRC/Data'
- 
-  data.datamodule = 'ImageNet'
-  data.image_size = image_size
+
+  data.datamodule = 'multiscale_ImageNet'
   data.dataset = 'ImageNet_%d' % image_size
   data.use_data_mean = False
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
-  data.effective_image_size = data.image_size
-  data.shape = [3, data.image_size, data.image_size]
-  data.dims = len(data.shape[1:])
   data.centered = False
   data.random_flip = False
   data.crop = False
   data.uniform_dequantization = False
+
+  #multiscale settings
+  data.scale_depth = 1 #k
+  data.scale_type = 'd'
+  data.scale_name = data.scale_type + str(data.scale_depth)
+
+  data.max_haar_depth = 3
+  data.num_scales = data.max_haar_depth + 1
+
+  #shapes used for the score model construction
+  data.target_image_size = 128
+  data.image_size = data.target_image_size//2**(data.scale_depth-1)
+  data.effective_image_size = data.image_size
+  data.shape = [3, data.image_size, data.image_size]
+  data.dims = len(data.shape[1:])
   data.num_channels = data.shape[0] #the number of channels the model sees as input.
+
+  #shapes for sampling the scale coefficients
+  if data.scale_name[0]=='d':
+    data.scale_shape = [9, data.image_size//2, data.image_size//2]
+  elif data.scale_name[0]=='a':
+    data.scale_shape = data.shape
 
   # model
   config.model = model = ml_collections.ConfigDict()
+
+  #multiscale settings
+  model.max_haar_depth = data.max_haar_depth - (data.scale_depth-1)
+  model.beta_min = 0.1
+  model.T_k = data.scale_depth/data.num_scales
+  target = np.exp(-1/4*(20-0.1)-1/2*0.1)
+  model.beta_max = (1-2/model.T_k)*model.beta_min -4/model.T_k**2 * np.log(target/2**(data.scale_depth-1))
+  
   model.checkpoint_path = None
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
-  model.beta_min = 0.1
-  model.beta_max = 20.
-  
-  # model architecture
-  model.name = 'guided_diffusion_UNET'
+  model.dropout = 0.1
+  #model.embedding_type = 'fourier'
+
+   # model architecture
+  model.name = 'guided_diffusion_UNET_multi_speed_haar'
   model.model_channels = 128
   model.input_channels = data.num_channels
   model.output_channels = data.num_channels
   model.num_res_blocks = 2
   model.attention_resolutions = (32, 16, 8)
   model.dropout = 0.
-  model.channel_mult =  (1, 1, 2, 3, 4)
+  model.channel_mult =  (.5, 1, 1, 1.5, 2)
   model.conv_resample = True
   model.num_classes = None
   model.num_heads = 4
@@ -132,7 +149,7 @@ def get_config():
 
   model.scale_by_sigma = False
   model.ema_rate = 0.9999
-  
+
   # optimization
   config.optim = optim = ml_collections.ConfigDict()
 
@@ -145,30 +162,5 @@ def get_config():
   optim.warmup = 0 #set it to 0 if you do not want to use warm up.
   optim.grad_clip = 0 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.
   config.seed = 42
-
-  # distillation
-  '''
-  config.distillation = distillation = ml_collections.ConfigDict()
-  distillation.log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/distillation'
-  distillation.starting_iter = 2
-  distillation.iterations = 9
-  distillation.N = 512 // 2**(distillation.starting_iter-1)  #initial target for the student sampling steps -> will be halved at the end of every iteration
-  distillation.num_steps = 50000
-
-  #resume from the checkpoint of the previous iteration. Training from the start for the current starting iteration.
-  distillation.prev_checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/celebA-HQ-160/vp/vp_celebA_smld_weighting/distillation/distillation_it_1/version_0/checkpoints/epoch=39-step=49999.ckpt' 
-  
-  #Training from the last checkpoint of the current starting iteration.
-  distillation.resume_checkpoint_path = None
-
-  distillation.optim = ml_collections.ConfigDict()
-  distillation.optim.weight_decay = 0
-  distillation.optim.optimizer = 'Adam'
-  distillation.optim.lr = 2e-5
-  distillation.optim.beta1 = 0.9
-  distillation.optim.eps = 1e-8
-  distillation.optim.warmup = 0 #set it to 0 if you do not want to use warm up.
-  distillation.optim.grad_clip = 1 #set it to 0 if you do not want to use gradient clipping using the norm algorithm. Gradient clipping defaults to the norm algorithm.
-  '''
 
   return config

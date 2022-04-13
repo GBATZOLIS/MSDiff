@@ -5,37 +5,24 @@ import numpy as np
 
 def get_config():
   config = ml_collections.ConfigDict()
-  image_size = 128
-  server = 'hpc' #Options:['abg', 'hpc']
 
   #logging
-  if server == 'hpc':
-    config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/%d' % image_size 
-  elif server == 'abg':
-    config.base_log_path = '/home/gb511/projects/fast_sampling/ImageNet/%d' % image_size
-
+  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/128' #'/home/gb511/projects/fast_sampling' 
   config.experiment_name = 'multiscale'
 
   # training
   config.training = training = ml_collections.ConfigDict()
-  training.multiscale = True
-  training.lightning_module = 'multiscale_base'
+  config.training.lightning_module = 'multiscale_base'
   training.num_nodes = 1
   training.gpus = 2
-  training.batch_size = 128 // (training.num_nodes*training.gpus)
+  training.batch_size = 512 // (training.num_nodes*training.gpus)
   training.accelerator = None if training.gpus == 1 else 'ddp'
   training.accumulate_grad_batches = 1
   training.workers = 4*training.gpus
   training.num_epochs = 10000
-  training.n_iters = 1000000
+  training.n_iters = 2000000
   training.visualization_callback = 'multiscale_base'
   training.show_evolution = False
-  training.use_ema = False
-
-  #Model checkpointing
-  training.checkpointing_strategy = 'mixed' #options: [mixed, last]
-  training.latest_save_every_n_train_steps = 5000 #replace
-  training.save_every_n_train_steps = 250000 #save all
   
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
@@ -47,7 +34,7 @@ def get_config():
   # sampling
   config.sampling = sampling = ml_collections.ConfigDict()
   sampling.method = 'pc'
-  sampling.predictor = 'reverse_diffusion'
+  sampling.predictor = 'ddim'
   sampling.corrector = 'none'
   sampling.n_steps_each = 1
   sampling.noise_removal = True
@@ -59,30 +46,19 @@ def get_config():
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
   evaluate.batch_size = training.batch_size
-  evaluate.callback = training.visualization_callback
-
-  evaluate.num_samples = 10000
-  evaluate.probability_flow = True
-  evaluate.predictor = ['euler_trapezoidal_s_2_a_0', 'euler_trapezoidal_s_2_a_7e-1'] 
-  evaluate.corrector = 'none'
-  evaluate.p_steps = [20, 32, 64, 128, 256] #[32, 64, 128, 256, 512, 1024]
-  evaluate.c_steps = 1
-  evaluate.denoise = True
-
+  evaluate.enable_sampling = True
+  evaluate.num_samples = 50000
+  evaluate.enable_loss = True
+  evaluate.enable_bpd = False
+  evaluate.bpd_dataset = 'test'
   evaluate.adaptive = False
-
 
   # data
   config.data = data = ml_collections.ConfigDict()
-
-  if server == 'hpc':
-    data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
-  elif server == 'abg':
-    data.base_dir =  '/home/gb511/datasets/ILSVRC/Data'
-
-  data.datamodule = 'multiscale_ImageNet'
-  data.dataset = 'ImageNet_%d' % image_size
+  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
+  data.dataset = 'celebA-HQ-160'
   data.use_data_mean = False
+  data.datamodule = 'unpaired_PKLDataset'
   data.create_dataset = False
   data.split = [0.8, 0.1, 0.1]
   data.centered = False
@@ -91,10 +67,10 @@ def get_config():
   data.uniform_dequantization = False
 
   #multiscale settings
-  data.scale_depth = 1 #k
+  data.scale_depth = 3 #k
   data.scale_type = 'd'
   data.scale_name = data.scale_type + str(data.scale_depth)
-
+  
   data.max_haar_depth = 3
   data.num_scales = data.max_haar_depth + 1
 
@@ -127,7 +103,7 @@ def get_config():
   model.sigma_max = np.sqrt(np.prod(data.shape))
   model.sigma_min = 0.01
   model.dropout = 0.1
-  #model.embedding_type = 'fourier'
+  model.embedding_type = 'fourier'
 
    # model architecture
   model.name = 'guided_diffusion_UNET_multi_speed_haar'
@@ -137,7 +113,7 @@ def get_config():
   model.num_res_blocks = 2
   model.attention_resolutions = (32, 16, 8)
   model.dropout = 0.
-  model.channel_mult =  (.5, 1, 1, 1.5, 2)
+  model.channel_mult =  (0.5, 1, 2)
   model.conv_resample = True
   model.num_classes = None
   model.num_heads = 4
