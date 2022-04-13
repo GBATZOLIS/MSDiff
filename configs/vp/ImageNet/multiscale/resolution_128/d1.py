@@ -24,7 +24,7 @@ def get_config():
   training.gpus = 1
   training.batch_size = 2 // (training.num_nodes*training.gpus) #128 // (training.num_nodes*training.gpus)
   training.accelerator = None if training.gpus == 1 else 'ddp'
-  training.accumulate_grad_batches = 1
+  training.accumulate_grad_batches = 2
   training.workers = 4*training.gpus
   training.num_epochs = 10000
   training.n_iters = 1000000

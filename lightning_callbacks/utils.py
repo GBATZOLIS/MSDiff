@@ -41,8 +41,7 @@ def get_callbacks(config, phase='train'):
 
       #useful reminder message
       if config.training.gpus == 1:
-        ema_device = None
-        print('EMA device should be set to the gpu_id to achieve faster training. CPU is used in this experiment.')
+        ema_device = None #EMA is in the same GPU for maximum training speed.
       else:
         ema_device = 'cpu'
         print('EMA device: cpu')
