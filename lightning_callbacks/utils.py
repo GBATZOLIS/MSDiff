@@ -36,6 +36,15 @@ def get_callbacks(config, phase='train'):
       else:
         multiscale = False
 
+      #if you are using more than two gpus, use ema_device='cpu'.
+      #if you use only one gpu, use ema_device='cuda:%x'% gpu_id
+
+      #useful reminder message
+      if config.training.gpus == 1:
+        print('EMA device should be set to the gpu_id to achieve faster training. CPU is used in this experiment.')
+      else:
+        print('EMA device: cpu')
+
       callbacks.append(get_callback_by_name('ema')(decay=config.model.ema_rate, ema_device='cpu', multiscale=multiscale)) 
     
     if config.training.checkpointing_strategy == 'mixed':
