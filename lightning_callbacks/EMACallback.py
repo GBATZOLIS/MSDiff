@@ -61,7 +61,7 @@ class EMA(pl.Callback):
             if self.ema_device == "cpu" and self.ema_pin_memory:
                 self.ema_state_dict = {k: tensor.pin_memory() for k, tensor in self.ema_state_dict.items()}
             
-            print(self.ema_state_dict.keys())
+            #print(self.ema_state_dict.keys())
 
         self._ema_state_dict_ready = True
 
@@ -76,7 +76,8 @@ class EMA(pl.Callback):
             updated_scale_name = pl_module.last_updated_scale
             with torch.no_grad():
                 for key, value in self.get_state_dict(pl_module.score_model[updated_scale_name]).items():
-                    ema_value = self.ema_state_dict[key]
+                    pl_module_key = 'score_model' + '.' + updated_scale_name + '.' + key
+                    ema_value = self.ema_state_dict[pl_module_key]
                     ema_value.copy_(self.decay * ema_value + (1. - self.decay) * value.to(self.ema_device), non_blocking=True)
 
     @rank_zero_only
