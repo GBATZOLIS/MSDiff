@@ -26,7 +26,7 @@ class EMA(pl.Callback):
           resource. In addition, we want to avoid duplicated operations in ranks != 0 to reduce jitter and improve
           performance.
     """
-    def __init__(self, decay: float = 0.9999, ema_device: Optional[Union[torch.device, str]] = None, pin_memory=True):
+    def __init__(self, decay: float = 0.9999, ema_device: Optional[Union[torch.device, str]] = None, pin_memory=True, multiscale=False):
         super().__init__()
         self.decay = decay
         self.ema_device: str = f"{ema_device}" if ema_device else None  # perform ema on different device from the model
@@ -34,6 +34,7 @@ class EMA(pl.Callback):
         self.ema_state_dict: Dict[str, torch.Tensor] = {}
         self.original_state_dict = {}
         self._ema_state_dict_ready = False
+        self.multiscale = multiscale
 
     @staticmethod
     def get_state_dict(pl_module: pl.LightningModule):
@@ -61,13 +62,23 @@ class EMA(pl.Callback):
 
         self._ema_state_dict_ready = True
 
+    def update_weights(self, pl_module):
+        # Update EMA weights
+        if not self.multiscale:
+            with torch.no_grad():
+                for key, value in self.get_state_dict(pl_module).items():
+                    ema_value = self.ema_state_dict[key]
+                    ema_value.copy_(self.decay * ema_value + (1. - self.decay) * value.to(self.ema_device), non_blocking=True)
+        else:
+            updated_scale_name = pl_module.last_updated_scale
+            with torch.no_grad():
+                for key, value in self.get_state_dict(pl_module.score_model[updated_scale_name]).items():
+                    ema_value = self.ema_state_dict[key]
+                    ema_value.copy_(self.decay * ema_value + (1. - self.decay) * value.to(self.ema_device), non_blocking=True)
+
     @rank_zero_only
     def on_train_batch_end(self, trainer: "pl.Trainer", pl_module: pl.LightningModule, *args, **kwargs) -> None:
-        # Update EMA weights
-        with torch.no_grad():
-            for key, value in self.get_state_dict(pl_module).items():
-                ema_value = self.ema_state_dict[key]
-                ema_value.copy_(self.decay * ema_value + (1. - self.decay) * value.to(self.ema_device), non_blocking=True)
+        self.update_weights(pl_module)
 
     #@overrides
     def on_validation_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:

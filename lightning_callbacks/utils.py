@@ -30,7 +30,13 @@ def get_callbacks(config, phase='train'):
 
     #check if this works for testing as well.
     if config.training.use_ema:
-      callbacks.append(get_callback_by_name('ema')(decay=config.model.ema_rate, ema_device='cpu')) 
+
+      if hasattr(config.training, 'multiscale'):
+        multiscale = config.training.multiscale
+      else:
+        multiscale = False
+
+      callbacks.append(get_callback_by_name('ema')(decay=config.model.ema_rate, ema_device='cpu', multiscale=multiscale)) 
     
     if config.training.checkpointing_strategy == 'mixed':
       #save all the checkpoints every K iterations (for post training evaluation)

@@ -94,6 +94,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
     def training_step(self, batch, batch_idx, optimizer_idx):
         scale_index = batch_idx % self.num_scales + 1
         scale_name = self.index_to_scale_name[scale_index]
+        self.last_updated_scale = scale_name
 
         #use the relevant batchsize (deeper scales are trained with bigger batchsizes because of the memory advantage)
         batch = batch[:self.config[scale_name].training.batch_size, ::]
