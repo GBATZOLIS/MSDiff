@@ -97,7 +97,7 @@ class MultiScaleSdeGenerativeModel(pl.LightningModule):
         self.last_updated_scale = scale_name
 
         #use the relevant batchsize (deeper scales are trained with bigger batchsizes because of the memory advantage)
-        batch = batch[:self.config[scale_name].training.batch_size, ::]
+        #batch = batch[:self.config[scale_name].training.batch_size, ::]
 
         batch = self.convert_to_haar_space(batch, max_depth=self.num_scales-1)        
         self.get_relevant_scales_from_batch(batch, scale_index)

@@ -79,7 +79,7 @@ class ImageDataModule(pl.LightningDataModule):
         self.val_workers = config.eval.workers
         self.test_workers = config.eval.workers
 
-        self.train_batch = config.training.batch_size * 2 ** config.data.max_haar_depth
+        self.train_batch = config.training.batch_size #config.training.batch_size * 2 ** config.data.max_haar_depth
         self.val_batch = config.eval.batch_size
         self.test_batch = config.eval.batch_size
 
