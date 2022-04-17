@@ -65,7 +65,7 @@ class EMA(pl.Callback):
         
         elif self._ema_state_dict_ready and pl_module.global_rank == 0:
             if self.ema_device == None:
-                self.ema_state_dict = self.ema_state_dict.to(pl_module.device)
+                self.ema_state_dict = {k: tensor.to(device=pl_module.device) for k, tensor in self.ema_state_dict.items()}
             else:
                 self.ema_state_dict = {k: tensor.to(device=self.ema_device) for k, tensor in self.ema_state_dict.items()}
                 if self.ema_device == "cpu" and self.ema_pin_memory:
