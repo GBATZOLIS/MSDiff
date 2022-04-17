@@ -61,9 +61,16 @@ class EMA(pl.Callback):
             if self.ema_device == "cpu" and self.ema_pin_memory:
                 self.ema_state_dict = {k: tensor.pin_memory() for k, tensor in self.ema_state_dict.items()}
             
-            #print(self.ema_state_dict.keys())
+            self._ema_state_dict_ready = True
+        
+        elif self._ema_state_dict_ready and pl_module.global_rank == 0:
+            if self.ema_device == None:
+                self.ema_state_dict = self.ema_state_dict.to(pl_module.device)
+            else:
+                self.ema_state_dict = {k: tensor.to(device=self.ema_device) for k, tensor in self.ema_state_dict.items()}
+                if self.ema_device == "cpu" and self.ema_pin_memory:
+                    self.ema_state_dict = {k: tensor.pin_memory() for k, tensor in self.ema_state_dict.items()}
 
-        self._ema_state_dict_ready = True
 
     def update_weights(self, pl_module):
         # Update EMA weights
