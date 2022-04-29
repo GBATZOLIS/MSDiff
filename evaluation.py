@@ -318,13 +318,13 @@ def run_unconditional_evaluation_pipeline(config):
     eq = 'ode' if config.eval.probability_flow else 'sde'
     for predictor in config.eval.predictor:
         print('predictor: %s' % predictor)
-        results[predictor]={}
+        results[eq + '_' + predictor]={}
         for p_steps in config.eval.p_steps:
             print('psteps: %d' % p_steps)
             path = os.path.join(config.base_log_path, config.experiment_name, \
-                'samples', 'eq(%s)-p(%s)-c(%s)' % (eq, predictor, config.eval.corrector), '%d' % p_steps)
+                'samples', '%d' % config.eval.checkpoint_iteration, 'eq(%s)-p(%s)-c(%s)' % (eq, predictor, config.eval.corrector), '%d' % p_steps)
             fid = return_fid(path, config)
-            results[predictor][p_steps] = fid
+            results[eq + '_' + predictor][p_steps] = fid
 
 
     #create the evaluation log file
@@ -334,10 +334,25 @@ def run_unconditional_evaluation_pipeline(config):
     
     Path(evaluation_log_path).mkdir(parents=True, exist_ok=True)
 
-    #log the results dictionary
-    f = open(os.path.join(evaluation_log_path, 'pece_results.pkl'), "wb")
-    pickle.dump(results, f)
-    f.close()
+    #update the results file
+    results_path = os.path.join(evaluation_log_path, 'results.pkl')
+    if os.path.exists(results_path):
+        #load the results and update them
+        with open(results_path, 'rb') as f:
+            current_results = pickle.load(f)
+
+        if config.eval.checkpoint_iteration not in current_results.keys():
+            current_results[config.eval.checkpoint_iteration] = results
+        
+        with open(results_path, 'wb') as f:
+            pickle.dump(current_results, f)
+    else:
+        #log the results dictionary
+        expanded_results = {config.eval.checkpoint_iteration : results}
+        with open(results_path, 'wb') as f:
+            pickle.dump(expanded_results, f)
+
+    
 
 def run_conditional_evaluation_pipeline(task, base_path, snr, device):
     #EVALUATION PIPELINE FOR CONDITIONAL GENERATION / INVERSE PROBLEMS

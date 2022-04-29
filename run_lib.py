@@ -124,7 +124,7 @@ def test_multiscale(configs):
     Path(eval_log_path).mkdir(parents=True, exist_ok=True)
     logger = pl.loggers.TensorBoardLogger(save_dir=eval_log_path, name='test_metrics')
 
-    checkpoint_path = base_config.model.checkpoint_path
+    checkpoint_path = base_config.eval.checkpoint_path
     LightningModule = create_lightning_module(configs, checkpoint_path)
     
     trainer = pl.Trainer(gpus = base_config.training.gpus,
@@ -198,7 +198,7 @@ def test(config, log_path, checkpoint_path):
 
     if checkpoint_path is not None or config.model.checkpoint_path is not None:
       if config.model.checkpoint_path is not None and checkpoint_path is None:
-        checkpoint_path = config.model.checkpoint_path
+        checkpoint_path = config.eval.checkpoint_path
     else:
       return 'Testing cannot be completed because no checkpoint has been provided.'
 

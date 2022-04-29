@@ -134,7 +134,8 @@ class MultiscaleImageVisualizationCallback(Callback):
         self.c_steps = config.eval.c_steps
         self.probability_flow = config.eval.probability_flow
         self.denoise = config.eval.denoise
-        self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
+        #self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
+        self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples', '%d' % config.eval.checkpoint_iteration)
     
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         if batch_idx == 0:
@@ -222,7 +223,9 @@ class ImageVisualizationCallback(Callback):
         self.gamma = config.eval.gamma
         self.alpha = config.eval.alpha
         self.starting_T = config.eval.starting_T
-        self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
+        #self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
+
+        self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples', '%d' % config.eval.checkpoint_iteration)
 
     def update_config(self, pl_module):
         pl_module.config = self.config

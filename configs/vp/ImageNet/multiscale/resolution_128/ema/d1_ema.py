@@ -61,11 +61,14 @@ def get_config():
   evaluate.batch_size = training.batch_size
   evaluate.callback = training.visualization_callback
 
-  evaluate.num_samples = 10000
+  evaluate.checkpoint_iteration = 249999
+  evaluate.checkpoint_path =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/128/multiscale_ema/checkpoint_collection/latest-step=%d.ckpt' % evaluate.checkpoint_iteration
+
+  evaluate.num_samples = 20000
   evaluate.probability_flow = True
-  evaluate.predictor = ['euler_trapezoidal_s_2_a_0', 'euler_trapezoidal_s_2_a_7e-1'] 
+  evaluate.predictor = ['euler_maruyama', 'ddim']
   evaluate.corrector = 'none'
-  evaluate.p_steps = [20, 32, 64, 128, 256] #[32, 64, 128, 256, 512, 1024]
+  evaluate.p_steps = [64, 128, 256] 
   evaluate.c_steps = 1
   evaluate.denoise = True
 
