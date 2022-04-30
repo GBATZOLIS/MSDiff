@@ -134,7 +134,7 @@ class MultiscaleImageVisualizationCallback(Callback):
         self.c_steps = config.eval.c_steps
         self.probability_flow = config.eval.probability_flow
         self.denoise = config.eval.denoise
-        
+
         if hasattr(config.eval, 'checkpoint_iteration'):
             if config.eval.checkpoint_iteration is not None:
                 self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples', '%d' % config.eval.checkpoint_iteration)
@@ -173,7 +173,7 @@ class MultiscaleImageVisualizationCallback(Callback):
         num_generated_samples = 0
         while num_generated_samples < self.num_samples:
             psteps_per_scale = p_steps // pl_module.num_scales
-            samples, info = pl_module.sample(
+            samples, info = pl_module.sample(num_samples=self.config.eval.batch_size,
                                             predictor=predictor,
                                             corrector=self.corrector,
                                             p_steps=psteps_per_scale,
