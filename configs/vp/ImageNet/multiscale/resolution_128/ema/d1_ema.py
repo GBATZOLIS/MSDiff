@@ -62,7 +62,7 @@ def get_config():
   evaluate.callback = training.visualization_callback
 
   evaluate.checkpoint_iteration = 249999
-  evaluate.checkpoint_path =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/128/multiscale_ema/checkpoint_collection/latest-step=%d.ckpt' % evaluate.checkpoint_iteration
+  evaluate.checkpoint_path =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/128/multiscale_ema/checkpoint_collection/step=%d.ckpt' % evaluate.checkpoint_iteration
 
   evaluate.num_samples = 20000
   evaluate.probability_flow = True
