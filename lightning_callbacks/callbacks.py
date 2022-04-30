@@ -134,9 +134,12 @@ class MultiscaleImageVisualizationCallback(Callback):
         self.c_steps = config.eval.c_steps
         self.probability_flow = config.eval.probability_flow
         self.denoise = config.eval.denoise
-        #self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
+        
         if hasattr(config.eval, 'checkpoint_iteration'):
-            self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples', '%d' % config.eval.checkpoint_iteration)
+            if config.eval.checkpoint_iteration is not None:
+                self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples', '%d' % config.eval.checkpoint_iteration)
+            else:
+                self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
         else:
             self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
 
@@ -229,7 +232,10 @@ class ImageVisualizationCallback(Callback):
         #self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
 
         if hasattr(config.eval, 'checkpoint_iteration'):
-            self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples', '%d' % config.eval.checkpoint_iteration)
+            if config.eval.checkpoint_iteration is not None:
+                self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples', '%d' % config.eval.checkpoint_iteration)
+            else:
+                self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
         else:
             self.save_samples_dir = os.path.join(config.base_log_path, config.experiment_name, 'samples')
 
