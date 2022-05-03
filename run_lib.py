@@ -114,33 +114,34 @@ def train_multiscale(configs):
 def test_multiscale(configs):
     base_config = configs.d1
 
-    
     DataModule = create_lightning_datamodule(base_config)
     DataModule.setup()
 
-    callbacks = get_callbacks(base_config, phase='test')
+    for checkpoint_iteration in base_config.eval.checkpoint_iterations:
+      base_config.eval.checkpoint_iteration = checkpoint_iteration
 
-    eval_log_path = base_config.base_log_path
-    Path(eval_log_path).mkdir(parents=True, exist_ok=True)
-    logger = pl.loggers.TensorBoardLogger(save_dir=eval_log_path, name='test_metrics')
+      callbacks = get_callbacks(base_config, phase='test')
 
-    checkpoint_path = base_config.eval.checkpoint_path
-    LightningModule = create_lightning_module(configs, checkpoint_path)
+      eval_log_path = base_config.base_log_path
+      Path(eval_log_path).mkdir(parents=True, exist_ok=True)
+      logger = pl.loggers.TensorBoardLogger(save_dir=os.path.join(eval_log_path, 'test_metrics'), name='%d' % checkpoint_iteration)
+      
+      checkpoint_path = os.path.join(base_config.eval.base_checkpoint_path, 'step=%d.ckpt' % checkpoint_iteration)
+      LightningModule = create_lightning_module(configs, checkpoint_path)
     
-    trainer = pl.Trainer(gpus = base_config.training.gpus,
-                          num_nodes = base_config.training.num_nodes,
-                          accelerator = base_config.training.accelerator,
-                          accumulate_grad_batches = base_config.training.accumulate_grad_batches,
-                          gradient_clip_val = base_config.optim.grad_clip,
-                          max_steps=base_config.training.n_iters, 
-                          callbacks=callbacks, 
-                          logger = logger)
+      trainer = pl.Trainer(gpus = base_config.training.gpus,
+                            num_nodes = base_config.training.num_nodes,
+                            accelerator = base_config.training.accelerator,
+                            accumulate_grad_batches = base_config.training.accumulate_grad_batches,
+                            gradient_clip_val = base_config.optim.grad_clip,
+                            max_steps=base_config.training.n_iters, 
+                            callbacks=callbacks, 
+                            logger = logger)
     
-    trainer.test(LightningModule, test_dataloaders = DataModule.test_dataloader())
-    
+      trainer.test(LightningModule, test_dataloaders = DataModule.test_dataloader())
 
-    #evaluate FID scores on the generated samples
-    unconditional_evaluation_pipeline(base_config)
+      #evaluate FID scores on the generated samples
+      unconditional_evaluation_pipeline(base_config)
 
 def train(config, log_path, checkpoint_path):
     if config.data.create_dataset:
@@ -186,38 +187,35 @@ def train(config, log_path, checkpoint_path):
 
     trainer.fit(LightningModule, datamodule=DataModule)
 
-def test(config, log_path, checkpoint_path):
-    eval_log_path = config.base_log_path
-    Path(eval_log_path).mkdir(parents=True, exist_ok=True)
-    logger = pl.loggers.TensorBoardLogger(save_dir=eval_log_path, name='test_metrics')
-
+def test(config):
     DataModule = create_lightning_datamodule(config)
     DataModule.setup()
 
-    callbacks = get_callbacks(config, phase='test')
+    for checkpoint_iteration in config.eval.checkpoint_iterations:
+      config.eval.checkpoint_iteration = checkpoint_iteration
 
-    if checkpoint_path is not None or config.model.checkpoint_path is not None:
-      if config.model.checkpoint_path is not None and checkpoint_path is None:
-        checkpoint_path = config.eval.checkpoint_path
-    else:
-      return 'Testing cannot be completed because no checkpoint has been provided.'
+      callbacks = get_callbacks(config, phase='test')
 
-    LightningModule = create_lightning_module(config, checkpoint_path)
+      eval_log_path = config.base_log_path
+      Path(eval_log_path).mkdir(parents=True, exist_ok=True)
+      logger = pl.loggers.TensorBoardLogger(save_dir=os.path.join(eval_log_path, 'test_metrics'), name='%d' % checkpoint_iteration)
 
-    trainer = pl.Trainer(gpus=config.training.gpus,
-                         num_nodes = config.training.num_nodes,
-                         accelerator = config.training.accelerator,
-                         accumulate_grad_batches = config.training.accumulate_grad_batches,
-                         gradient_clip_val = config.optim.grad_clip,
-                         max_steps=config.training.n_iters, 
-                         callbacks=callbacks, 
-                         logger = logger)
-    
-    trainer.test(LightningModule, test_dataloaders = DataModule.test_dataloader())
+      checkpoint_path = os.path.join(config.eval.base_checkpoint_path, 'step=%d.ckpt' % checkpoint_iteration)
+      LightningModule = create_lightning_module(config, checkpoint_path)
 
-    #evaluate FID scores on the generated samples
-    unconditional_evaluation_pipeline(config)
+      trainer = pl.Trainer(gpus=config.training.gpus,
+                          num_nodes = config.training.num_nodes,
+                          accelerator = config.training.accelerator,
+                          accumulate_grad_batches = config.training.accumulate_grad_batches,
+                          gradient_clip_val = config.optim.grad_clip,
+                          max_steps=config.training.n_iters, 
+                          callbacks=callbacks, 
+                          logger = logger)
+      
+      trainer.test(LightningModule, test_dataloaders = DataModule.test_dataloader())
 
+      #evaluate FID scores on the generated samples
+      unconditional_evaluation_pipeline(config)
 
 def conditional_evaluation_pipeline(master_config):
   for config_name, config in master_config.items():

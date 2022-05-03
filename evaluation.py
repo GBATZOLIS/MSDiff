@@ -343,6 +343,14 @@ def run_unconditional_evaluation_pipeline(config):
 
         if config.eval.checkpoint_iteration not in current_results.keys():
             current_results[config.eval.checkpoint_iteration] = results
+        else:
+            for numerical_scheme in results.keys():
+                if numerical_scheme not in current_results[config.eval.checkpoint_iteration].keys():
+                    current_results[config.eval.checkpoint_iteration][numerical_scheme] = results[numerical_scheme]
+                else:
+                    for psteps in results[numerical_scheme].keys():
+                        if psteps not in current_results[config.eval.checkpoint_iteration][numerical_scheme].keys():
+                            current_results[config.eval.checkpoint_iteration][numerical_scheme][psteps] = results[numerical_scheme][psteps]
         
         with open(results_path, 'wb') as f:
             pickle.dump(current_results, f)

@@ -61,14 +61,15 @@ def get_config():
   evaluate.batch_size = training.batch_size
   evaluate.callback = training.visualization_callback
 
-  evaluate.checkpoint_iteration = 249999
-  evaluate.checkpoint_path =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/128/multiscale_ema/checkpoint_collection/step=%d.ckpt' % evaluate.checkpoint_iteration
+  evaluate.checkpoint_iterations = [249999, 499999, 749999, 999999, 1249999, 1499999, 1749999, 1999999]
+  evaluate.checkpoint_iteration = None
+  evaluate.base_checkpoint_path =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/128/multiscale_ema/checkpoint_collection'
 
   evaluate.num_samples = 20000
-  evaluate.probability_flow = True
-  evaluate.predictor = ['euler_maruyama', 'ddim']
+  evaluate.probability_flow = False
+  evaluate.predictor = ['reverse_diffusion']
   evaluate.corrector = 'none'
-  evaluate.p_steps = [64, 128, 256] 
+  evaluate.p_steps = [1000] 
   evaluate.c_steps = 1
   evaluate.denoise = True
 
