@@ -61,7 +61,7 @@ def get_config():
   evaluate.batch_size = training.batch_size
   evaluate.callback = training.visualization_callback
 
-  evaluate.checkpoint_iterations = [249999, 499999, 749999, 999999, 1249999, 1499999, 1749999, 1999999]
+  evaluate.checkpoint_iterations = [1499999, 1749999, 1999999] #[249999, 499999, 749999, 999999, 1249999, 1499999, 1749999, 1999999]
   evaluate.checkpoint_iteration = None
   evaluate.base_checkpoint_path =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/128/multiscale_ema/checkpoint_collection'
 
