@@ -1,4 +1,4 @@
-from configs.vp.celebA_HQ_160.multiscale import d1, d2, d3, a3
+from configs.vp.celebA_HQ_160.multiscale.ddpm import d1, d2, d3, a3
 
 import ml_collections
 
