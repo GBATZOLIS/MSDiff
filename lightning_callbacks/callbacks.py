@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import pickle
 from fast_sampling.computation_utils import get_adaptive_discretisation_fn
+from lightning_callbacks.HaarMultiScaleCallback import normalise_per_image, permute_channels, normalise, normalise_per_band, create_supergrid
 
 @utils.register_callback(name='configuration')
 class ConfigurationSetterCallback(Callback):
@@ -145,9 +146,28 @@ class MultiscaleImageVisualizationCallback(Callback):
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         if batch_idx == 0:
+            '''
             for predictor in self.predictor:
                 for p_steps in self.p_steps:
                     self.generate_dataset(pl_module, predictor, p_steps)
+            '''
+
+            #get the perturbed data
+            pertub_data_evolution = self.get_converged_evolution(pl_module, batch)
+
+            #convert it to perturbed super-grids
+            super_grid_evolution = {}
+            for T2 in pertub_data_evolution.keys():
+                super_grid = self.convert_to_haar_grid_space(pertub_data_evolution[T2], pl_module)
+                super_grid_evolution[T2] = super_grid[0] #keep only the first image
+            
+            #save the super grids for different timepoints
+            base_dir = os.path.join(self.save_samples_dir, 'teaser')
+            Path(base_dir).mkdir(parents=True, exist_ok=True)
+            for T2 in pertub_data_evolution.keys():
+                fp = os.path.join(base_dir, '%.2f.png' % T2)
+                save_image(super_grid_evolution[T2], fp)
+
 
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
@@ -164,6 +184,44 @@ class MultiscaleImageVisualizationCallback(Callback):
         grid_images = torchvision.utils.make_grid(sample_imgs, normalize=True, scale_each=True)
         pl_module.logger.experiment.add_image('generated_samples_%d_psteps_per_scale_%d_predictor_%s' % (pl_module.global_step, steps_per_scale, predictor), grid_images, pl_module.current_epoch)
     
+    def detect_haar_depth(self, haar_x : dict):
+        for key in haar_x.keys():
+            if key.startswith('a'):
+                approx_key = key
+                break
+        return int(approx_key[1])
+
+    def convert_to_haar_grid_space(self, haar_x, pl_module):
+        depth = self.detect_haar_depth(haar_x)
+
+        super_grids = []
+        for j in range(haar_x.size(0)):
+            a = normalise(haar_x['a%d' % depth][j, ::])
+            for i in range(pl_module.score_model.scale_max_haar_depth):
+                d = normalise(haar_x['d%d'%(depth-i)][j, ::])
+                concat = torch.cat((a,d), dim=1)
+                shape = concat.shape
+                a = make_grid(concat.reshape((-1, 3, shape[1], shape[2])), nrow=2, padding=0) 
+            super_grids.append(a)
+
+        super_grid = torch.stack(super_grids)
+        return super_grid
+
+    def get_converged_evolution(self, pl_module, batch):
+        batch = pl_module.convert_to_haar_space(batch, max_depth=pl_module.num_scales-1)
+
+        pertub_data_evolution = {}
+        pertub_data_evolution[0.] = batch
+        for scale_idx in range(1, pl_module.num_scales + 1):
+            T1, T2 = pl_module.compute_interval(scale_idx)
+            pertub_data_evolution[T2] = {}
+            for member_name in batch.keys():
+                z = torch.randn_like(batch[member_name])
+                mean, std = pl_module.sde[member_name].marginal_prob(batch[member_name], torch.tensor(T2).type_as(batch[member_name]))
+                perturbed_member = mean + std[(...,) + (None,) * len(batch[member_name].shape[1:])] * z
+                pertub_data_evolution[T2][member_name] = perturbed_member
+        return pertub_data_evolution
+
     def generate_dataset(self, pl_module, predictor, p_steps):
         eq = 'ode' if self.probability_flow else 'sde'
 

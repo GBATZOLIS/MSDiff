@@ -7,13 +7,13 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale' #'/home/gb511/projects/fast_sampling' 
-  config.experiment_name = 'loglinear_profile'
+  config.base_log_path = '/home/gb511/projects/fast_sampling' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale' 
+  config.experiment_name = 'ddpm_multiscale' #'loglinear_profile'
 
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'multiscale_base'
-  training.batch_size = 64
+  training.batch_size = 8 #64
   training.num_nodes = 1
   training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
@@ -45,8 +45,11 @@ def get_config():
   # evaluation (this file is not modified at all - subject to change)
   config.eval = evaluate = ml_collections.ConfigDict()
   evaluate.workers = 4*training.gpus
-  evaluate.batch_size = 64
+  evaluate.batch_size = training.batch_size
   evaluate.callback = training.visualization_callback
+
+  evaluate.checkpoint_iterations = [2294895]
+  evaluate.base_checkpoint_path = '/home/gb511/projects/fast_sampling/ddpm_multiscale/checkpoint_collection'
 
   evaluate.num_samples = 10000
   evaluate.probability_flow = True
@@ -61,7 +64,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
+  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
   data.dataset = 'celebA-HQ-160'
   data.use_data_mean = False
   data.datamodule = 'unpaired_PKLDataset'
@@ -103,6 +106,7 @@ def get_config():
   target = np.exp(-1/4*(20-0.1)-1/2*0.1)
   model.beta_max = (1-2/model.T_k)*model.beta_min -4/model.T_k**2 * np.log(target/2**(data.scale_depth-1))
   
+  #this checkpoint path is for resuming of training.
   model.checkpoint_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/loglinear_profile/version_5/checkpoints/epoch=620-step=1577487.ckpt'
   model.num_scales = 1000
   model.sigma_max = np.sqrt(np.prod(data.shape))
