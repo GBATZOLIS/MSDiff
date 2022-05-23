@@ -199,7 +199,7 @@ class MultiscaleImageVisualizationCallback(Callback):
             a = normalise(haar_x['a%d' % depth][j, ::])
             for i in range(depth):
                 d = normalise(haar_x['d%d'%(depth-i)][j, ::])
-                concat = torch.cat((a,d), dim=1)
+                concat = torch.cat((a,d), dim=0)
                 shape = concat.shape
                 a = make_grid(concat.reshape((-1, 3, shape[1], shape[2])), nrow=2, padding=0) 
             super_grids.append(a)
