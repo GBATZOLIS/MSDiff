@@ -23,6 +23,7 @@ def get_config():
   training.n_iters = 3000000 
   training.visualization_callback = 'multiscale_base'
   training.show_evolution = False
+  training.use_ema = False
   
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
