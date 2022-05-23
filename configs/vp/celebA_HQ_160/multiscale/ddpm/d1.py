@@ -29,7 +29,7 @@ def get_config():
   training.checkpointing_strategy = 'mixed' #options: [mixed, last]
   training.latest_save_every_n_train_steps = 5000 #replace
   training.save_every_n_train_steps = 250000 #save all
-  
+
   ## produce samples at each snapshot.
   training.snapshot_sampling = True
   training.likelihood_weighting = True
@@ -90,7 +90,7 @@ def get_config():
   data.num_scales = data.max_haar_depth + 1
 
   #shapes used for the score model construction
-  data.target_image_size = 128
+  data.target_image_size = 256
   data.image_size = data.target_image_size//2**(data.scale_depth-1)
   data.effective_image_size = data.image_size
   data.shape = [3, data.image_size, data.image_size]
