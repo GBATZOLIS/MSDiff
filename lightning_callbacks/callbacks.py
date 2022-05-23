@@ -197,7 +197,7 @@ class MultiscaleImageVisualizationCallback(Callback):
         super_grids = []
         for j in range(haar_x['a%d' % depth].size(0)):
             a = normalise(haar_x['a%d' % depth][j, ::])
-            for i in range(pl_module.score_model.scale_max_haar_depth):
+            for i in range(depth):
                 d = normalise(haar_x['d%d'%(depth-i)][j, ::])
                 concat = torch.cat((a,d), dim=1)
                 shape = concat.shape
