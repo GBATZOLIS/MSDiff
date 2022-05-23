@@ -195,7 +195,7 @@ class MultiscaleImageVisualizationCallback(Callback):
         depth = self.detect_haar_depth(haar_x)
 
         super_grids = []
-        for j in range(haar_x.size(0)):
+        for j in range(haar_x['a%d' % depth].size(0)):
             a = normalise(haar_x['a%d' % depth][j, ::])
             for i in range(pl_module.score_model.scale_max_haar_depth):
                 d = normalise(haar_x['d%d'%(depth-i)][j, ::])
