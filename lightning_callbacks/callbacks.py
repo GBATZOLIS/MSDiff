@@ -146,12 +146,13 @@ class MultiscaleImageVisualizationCallback(Callback):
 
     def on_test_batch_start(self, trainer, pl_module, batch, batch_idx, dataloader_idx):
         if batch_idx == 0:
-            '''
             for predictor in self.predictor:
                 for p_steps in self.p_steps:
                     self.generate_dataset(pl_module, predictor, p_steps)
-            '''
+            
 
+            #commented section to be permanently deleted in the future. It was done for the purposes of creation of a demonstration.
+            '''
             #get the perturbed data
             pertub_data_evolution = self.get_converged_evolution(pl_module, batch)
 
@@ -167,7 +168,7 @@ class MultiscaleImageVisualizationCallback(Callback):
             for T2 in pertub_data_evolution.keys():
                 fp = os.path.join(base_dir, '%.2f.png' % T2)
                 save_image(super_grid_evolution[T2], fp)
-
+            '''
 
     def on_validation_epoch_end(self, trainer, pl_module):
         current_epoch = pl_module.current_epoch
