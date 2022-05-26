@@ -7,13 +7,13 @@ def get_config():
   config = ml_collections.ConfigDict()
 
   #logging
-  config.base_log_path = '/home/gb511/projects/fast_sampling' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale' 
-  config.experiment_name = 'ddpm_multiscale' #'loglinear_profile'
+  config.base_log_path = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale'  #'/home/gb511/projects/fast_sampling' 
+  config.experiment_name =  'loglinear_profile' #'ddpm_multiscale'
 
   # training
   config.training = training = ml_collections.ConfigDict()
   config.training.lightning_module = 'multiscale_base'
-  training.batch_size = 8 #64
+  training.batch_size = 64
   training.num_nodes = 1
   training.gpus = 1
   training.accelerator = None if training.gpus == 1 else 'ddp'
@@ -70,7 +70,7 @@ def get_config():
 
   # data
   config.data = data = ml_collections.ConfigDict()
-  data.base_dir = 'datasets' #'/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
+  data.base_dir =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' #'datasets'
   data.dataset = 'celebA-HQ-160'
   data.use_data_mean = False
   data.datamodule = 'unpaired_PKLDataset'
