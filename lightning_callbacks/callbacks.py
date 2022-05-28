@@ -224,12 +224,19 @@ class MultiscaleImageVisualizationCallback(Callback):
         return pertub_data_evolution
 
     def generate_dataset(self, pl_module, predictor, p_steps):
+        def get_image_count(directory, img_format='png'):  
+            initial_count = 0
+            for path in os.listdir(directory):
+                if os.path.isfile(os.path.join(directory, path)) and path.split('.')[-1]==img_format:
+                    initial_count += 1
+            return initial_count
+
         eq = 'ode' if self.probability_flow else 'sde'
 
         p_step_dir = os.path.join(self.save_samples_dir, 'eq(%s)-p(%s)-c(%s)' % (eq, predictor, self.config.eval.corrector), '%d' % p_steps)
         Path(p_step_dir).mkdir(parents=True, exist_ok=True)
 
-        num_generated_samples = 0
+        num_generated_samples = get_image_count(p_step_dir)
         while num_generated_samples < self.num_samples:
             psteps_per_scale = p_steps // pl_module.num_scales
             samples, info = pl_module.sample(num_samples=self.config.eval.batch_size,
@@ -239,7 +246,7 @@ class MultiscaleImageVisualizationCallback(Callback):
                                             c_steps=self.c_steps,
                                             probability_flow=self.probability_flow,
                                             denoise=self.denoise)
-            if num_generated_samples == 0:
+            if num_generated_samples == num_generated_samples + samples.size(0):
                 timing_information = {}
                 for scale_name in info.keys():
                     scale_time = info[scale_name]['time']
