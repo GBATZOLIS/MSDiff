@@ -351,7 +351,15 @@ def run_unconditional_evaluation_pipeline(config):
                     for psteps in results[numerical_scheme].keys():
                         if psteps not in current_results[config.eval.checkpoint_iteration][numerical_scheme].keys():
                             current_results[config.eval.checkpoint_iteration][numerical_scheme][psteps] = results[numerical_scheme][psteps]
-        
+                        else:
+                            #in this case we have most likely calculated FID for a smaller number of samples, so save both values.
+                            if isinstance(current_results[config.eval.checkpoint_iteration][numerical_scheme][psteps], list):
+                                current_results[config.eval.checkpoint_iteration][numerical_scheme][psteps].append(results[numerical_scheme][psteps])
+                            else:
+                                updated_results = [current_results[config.eval.checkpoint_iteration][numerical_scheme][psteps]]
+                                updated_results.append(results[numerical_scheme][psteps])
+                                current_results[config.eval.checkpoint_iteration][numerical_scheme][psteps] = updated_results
+
         with open(results_path, 'wb') as f:
             pickle.dump(current_results, f)
     else:
