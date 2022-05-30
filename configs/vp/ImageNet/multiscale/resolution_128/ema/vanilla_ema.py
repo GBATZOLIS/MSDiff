@@ -69,11 +69,11 @@ def get_config():
   evaluate.checkpoint_iteration = None
   evaluate.base_checkpoint_path =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/ImageNet/128/vanilla_ema/checkpoint_collection'
 
-  evaluate.num_samples = 50000
+  evaluate.num_samples = 20000
   evaluate.probability_flow = False
-  evaluate.predictor = ['reverse_diffusion']
+  evaluate.predictor = ['ddim']
   evaluate.corrector = 'none'
-  evaluate.p_steps = [128, 256] 
+  evaluate.p_steps = [128]
   evaluate.c_steps = 1
   evaluate.denoise = True
 
