@@ -63,7 +63,7 @@ def get_config():
 
   evaluate.checkpoint_iterations = [2539999]
   evaluate.checkpoint_iteration = None
-  evaluate.base_checkpoint_path =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/celebA-HQ/OpenAI_architecture/128/multiscale/checkpoint_resuming'
+  evaluate.base_checkpoint_path =  '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/projects/fast_reverse_diffusion/multiscale/celebA-HQ/OpenAI_architecture/128/multiscale/checkpoint_collection'
 
   evaluate.num_samples = 50000
   evaluate.probability_flow = False
