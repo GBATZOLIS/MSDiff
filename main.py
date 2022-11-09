@@ -48,6 +48,8 @@ def main(argv):
     run_lib.run_distillation(FLAGS.config)
   elif FLAGS.mode == 'compute_lipschitz_constant':
     run_lib.compute_lipschitz_constant(FLAGS.config)
+  elif FLAGS.mode == 'compute_curvature_profile':
+    run_lib.compute_curvature_profile(FLAGS.config)
   elif FLAGS.mode == 'train_multiscale':
     run_lib.train_multiscale(FLAGS.config)
   elif FLAGS.mode == 'test_multiscale':
