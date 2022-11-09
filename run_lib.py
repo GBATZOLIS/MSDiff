@@ -32,13 +32,16 @@ import os
 import matplotlib.pyplot as plt
 
 from tqdm import tqdm
-from fast_sampling.computation_utils import fast_sampling_scheme, get_Lip_constant_profile
+from fast_sampling.computation_utils import fast_sampling_scheme, get_Lip_constant_profile, get_curvature_profile
 
 def compute_fast_sampling_scheme(config, save_dir):
   fast_sampling_scheme(config, save_dir)
 
 def compute_lipschitz_constant(config):
   get_Lip_constant_profile(config)
+
+def compute_curvature_profile(config):
+  get_curvature_profile(config)
 
 def run_distillation(config):
   DataModule = create_lightning_datamodule(config)

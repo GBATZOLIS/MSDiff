@@ -66,6 +66,107 @@ def compute_expectations(timestamps, model, sde, dataloader, mu_0, device):
     #print(expectations)
     return expectations
 
+def get_curvature_profile(config):
+    assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
+
+    device = 'cuda'
+    DataModule = create_lightning_datamodule(config)
+    DataModule.setup()
+    dataloader = DataModule.train_dataloader()
+
+    lmodule = create_lightning_module(config, config.model.checkpoint_path).to(device)
+    lmodule.eval()
+    lmodule.configure_sde(config)
+
+    model = lmodule.score_model
+    sde = lmodule.sde
+    eps = lmodule.sampling_eps
+    t_grid = 100
+    num_batches = 1000
+
+    if config.base_log_path is not None:
+        save_dir = os.path.join(config.base_log_path, config.experiment_name, 'curvature')
+
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
+
+    curvature_estimator = get_curvature_profile_fn(dataloader, model, sde, num_batches, True, device)
+    timesteps = torch.linspace(eps, sde.T, t_grid, device=device)
+
+    curvatures = []
+    for i in tqdm(range(timesteps.size(0))):
+        t = timesteps[i]
+        curvatures.append(curvature_estimator(t))
+    
+    with open(os.path.join(save_dir, 'info.pkl'), 'wb') as f:
+        info = {'t':timesteps, 'Lip_constant':curvatures}
+        pickle.dump(info, f)
+
+
+def get_curvature_profile_fn(dataloader, model, sde, num_batches, continuous=True, device='cuda'):
+    #output: a fn that receives model as input and outputs the estimated curvature profile
+
+    def get_f_ode_fn(sde, model):
+        score_fn = mutils.get_score_fn(sde, model, conditional=False, train=False, continuous=continuous)
+        def f_ode_fn(x, t):
+            score = score_fn(x, t)
+            drift, diffusion = sde.sde(x, t)
+            return drift - diffusion[:, None, None, None] ** 2 * score * 0.5
+        return f_ode_fn
+    
+    def get_fode_as_fn_of_x(f_ode, t):
+        def fode_as_fn_of_x(x):
+            return f_ode(x, t)
+        return fode_as_fn_of_x
+
+    def get_fode_as_fn_of_t(f_ode, x):
+        def fode_as_fn_of_t(t):
+            return f_ode(x, t)
+        return fode_as_fn_of_t
+
+    def project_acc_vector(velocity, acceleration):
+        #velocity and acceleration are assumed batched tensors.
+        #velocity.size() = (batch, velocity)
+        #acceleration.size() = (batch, acceleration)
+
+        normalised_velocity = torch.nn.functional.normalize(velocity, p=2.0, dim=1)
+        tangential_acceleration_coefficient = torch.sum(normalised_velocity*acceleration, dim=1)
+        tangential_acceleration = tangential_acceleration_coefficient[:,None]*normalised_velocity
+        centripetal_acceleration = acceleration - tangential_acceleration
+        return tangential_acceleration, centripetal_acceleration
+
+    def centripetal_acceleration_fn(x, t):
+        f_ode_fn = get_f_ode_fn(sde, model)
+        f_ode_x = get_fode_as_fn_of_x(f_ode_fn, t)
+        f_ode_t = get_fode_as_fn_of_t(f_ode_fn, x)
+
+        velocity = f_ode_fn(x, t)
+        jvp = torch.autograd.functional.jvp(f_ode_x, x, v=velocity)[1]
+        df_dt = torch.autograd.functional.jvp(f_ode_t, t, v=torch.ones_like(t))[1]
+        acceleration = jvp + df_dt
+        centripetal_acceleration = project_acc_vector(torch.flatten(velocity, star_dim=1), torch.flatten(acceleration, star_dim=1))[1]
+        return centripetal_acceleration
+    
+    def average_curvature(x, t): #t is the same for all x
+        centripetal_acceleration = centripetal_acceleration_fn(x, t)
+        centr_acc_magnitudes = torch.linalg.norm(centripetal_acceleration, dim=1)
+        return torch.mean(centr_acc_magnitudes)
+
+    def curvature_estimator_fn(t):
+        t_curvatures = []
+        for idx, batch in enumerate(dataloader):
+          batch = batch.to(device)
+          z = torch.randn_like(batch.to(device))
+          vec_t = torch.ones(batch.size(0), device=model.device) * t
+          mean, std = sde.marginal_prob(batch, vec_t)
+          x = mean + std[(...,) + (None,) * len(batch.shape[1:])] * z
+
+          avg_curvature = average_curvature(x, t)
+          t_curvatures.append(avg_curvature)
+      
+        return torch.mean(t_curvatures)
+    
+    return curvature_estimator_fn
+
 def get_Lip_constant_profile(config):
     assert config.model.checkpoint_path is not None, 'checkpoint path has not been provided in the configuration file.'
 
