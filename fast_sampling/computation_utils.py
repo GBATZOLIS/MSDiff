@@ -140,8 +140,9 @@ def get_curvature_profile_fn(dataloader, model, sde, num_batches, continuous=Tru
         f_ode_t = get_fode_as_fn_of_t(f_ode_fn, x)
 
         velocity = f_ode_fn(x, t)
-        jvp = torch.autograd.functional.jvp(f_ode_x, x, v=velocity)[1]
-        df_dt = torch.autograd.functional.jvp(f_ode_t, t, v=torch.ones_like(t))[1]
+        jvp = torch.autograd.functional.jvp(f_ode_x, x, v=velocity)[1].detach()
+        df_dt = torch.autograd.functional.jvp(f_ode_t, t, v=torch.ones_like(t))[1].detach()
+        
         acceleration = jvp + df_dt
         centripetal_acceleration = project_acc_vector(torch.flatten(velocity, start_dim=1), torch.flatten(acceleration, start_dim=1))[1]
         return centripetal_acceleration
