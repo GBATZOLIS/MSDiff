@@ -81,8 +81,8 @@ def get_curvature_profile(config):
     model = lmodule.score_model
     sde = lmodule.sde
     eps = lmodule.sampling_eps
-    t_grid = 100
-    num_batches = 1000
+    t_grid = 10
+    num_batches = 10
 
     if config.base_log_path is not None:
         save_dir = os.path.join(config.base_log_path, config.experiment_name, 'curvature')
@@ -162,7 +162,7 @@ def get_curvature_profile_fn(dataloader, model, sde, num_batches, continuous=Tru
             mean, std = sde.marginal_prob(batch, vec_t)
             x = mean + std[(...,) + (None,) * len(batch.shape[1:])] * z
 
-            avg_curvature = average_curvature(x, vec_t).item()
+            avg_curvature = average_curvature(x, vec_t)
             t_curvatures.append(avg_curvature)
       
         return torch.mean(t_curvatures)
