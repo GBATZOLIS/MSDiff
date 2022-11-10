@@ -98,7 +98,7 @@ def get_curvature_profile(config):
         curvatures.append(curvature_estimator(t))
     
     with open(os.path.join(save_dir, 'info.pkl'), 'wb') as f:
-        info = {'t':timesteps, 'Lip_constant':curvatures}
+        info = {'t':timesteps.cpu().tolist(), 'curvatures':curvatures}
         pickle.dump(info, f)
 
 
