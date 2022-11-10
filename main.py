@@ -19,7 +19,8 @@ flags.DEFINE_enum("mode", "train", \
   'unconditional_evaluation_pipeline', \
   'compute_fast_sampling_scheme',
   'distillation', 
-  'compute_lipschitz_constant', 
+  'compute_lipschitz_constant',
+  'compute_curvature_profile',
   'train_multiscale', 
   'test_multiscale'], \
 
