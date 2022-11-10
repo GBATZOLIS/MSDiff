@@ -155,14 +155,14 @@ def get_curvature_profile_fn(dataloader, model, sde, num_batches, continuous=Tru
         t_curvatures = []
         for idx, batch in enumerate(dataloader):
             print(batch.size())
-          batch = batch.to(device)
-          z = torch.randn_like(batch.to(device))
-          vec_t = torch.ones(batch.size(0), device=model.device) * t
-          mean, std = sde.marginal_prob(batch, vec_t)
-          x = mean + std[(...,) + (None,) * len(batch.shape[1:])] * z
+            batch = batch.to(device)
+            z = torch.randn_like(batch.to(device))
+            vec_t = torch.ones(batch.size(0), device=model.device) * t
+            mean, std = sde.marginal_prob(batch, vec_t)
+            x = mean + std[(...,) + (None,) * len(batch.shape[1:])] * z
 
-          avg_curvature = average_curvature(x, vec_t)
-          t_curvatures.append(avg_curvature)
+            avg_curvature = average_curvature(x, vec_t)
+            t_curvatures.append(avg_curvature)
       
         return torch.mean(t_curvatures)
     
