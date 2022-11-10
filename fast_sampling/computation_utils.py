@@ -143,7 +143,7 @@ def get_curvature_profile_fn(dataloader, model, sde, num_batches, continuous=Tru
         jvp = torch.autograd.functional.jvp(f_ode_x, x, v=velocity)[1]
         df_dt = torch.autograd.functional.jvp(f_ode_t, t, v=torch.ones_like(t))[1]
         acceleration = jvp + df_dt
-        centripetal_acceleration = project_acc_vector(torch.flatten(velocity, star_dim=1), torch.flatten(acceleration, star_dim=1))[1]
+        centripetal_acceleration = project_acc_vector(torch.flatten(velocity, start_dim=1), torch.flatten(acceleration, start_dim=1))[1]
         return centripetal_acceleration
     
     def average_curvature(x, t): #t is the same for all x
