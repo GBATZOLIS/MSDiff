@@ -167,7 +167,7 @@ def get_curvature_profile_fn(dataloader, model, sde, num_batches, continuous=Tru
             avg_curvature = average_curvature(x, vec_t).item()
             t_curvatures.append(avg_curvature)
       
-        return torch.mean(torch.tensor(t_curvatures))
+        return torch.mean(torch.tensor(t_curvatures)).cpu().item()
     
     return curvature_estimator_fn
 
