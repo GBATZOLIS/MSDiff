@@ -91,7 +91,7 @@ def get_config():
   if server == 'hpc':
     data.base_dir = '/home/gb511/rds/rds-t2-cs138-LlrDsbHU5UM/gb511/datasets' 
   elif server == 'abg':
-    data.base_dir =  '/home/gb511/score_sde_pytorch-1/datasets/celebA-HQ-160'
+    data.base_dir =  '/home/gb511/score_sde_pytorch-1/datasets'
  
   data.datamodule = 'unpaired_PKLDataset'
   data.image_size = image_size
