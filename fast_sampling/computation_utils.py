@@ -154,6 +154,7 @@ def get_curvature_profile_fn(dataloader, model, sde, num_batches, continuous=Tru
     def curvature_estimator_fn(t):
         t_curvatures = []
         for idx, batch in enumerate(dataloader):
+            print(batch.size())
           batch = batch.to(device)
           z = torch.randn_like(batch.to(device))
           vec_t = torch.ones(batch.size(0), device=model.device) * t
