@@ -161,7 +161,7 @@ def get_curvature_profile_fn(dataloader, model, sde, num_batches, continuous=Tru
             mean, std = sde.marginal_prob(batch, vec_t)
             x = mean + std[(...,) + (None,) * len(batch.shape[1:])] * z
 
-            avg_curvature = average_curvature(x, vec_t)
+            avg_curvature = average_curvature(x, vec_t).item()
             t_curvatures.append(avg_curvature)
       
         return torch.mean(t_curvatures)
