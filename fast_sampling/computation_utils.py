@@ -81,8 +81,8 @@ def get_curvature_profile(config):
     model = lmodule.score_model
     sde = lmodule.sde
     eps = lmodule.sampling_eps
-    t_grid = 20
-    num_batches = 125
+    t_grid = 100
+    num_batches = 100
 
     if config.base_log_path is not None:
         save_dir = os.path.join(config.base_log_path, config.experiment_name, 'curvature')
