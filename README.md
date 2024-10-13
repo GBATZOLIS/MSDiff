@@ -1,4 +1,4 @@
-# Non-Uniform Diffusion Models for Deep Generative Modeling
+# Non-Uniform Diffusion Models
 
 This repository extends Yang Song's codebase from [Score-Based Generative Modeling through Stochastic Differential Equations](https://openreview.net/forum?id=PxTIG12RRHS), utilizing PyTorch and PyTorch-Lightning.
 
