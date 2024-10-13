@@ -173,7 +173,7 @@ The conditional generation experiments use the Lightning module:
 
 If you use this code for your research, please cite our paper:
 
-[Non-Uniform Diffusion Models for Deep Generative Modeling](https://arxiv.org/pdf/2207.09786)
+[Non-Uniform Diffusion Models](https://arxiv.org/pdf/2207.09786)
 
 BibTeX:
 
