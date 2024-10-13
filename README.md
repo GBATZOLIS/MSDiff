@@ -159,56 +159,6 @@ The conditional generation experiments use the Lightning module:
 
 ---
 
-## Dependencies
-
-- Python 3.x
-- [PyTorch](https://pytorch.org/)
-- [PyTorch-Lightning](https://www.pytorchlightning.ai/)
-- [ml_collections](https://github.com/google/ml_collections) (for configuration files)
-
-### Installation
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/yourusername/yourrepository.git
-   cd yourrepository
-   ```
-
-2. **Install the required packages:**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-   **Note:** Make sure that you have PyTorch and PyTorch-Lightning installed. You may need to adjust the PyTorch installation according to your CUDA version.
-
-   ```bash
-   # For example, to install PyTorch with CUDA 11.1:
-   pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu111
-   pip install pytorch-lightning
-   ```
-
-3. **Install `ml_collections`:**
-
-   ```bash
-   pip install ml-collections
-   ```
-
----
-
-## Additional Notes
-
-- **Datasets:** Ensure that you have the appropriate datasets downloaded and prepared. The configurations assume the datasets are stored in specific directories, which you may need to adjust in the config files.
-
-- **GPU Acceleration:** We recommend using GPU acceleration for training and testing the models, as they are computationally intensive.
-
-- **Configuration Files:** The configurations provided are designed to reproduce the experiments in the paper. You may adjust the configurations as needed for your experiments. Key parameters include batch size, learning rate, number of training steps, etc.
-
-- **Checkpoints and Logging:** Training and evaluation logs, as well as model checkpoints, will be saved according to the settings in the configuration files. Make sure to set appropriate paths for saving your results.
-
----
-
 ## Citation
 
 If you use this code for your research, please cite our paper:
@@ -218,25 +168,15 @@ If you use this code for your research, please cite our paper:
 BibTeX:
 
 ```bibtex
-@inproceedings{yourpaper,
-  title={Non-Uniform Diffusion Models for Deep Generative Modeling},
-  author={Your Name and Coauthors},
-  booktitle={Conference},
-  year={2023}
+@article{batzolis2022non,
+  title={Non-uniform diffusion models},
+  author={Batzolis, Georgios and Stanczuk, Jan and Sch{\"o}nlieb, Carola-Bibiane and Etmann, Christian},
+  journal={arXiv preprint arXiv:2207.09786},
+  year={2022}
 }
 ```
 
 ---
-
-## Acknowledgements
-
-We would like to thank Yang Song for providing the original code base for [Score-Based Generative Modeling through Stochastic Differential Equations](https://openreview.net/forum?id=PxTIG12RRHS).
-
----
-
-## License
-
-This project is licensed under the terms of the MIT license.
 
 ---
 
