@@ -1,15 +1,25 @@
 # Non-Uniform Diffusion Models for Deep Generative Modeling
 
-This repository is an extension of the code base provided by Yang Song for the paper [Score-Based Generative Modeling through Stochastic Differential Equations](https://openreview.net/forum?id=PxTIG12RRHS). The code depends on PyTorch and PyTorch-Lightning.
+This repository extends Yang Song's codebase from [Score-Based Generative Modeling through Stochastic Differential Equations](https://openreview.net/forum?id=PxTIG12RRHS), utilizing PyTorch and PyTorch-Lightning.
 
-We have extended the code to support **non-uniform diffusion models**, leading to **multi-scale diffusion models**. Non-uniform diffusion opens avenues for further research in faster and potentially better generative modeling, conditional generation, and hierarchical representation learning using the score-based diffusion framework.
+We introduce **non-uniform diffusion models**, leading to **multi-scale diffusion models** that enable faster and more efficient generative modeling. By allowing different parts of the input to diffuse at varying rates, we achieve:
 
-In our paper, we use non-uniform diffusion to:
+- **Better FID scores** than standard uniform diffusion models with equal or less training time.
+- **Significantly faster sample generation**, up to 4.4× faster at 128×128 resolution.
+- **A novel estimator for the conditional score function** (CMDE), performing on par with state-of-the-art methods.
 
-- Show that multi-scale diffusion models achieve better FID scores than standard uniform diffusion models in the same or less training time.
-- Achieve a significant speed-up in sample generation (up to 4.4 times faster at 128×128 resolution).
-- Derive the CMDE and VS-CMDE estimators of the conditional score for conditional image generation.
-- Provide code for training conditional score models using the conditional denoising estimator (CDE).
+**Our contributions include:**
+
+1. **A principled framework** for training non-uniform diffusion models.
+2. **Efficient multi-scale models** with improved performance and faster sampling.
+3. **The Conditional Multi-Speed Diffusive Estimator (CMDE)** for conditional score estimation.
+4. **A proof of consistency** for the Conditional Denoising Estimator (CDE).
+5. **An empirical comparison** of methods on tasks like super-resolution and inpainting.
+6. **The open-source library** MSDiff to support further research.
+
+---
+
+By exploring non-uniform diffusion, we aim to advance deep generative modeling with faster and more effective models.
 
 ## Instructions
 
